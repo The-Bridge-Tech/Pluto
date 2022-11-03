@@ -1,0 +1,150 @@
+[0.303s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--packages-select', 'pluto_launch']
+[0.303s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=8, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=['pluto_launch'], packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x7f242653d600>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f242653d090>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f242653d090>>)
+[0.351s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.351s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.351s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.351s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.351s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.351s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.351s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/shouyu/ros2_ws/src/Pluto'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.351s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.352s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.374s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extensions ['ignore', 'ignore_ament_install']
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'ignore'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'ignore_ament_install'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extensions ['colcon_pkg']
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'colcon_pkg'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extensions ['colcon_meta']
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'colcon_meta'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extensions ['ros']
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'ros'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extensions ['cmake', 'python']
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'cmake'
+[0.375s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'python'
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extensions ['python_setup_py']
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(nmea_navsat_driver) by extension 'python_setup_py'
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extensions ['ignore', 'ignore_ament_install']
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extension 'ignore'
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extension 'ignore_ament_install'
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extensions ['colcon_pkg']
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extension 'colcon_pkg'
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extensions ['colcon_meta']
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extension 'colcon_meta'
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extensions ['ros']
+[0.376s] Level 1:colcon.colcon_core.package_identification:_identify(pluto_launch) by extension 'ros'
+[0.378s] DEBUG:colcon.colcon_core.package_identification:Package 'pluto_launch' with type 'ros.ament_python' and name 'pluto_launch'
+[0.378s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extensions ['ignore', 'ignore_ament_install']
+[0.378s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extension 'ignore'
+[0.378s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extension 'ignore_ament_install'
+[0.378s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extensions ['colcon_pkg']
+[0.378s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extension 'colcon_pkg'
+[0.378s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extensions ['colcon_meta']
+[0.378s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extension 'colcon_meta'
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extensions ['ros']
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(py_pubsub) by extension 'ros'
+[0.379s] DEBUG:colcon.colcon_core.package_identification:Package 'py_pubsub' with type 'ros.ament_python' and name 'py_pubsub'
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extensions ['ignore', 'ignore_ament_install']
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'ignore'
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'ignore_ament_install'
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extensions ['colcon_pkg']
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'colcon_pkg'
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extensions ['colcon_meta']
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'colcon_meta'
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extensions ['ros']
+[0.379s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'ros'
+[0.380s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extensions ['cmake', 'python']
+[0.380s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'cmake'
+[0.380s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'python'
+[0.380s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extensions ['python_setup_py']
+[0.380s] Level 1:colcon.colcon_core.package_identification:_identify(realsense-ros) by extension 'python_setup_py'
+[0.380s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.380s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.380s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.380s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.380s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.435s] INFO:colcon.colcon_core.package_selection:Skipping not selected package 'py_pubsub' in 'py_pubsub'
+[0.436s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.436s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.458s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 339 installed packages in /home/shouyu/ros2_humble/install
+[0.463s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 160 installed packages in /opt/ros/humble
+[0.468s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'cmake_args' from command line to 'None'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'cmake_target' from command line to 'None'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'cmake_clean_cache' from command line to 'False'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'cmake_clean_first' from command line to 'False'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'cmake_force_configure' from command line to 'False'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'ament_cmake_args' from command line to 'None'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'catkin_cmake_args' from command line to 'None'
+[0.525s] Level 5:colcon.colcon_core.verb:set package 'pluto_launch' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.525s] DEBUG:colcon.colcon_core.verb:Building package 'pluto_launch' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/shouyu/ros2_ws/src/Pluto/build/pluto_launch', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch', 'merge_install': False, 'path': '/home/shouyu/ros2_ws/src/Pluto/pluto_launch', 'symlink_install': False, 'test_result_base': None}
+[0.527s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.542s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.542s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/shouyu/ros2_ws/src/Pluto/pluto_launch' with build type 'ament_python'
+[0.542s] Level 1:colcon.colcon_core.shell:create_environment_hook('pluto_launch', 'ament_prefix_path')
+[0.557s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.558s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/hook/ament_prefix_path.ps1'
+[0.558s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/hook/ament_prefix_path.dsv'
+[0.559s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/hook/ament_prefix_path.sh'
+[0.568s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.568s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.203s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/shouyu/ros2_ws/src/Pluto/pluto_launch'
+[1.208s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.208s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.990s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/shouyu/ros2_ws/src/Pluto/pluto_launch': PYTHONPATH=/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/pluto_launch build --build-base /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build install --prefix /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch --record /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/install.log --single-version-externally-managed
+[2.656s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/shouyu/ros2_ws/src/Pluto/pluto_launch' returned '0': PYTHONPATH=/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/pluto_launch build --build-base /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build install --prefix /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch --record /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/install.log --single-version-externally-managed
+[2.672s] Level 1:colcon.colcon_core.environment:checking '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch' for CMake module files
+[2.672s] Level 1:colcon.colcon_core.environment:checking '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch' for CMake config files
+[2.673s] Level 1:colcon.colcon_core.environment:checking '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib'
+[2.673s] Level 1:colcon.colcon_core.environment:checking '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/bin'
+[2.673s] Level 1:colcon.colcon_core.environment:checking '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/pkgconfig/pluto_launch.pc'
+[2.673s] Level 1:colcon.colcon_core.environment:checking '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages'
+[2.673s] Level 1:colcon.colcon_core.shell:create_environment_hook('pluto_launch', 'pythonpath')
+[2.679s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/hook/pythonpath.ps1'
+[2.679s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/hook/pythonpath.dsv'
+[2.679s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/hook/pythonpath.sh'
+[2.680s] Level 1:colcon.colcon_core.environment:checking '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/bin'
+[2.680s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(pluto_launch)
+[2.685s] INFO:colcon.colcon_core.shell:Creating package script '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/package.ps1'
+[2.686s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/package.dsv'
+[2.686s] INFO:colcon.colcon_core.shell:Creating package script '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/package.sh'
+[2.687s] INFO:colcon.colcon_core.shell:Creating package script '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/package.bash'
+[2.687s] INFO:colcon.colcon_core.shell:Creating package script '/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch/package.zsh'
+[2.688s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/colcon-core/packages/pluto_launch)
+[2.688s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.688s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.689s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[2.689s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.705s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.705s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.706s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.723s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.728s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/shouyu/ros2_ws/src/Pluto/install/local_setup.ps1'
+[2.729s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/shouyu/ros2_ws/src/Pluto/install/_local_setup_util_ps1.py'
+[2.730s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/shouyu/ros2_ws/src/Pluto/install/setup.ps1'
+[2.742s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/shouyu/ros2_ws/src/Pluto/install/local_setup.sh'
+[2.743s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/shouyu/ros2_ws/src/Pluto/install/_local_setup_util_sh.py'
+[2.743s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/shouyu/ros2_ws/src/Pluto/install/setup.sh'
+[2.757s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/shouyu/ros2_ws/src/Pluto/install/local_setup.bash'
+[2.757s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/shouyu/ros2_ws/src/Pluto/install/setup.bash'
