@@ -1,3 +1,7 @@
 [submodule "realsense-ros"]
 	path = realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
+[submodule "nmea_navsat_driver"]
+	path = nmea_navsat_driver
+	url = https://github.com/ros-drivers/nmea_navsat_driver.git
+	branch = ros2

@@ -1,0 +1,130 @@
+[0.058s] Invoking command in '/home/bridgetech/ros2_ws/src/Pluto/build/realsense2_camera_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/bridgetech/ros2_ws/install/py_pubsub:/home/bridgetech/ros2_ws/install/examples_rclpy_minimal_subscriber:/home/bridgetech/ros2_ws/install/examples_rclpy_minimal_service:/home/bridgetech/ros2_ws/install/examples_rclpy_minimal_publisher:/home/bridgetech/ros2_ws/install/examples_rclpy_minimal_client:/home/bridgetech/ros2_ws/install/examples_rclpy_minimal_action_server:/home/bridgetech/ros2_ws/install/examples_rclpy_minimal_action_client:/home/bridgetech/ros2_ws/install/examples_rclpy_executors:/home/bridgetech/IntelVino/pluto/install/py_launch_example:/home/bridgetech/IntelVino/pluto/install/maestro_controller:/home/bridgetech/IntelVino/pluto/install/compass:/opt/ros/foxy /usr/bin/cmake --build /home/bridgetech/ros2_ws/src/Pluto/build/realsense2_camera_msgs -- -j2 -l2
+[1.165s] [35m[1mScanning dependencies of target realsense2_camera_msgs__cpp[0m
+[1.165s] [  1%] [34m[1mGenerating C code for ROS interfaces[0m
+[1.165s] [  3%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[1.896s] make[2]: *** Deleting file 'rosidl_generator_c/realsense2_camera_msgs/msg/imu_info.h'
+[1.896s] make[2]: *** Deleting file 'rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp'
+[1.896s] Traceback (most recent call last):
+[1.897s]   File "/opt/ros/foxy/share/rosidl_generator_c/cmake/../../../lib/rosidl_generator_c/rosidl_generator_c", line 40, in <module>
+[1.897s]     sys.exit(main())
+[1.897s]   File "/opt/ros/foxy/share/rosidl_generator_c/cmake/../../../lib/rosidl_generator_c/rosidl_generator_c", line 34, in main
+[1.898s]     return generate_c(
+[1.898s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_generator_c/__init__.py", line 37, in generate_c
+[1.898s]     generate_files(
+[1.898s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 87, in generate_files
+[1.898s]     expand_template(
+[1.899s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 149, in expand_template
+[1.903s]     interpreter.string(template_content, template_path, locals=data)
+[1.903s]   File "/usr/lib/python3/dist-packages/em.py", line 2391, in string
+[1.903s] Traceback (most recent call last):
+[1.904s]   File "/opt/ros/foxy/share/rosidl_generator_cpp/cmake/../../../lib/rosidl_generator_cpp/rosidl_generator_cpp", line 40, in <module>
+[1.904s]     sys.exit(main())
+[1.904s]   File "/opt/ros/foxy/share/rosidl_generator_cpp/cmake/../../../lib/rosidl_generator_cpp/rosidl_generator_cpp", line 34, in main
+[1.905s]     return generate_cpp(
+[1.907s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_generator_cpp/__init__.py", line 38, in generate_cpp
+[1.908s]     self.safe(scanner, True, locals)
+[1.908s]   File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe
+[1.909s]     self.parse(scanner, locals)
+[1.910s]   File "/usr/lib/python3/dist-packages/em.py", line 2421, in parse
+[1.912s]     token.run(self, locals)
+[1.913s]     generate_files(
+[1.915s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 87, in generate_files
+[1.915s]     expand_template(
+[1.916s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 149, in expand_template
+[1.916s]     interpreter.string(template_content, template_path, locals=data)
+[1.916s]   File "/usr/lib/python3/dist-packages/em.py", line 2391, in string
+[1.917s]     self.safe(scanner, True, locals)
+[1.918s]   File "/usr/lib/python3/dist-packages/em.py", line 1547, in run
+[1.918s]     self.subrun(info[0][1], interpreter, locals)
+[1.919s]   File "/usr/lib/python3/dist-packages/em.py", line 1631, in subrun
+[1.919s]   File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe
+[1.922s]     self.parse(scanner, locals)
+[1.923s]     token.run(interpreter, locals)
+[1.923s]   File "/usr/lib/python3/dist-packages/em.py", line 1425, in run
+[1.924s]     interpreter.execute(self.code, locals)
+[1.925s]   File "/usr/lib/python3/dist-packages/em.py", line 2421, in parse
+[1.926s]   File "/usr/lib/python3/dist-packages/em.py", line 2595, in execute
+[1.927s]     token.run(self, locals)
+[1.927s]   File "/usr/lib/python3/dist-packages/em.py", line 1547, in run
+[1.929s]     self.subrun(info[0][1], interpreter, locals)
+[1.929s]     _exec(statements, self.globals, locals)
+[1.930s]   File "<string>", line 2, in <module>
+[1.932s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 198, in _expand_template
+[1.932s]   File "/usr/lib/python3/dist-packages/em.py", line 1631, in subrun
+[1.933s]     token.run(interpreter, locals)
+[1.937s]   File "/usr/lib/python3/dist-packages/em.py", line 1425, in run
+[1.937s]     interpreter.execute(self.code, locals)
+[1.938s]     interpreter.string(content, str(template_path), kwargs)
+[1.944s]   File "/usr/lib/python3/dist-packages/em.py", line 2391, in string
+[1.947s]     self.safe(scanner, True, locals)
+[1.951s]   File "/usr/lib/python3/dist-packages/em.py", line 2595, in execute
+[1.952s]     _exec(statements, self.globals, locals)
+[1.953s]   File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe
+[1.955s]     self.parse(scanner, locals)
+[1.958s]   File "<string>", line 2, in <module>
+[1.959s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 198, in _expand_template
+[1.962s]   File "/usr/lib/python3/dist-packages/em.py", line 2421, in parse
+[1.963s]     token.run(self, locals)
+[1.963s]     interpreter.string(content, str(template_path), kwargs)
+[1.968s]   File "/usr/lib/python3/dist-packages/em.py", line 2391, in string
+[1.969s]     self.safe(scanner, True, locals)
+[1.970s]   File "/usr/lib/python3/dist-packages/em.py", line 1526, in run
+[1.972s]     if interpreter.evaluate(secondary.rest, locals):
+[1.976s]   File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe
+[1.984s]     self.parse(scanner, locals)
+[1.984s]   File "/usr/lib/python3/dist-packages/em.py", line 2572, in evaluate
+[1.984s]   File "/usr/lib/python3/dist-packages/em.py", line 2421, in parse
+[1.985s]     result = eval(expression, self.globals, locals)
+[1.985s] KeyboardInterrupt
+[1.985s]     token.run(self, locals)
+[1.986s]   File "/usr/lib/python3/dist-packages/em.py", line 1425, in run
+[1.986s]     interpreter.execute(self.code, locals)
+[1.987s]   File "/usr/lib/python3/dist-packages/em.py", line 2595, in execute
+[1.989s]     _exec(statements, self.globals, locals)
+[1.991s]   File "<string>", line 2, in <module>
+[1.992s]   File "/opt/ros/foxy/lib/python3.8/site-packages/rosidl_cmake/__init__.py", line 198, in _expand_template
+[1.993s]     interpreter.string(content, str(template_path), kwargs)
+[1.995s]   File "/usr/lib/python3/dist-packages/em.py", line 2391, in string
+[1.996s]     self.safe(scanner, True, locals)
+[2.001s]   File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe
+[2.005s]     self.parse(scanner, locals)
+[2.005s]   File "/usr/lib/python3/dist-packages/em.py", line 2417, in parse
+[2.005s]     token = scanner.one()
+[2.006s]   File "/usr/lib/python3/dist-packages/em.py", line 1984, in one
+[2.006s]     token.scan(self)
+[2.006s]   File "/usr/lib/python3/dist-packages/em.py", line 1468, in scan
+[2.006s]     self.subscan(scanner, self.type)
+[2.006s]   File "/usr/lib/python3/dist-packages/em.py", line 1483, in subscan
+[2.006s]     token = scanner.one()
+[2.006s]   File "/usr/lib/python3/dist-packages/em.py", line 1984, in one
+[2.007s]     token.scan(self)
+[2.007s]   File "/usr/lib/python3/dist-packages/em.py", line 1468, in scan
+[2.014s]     self.subscan(scanner, self.type)
+[2.014s]   File "/usr/lib/python3/dist-packages/em.py", line 1483, in subscan
+[2.014s]     token = scanner.one()
+[2.014s]   File "/usr/lib/python3/dist-packages/em.py", line 1984, in one
+[2.015s]     token.scan(self)
+[2.015s]   File "/usr/lib/python3/dist-packages/em.py", line 1315, in scan
+[2.015s]     i = scanner.next('?', 0, q, True)
+[2.015s]   File "/usr/lib/python3/dist-packages/em.py", line 1836, in next
+[2.015s]     raise ParseError("expecting %s, not found" % target)
+[2.015s] KeyboardInterrupt
+[2.031s] Exception ignored in: <function Interpreter.__del__ at 0x7f646f63eb80>
+[2.031s] Traceback (most recent call last):
+[2.031s]   File "/usr/lib/python3/dist-packages/em.py", line 2094, in __del__
+[2.031s]   File "/usr/lib/python3/dist-packages/em.py", line 2157, in shutdown
+[2.032s]   File "/usr/lib/python3/dist-packages/em.py", line 2646, in finalize
+[2.032s]   File "/usr/lib/python3/dist-packages/em.py", line 2200, in push
+[2.032s] AttributeError: '_io.TextIOWrapper' object has no attribute 'push'
+[2.064s] Exception ignored in: <function Interpreter.__del__ at 0x7f51ec417c10>
+[2.064s] Traceback (most recent call last):
+[2.064s]   File "/usr/lib/python3/dist-packages/em.py", line 2094, in __del__
+[2.064s]   File "/usr/lib/python3/dist-packages/em.py", line 2157, in shutdown
+[2.064s]   File "/usr/lib/python3/dist-packages/em.py", line 2646, in finalize
+[2.064s]   File "/usr/lib/python3/dist-packages/em.py", line 2200, in push
+[2.064s] AttributeError: '_io.TextIOWrapper' object has no attribute 'push'
+[2.072s] make[2]: *** [CMakeFiles/realsense2_camera_msgs__rosidl_generator_c.dir/build.make:110: rosidl_generator_c/realsense2_camera_msgs/msg/imu_info.h] Interrupt
+[2.072s] make[1]: *** [CMakeFiles/Makefile2:441: CMakeFiles/realsense2_camera_msgs__rosidl_generator_c.dir/all] Interrupt
+[2.091s] make[2]: *** [CMakeFiles/realsense2_camera_msgs__cpp.dir/build.make:126: rosidl_generator_cpp/realsense2_camera_msgs/msg/imu_info.hpp] Interrupt
+[2.091s] make[1]: *** [CMakeFiles/Makefile2:496: CMakeFiles/realsense2_camera_msgs__cpp.dir/all] Interrupt
+[2.092s] make: *** [Makefile:141: all] Interrupt

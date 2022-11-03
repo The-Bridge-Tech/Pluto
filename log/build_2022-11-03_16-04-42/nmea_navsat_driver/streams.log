@@ -1,0 +1,35 @@
+[0.398s] Invoking command in '/home/bridgetech/ros2_ws/src/Pluto/build/nmea_navsat_driver': /usr/bin/cmake /home/bridgetech/ros2_ws/src/Pluto/nmea_navsat_driver -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/bridgetech/ros2_ws/src/Pluto/install/nmea_navsat_driver
+[0.557s] -- The C compiler identification is GNU 9.4.0
+[0.679s] -- The CXX compiler identification is GNU 9.4.0
+[0.690s] -- Check for working C compiler: /usr/bin/cc
+[0.814s] -- Check for working C compiler: /usr/bin/cc -- works
+[0.815s] -- Detecting C compiler ABI info
+[1.025s] -- Detecting C compiler ABI info - done
+[1.052s] -- Detecting C compile features
+[1.053s] -- Detecting C compile features - done
+[1.066s] -- Check for working CXX compiler: /usr/bin/c++
+[1.420s] -- Check for working CXX compiler: /usr/bin/c++ -- works
+[1.422s] -- Detecting CXX compiler ABI info
+[1.633s] -- Detecting CXX compiler ABI info - done
+[1.661s] -- Detecting CXX compile features
+[1.663s] -- Detecting CXX compile features - done
+[2.047s] CMake Error at CMakeLists.txt:5 (find_package):
+[2.047s]   By not providing "Findcatkin.cmake" in CMAKE_MODULE_PATH this project has
+[2.047s]   asked CMake to find a package configuration file provided by "catkin", but
+[2.047s]   CMake did not find one.
+[2.047s] 
+[2.047s]   Could not find a package configuration file provided by "catkin" with any
+[2.047s]   of the following names:
+[2.047s] 
+[2.047s]     catkinConfig.cmake
+[2.048s]     catkin-config.cmake
+[2.048s] 
+[2.048s]   Add the installation prefix of "catkin" to CMAKE_PREFIX_PATH or set
+[2.048s]   "catkin_DIR" to a directory containing one of the above files.  If "catkin"
+[2.048s]   provides a separate development package or SDK, be sure it has been
+[2.048s]   installed.
+[2.048s] 
+[2.048s] 
+[2.048s] -- Configuring incomplete, errors occurred!
+[2.048s] See also "/home/bridgetech/ros2_ws/src/Pluto/build/nmea_navsat_driver/CMakeFiles/CMakeOutput.log".
+[2.061s] Invoked command in '/home/bridgetech/ros2_ws/src/Pluto/build/nmea_navsat_driver' returned '1': /usr/bin/cmake /home/bridgetech/ros2_ws/src/Pluto/nmea_navsat_driver -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/bridgetech/ros2_ws/src/Pluto/install/nmea_navsat_driver
