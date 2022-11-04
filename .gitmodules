@@ -9,3 +9,7 @@
 	path = imu_tools
 	url = https://github.com/CCNYRoboticsLab/imu_tools.git
 	branch = foxy
+[submodule "phidgets_drivers"]
+	path = phidgets_drivers
+	url = https://github.com/ros-drivers/phidgets_drivers.git
+	branch = foxy
