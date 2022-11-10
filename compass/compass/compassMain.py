@@ -1,8 +1,8 @@
 
-from Phidget22.Phidget import *
-from Phidget22.Devices.Accelerometer import *
-from Phidget22.Devices.Gyroscope import *
-from Phidget22.Devices.Magnetometer import *
+# from Phidget22.Phidget import *
+# from Phidget22.Devices.Accelerometer import *
+# from Phidget22.Devices.Gyroscope import *
+# from Phidget22.Devices.Magnetometer import *
 import rclpy
 from rclpy.node import Node
 
@@ -119,7 +119,7 @@ class CompassPublisher(Node):
         
         self.imu_listener = self.create_subscription(
             Imu,
-            'topic',
+            'imu/data',
             self.convert_quaternion_to_euler_angle,
             10)
 

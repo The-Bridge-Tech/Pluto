@@ -12,12 +12,12 @@ def generate_launch_description():
 
     spatial_launch = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('pluto_launch'), 'launch'),
+         get_package_share_directory('pluto_launch'), ),
          '/spatial-launch.py'])
       )
     imu_tool = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('pluto_launch'), 'launch'),
+         get_package_share_directory('pluto_launch'), ),
          '/imu_filter.launch.py'])
       )
     
