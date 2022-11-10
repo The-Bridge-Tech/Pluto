@@ -21,7 +21,11 @@ import launch_ros.actions
 from ament_index_python.packages import get_package_share_directory
 from pathlib import Path
 
-controller_node_config =os.path.join( os.getcwd(), "src", "controller", "config", "ServoAndSpeed.yaml")
+controller_node_config = os.path.join(
+      get_package_share_directory('pluto_launch'),
+      'config',
+      'ServoAndSpeed.yaml'
+      )
 def generate_launch_description():
     
     return LaunchDescription([
@@ -32,5 +36,10 @@ def generate_launch_description():
             name='controller',
             parameters=[controller_node_config]
             ),
-        
+        launch_ros.actions.Node(
+            package='controller',
+            executable='joystickInterpreter', 
+            name='joystickInterpreter',
+            parameters=[controller_node_config]
+        )
     ])

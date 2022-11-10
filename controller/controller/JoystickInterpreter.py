@@ -8,11 +8,12 @@ from geometry_msgs.msg import Twist
 from .HelpFunction import  calculate_velocity_from_pwm
 
 
-from .ControllerNode import LEFT_NEUTRAL, RIGHT_NEUTRAL, RIGHT_MAX, LEFT_MAX, LEFT_MIN, RIGHT_MIN,WHEEL_RADIUS, WHEEL_SEPARATION, KNOW_VELOCITY, KNOW_PWM_RIGHT, KNOW_PWM_LEFT
+#from .ControllerNode import LEFT_NEUTRAL, RIGHT_NEUTRAL, RIGHT_MAX, LEFT_MAX, LEFT_MIN, RIGHT_MIN,WHEEL_RADIUS, WHEEL_SEPARATION, KNOW_VELOCITY, KNOW_PWM_RIGHT, KNOW_PWM_LEFT
 #The joystick_interpret has two mode
 # Mode 1: listen to 
     # axis 1 (for left wheel)
     # axis 4 (for right wheel)
+# Mode 2:
     
     
     
@@ -24,29 +25,17 @@ from .ControllerNode import LEFT_NEUTRAL, RIGHT_NEUTRAL, RIGHT_MAX, LEFT_MAX, LE
 
 # settings from teleop_twist
 #TODO: change later
-MAX_X_VELOCITY = 0.7
-MAX_YAW_VELOCITY = 0.4
-MAX_ALLOWED_X_VELOCITY = 5
-MAX_ALLOWED_YAW_VELOCITY = 0.5
+
 
 class JoystickInterpreter(Node):
     
-    def __init__(self, mode:int, left_neutral:int, right_neutral:int, left_max, left_min, right_max, right_min, wheel_radius, wheel_separation, know_velocity, know_left_pwm, know_right_pwm) -> None:
+    def __init__(self, mode:int) -> None:
         super().__init__("joystick_interpreter")
         self.mode  = mode
-        self.left_neutral = left_neutral
-        self.right_neutral = right_neutral
-        self.left_max = left_max
-        self.left_min = left_min
-        self.right_max = right_max
-        self.right_min = right_min
-        self.wheel_radius = wheel_radius
-        self.whee_separation = wheel_separation
-        self.known_velocity = know_velocity
-        self.know_left_pwm = know_left_pwm
-        self.know_right_pwm = know_right_pwm
-        
-        
+
+        self.define_parameters()
+            # call parameters 
+
         self.last_joy_message = Joy()
         self.last_cmd_vel_joy_message = Twist()
 
@@ -68,13 +57,39 @@ class JoystickInterpreter(Node):
             self.cmd_joy_subscription = self.create_subscription(
                 Twist,
             'cmd_vel_joy',
-            self._interpret_mode_two,
+            self.cmd_vel_joy_listerner,
             10)
-   
+
 
         else:
-            raise ValueError("Unknown modem in joystick_interpret")
-    
+            raise ValueError("Unknown mode in joystick_interpret")
+        
+        self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
+        self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
+        self.RIGHT_MAX = self.get_parameter("RIGHT_MAX").get_parameter_value().integer_value
+        self.LEFT_MAX = self.get_parameter("LEFT_MAX").get_parameter_value().integer_value
+        self.RIGHT_MIN = self.get_parameter("RIGHT_MIN").get_parameter_value().integer_value
+        self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
+        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().integer_value
+        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().integer_value
+        self.KNOW_VELOCITY = self.get_parameter("KNOW_VELOCITY").get_parameter_value().integer_value
+        self.KNOW_PWM_LEFT = self.get_parameter("KNOW_PWM_LEFT").get_parameter_value().integer_value
+        self.KNOW_PWM_RIGHT = self.get_parameter("KNOW_PWM_RIGHT").get_parameter_value().integer_value
+        
+        
+        
+    def define_parameters(self)->None:
+        self.declare_parameter('LEFT_NEUTRAL', 0)
+        self.declare_parameter('RIGHT_NEUTRAL',0)
+        self.declare_parameter('RIGHT_MAX', 0)
+        self.declare_parameter('LEFT_MAX',0)
+        self.declare_parameter('RIGHT_MIN',0)
+        self.declare_parameter('LEFT_MIN',0)
+        self.declare_parameter('WHEEL_RADIUS',10)
+        self.declare_parameter('WHEEL_SEPARATION',20)
+        self.declare_parameter('KNOW_VELOCITY',1)
+        self.declare_parameter('KNOW_PWM_LEFT',4600)
+        self.declare_parameter('KNOW_PWM_RIGHT', 7000)
     
     def calculate_pwm_from_axis(self, axis: float, neutral, min, max):
         if axis == 0:
@@ -92,15 +107,21 @@ class JoystickInterpreter(Node):
         self.last_joy_message = message
         
     def cmd_vel_joy_listerner(self, message:Twist) -> None:
+        x =  self.last_twist_message.linear.x
+        yaw = self.last_twist_message.angular.z
+        self.get_logger().info("Publish " + str(x) + " and " + str(yaw))
         self.last_cmd_vel_joy_message = message
             
-    
+        # x =  self.last_twist_message.linear.x
+        # yaw = self.last_twist_message.angular.z
+        # print(x, yaw)
+        
     def interpret_message(self):
         if self.mode == 1:
             self._interpret_mode_one(self.last_joy_message)
         elif self.mode == 2:
-            self._interpret_mode_two(self.last_cmd_vel_joy_message, self.last_joy_message)
-    def _interpret_mode_two(self, last_twist_message:Twist, last_joy_message:Joy) -> None:
+            self._interpret_mode_two(self.last_cmd_vel_joy_message)
+    def _interpret_mode_two(self, last_twist_message:Twist) -> None:
         # as of right now, just publish what we heard
         
         # final_velocity_x = (last_twist_message.linear.x/ MAX_X_VELOCITY) * (last_joy_message.axes[4]/ MAX_ALLOWED_X_VELOCITY)
@@ -108,7 +129,11 @@ class JoystickInterpreter(Node):
         
         # self.twist_msg.linear.x = final_velocity_x
         # self.twist_msg.angular.z = final_velocity_yaw
-        self.cmd_vel_publisher.publish(last_twist_message)
+        # x =  last_twist_message.linear.x
+        # yaw = last_twist_message.angular.z
+        # self.get_logger().info("Publish " + str(x) + " and " + str(yaw))
+        self.twist_msg = last_twist_message
+        self.cmd_vel_publisher.publish(self.twist_msg)
         
     def _interpret_mode_one(self, message: Joy)->None:
              
@@ -118,21 +143,21 @@ class JoystickInterpreter(Node):
         left_axis_value = message.axes[1]   
         right_axis_value = message.axes[4]
         print(left_axis_value, right_axis_value)
-        left_pwm = self.calculate_pwm_from_axis(left_axis_value, self.left_neutral, self.left_min, self.left_max)
-        right_pwm = self.calculate_pwm_from_axis(right_axis_value, self.right_neutral, self.right_min, self.right_max)
+        left_pwm = self.calculate_pwm_from_axis(left_axis_value, self.LEFT_NEUTRAL, self.LEFT_MIN, self.LEFT_MAX)
+        right_pwm = self.calculate_pwm_from_axis(right_axis_value, self.RIGHT_NEUTRAL, self.RIGHT_MIN, self.RIGHT_MAX)
         
         print("left pwm " + str(left_pwm))
         print("right pwm" + str(right_pwm))
         
         # then conver to standard cmd_vel message
-        left_velocity =  calculate_velocity_from_pwm(left_pwm, self.known_velocity, self.know_left_pwm)
-        right_velocity =  calculate_velocity_from_pwm(right_pwm, self.known_velocity, self.know_right_pwm)
+        left_velocity =  calculate_velocity_from_pwm(left_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT)
+        right_velocity =  calculate_velocity_from_pwm(right_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT)
         
         print("Velocity left" + str(left_velocity))
         print("Velocity right" + str(right_velocity))
         
-        velocity_x = ( self.wheel_radius*left_velocity) + (self.wheel_radius*right_velocity - self.wheel_radius*left_velocity)/2
-        velocity_yaw = (right_velocity*self.wheel_radius - left_velocity*self.wheel_radius) / self.whee_separation
+        velocity_x = ( self.WHEEL_RADIUS*left_velocity) + (self.WHEEL_RADIUS*right_velocity - self.WHEEL_RADIUS*left_velocity)/2
+        velocity_yaw = (right_velocity*self.WHEEL_RADIUS - left_velocity*self.WHEEL_RADIUS) / self.WHEEL_SEPARATION
         
 
         
@@ -149,13 +174,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     #TODO: modify later, right now is in mode 1
-    joy_interpreter = JoystickInterpreter(mode=1, 
-                                          left_neutral=LEFT_NEUTRAL, right_neutral=RIGHT_NEUTRAL, 
-                                          left_max=LEFT_MAX, left_min=LEFT_MIN, 
-                                          right_max=RIGHT_MAX, right_min=RIGHT_MIN, 
-                                          wheel_radius=WHEEL_RADIUS, wheel_separation=WHEEL_SEPARATION, 
-                                          know_velocity=KNOW_VELOCITY, know_left_pwm=KNOW_PWM_LEFT,
-                                          know_right_pwm=KNOW_PWM_RIGHT)
+    joy_interpreter = JoystickInterpreter(mode=2)
 
     rclpy.spin(joy_interpreter)
   

@@ -4,22 +4,22 @@ from rclpy.node import Node
 from std_msgs.msg import UInt32
 from geometry_msgs.msg import Twist
 
-# #initial state
-LEFT_NEUTRAL = 4555
-RIGHT_NEUTRAL = 6955
-RIGHT_MAX = 1000+RIGHT_NEUTRAL
-LEFT_MAX = 1000 + LEFT_NEUTRAL
-RIGHT_MIN = -1000 + RIGHT_NEUTRAL
-LEFT_MIN = -1000 + LEFT_NEUTRAL
+# # #initial state
+# LEFT_NEUTRAL = 4555
+# RIGHT_NEUTRAL = 6955
+# RIGHT_MAX = 1000+RIGHT_NEUTRAL
+# LEFT_MAX = 1000 + LEFT_NEUTRAL
+# RIGHT_MIN = -1000 + RIGHT_NEUTRAL
+# LEFT_MIN = -1000 + LEFT_NEUTRAL
 
-#TODO: need measurement
-WHEEL_RADIUS = 10 #In meters
-WHEEL_SEPARATION = 20# In meters
+# #TODO: need measurement
+# WHEEL_RADIUS = 10 #In meters
+# WHEEL_SEPARATION = 20# In meters
 
-# define a ration of pwm and velocity
-KNOW_VELOCITY = 1
-KNOW_PWM_LEFT = 4600
-KNOW_PWM_RIGHT = 7000
+# # define a ration of pwm and velocity
+# KNOW_VELOCITY = 1
+# KNOW_PWM_LEFT = 4600
+# KNOW_PWM_RIGHT = 7000
 
 
 
@@ -147,14 +147,14 @@ class ControllerNode(Node):
         Publish pwm value to '/steering_right'
         """
         self.right_server_publisher.publish(self.new_right_pwm)
-        self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
+        #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
     
     def left_servero_time_callback(self):
         """
         Publish pwm value to '/steering_left'
         """
         self.left_server_publisher.publish(self.new_left_pwm)
-        self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
+        #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
 
 
 def main(args=None):

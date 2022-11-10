@@ -13,7 +13,11 @@ import launch
 import launch_ros.actions
 
 
-launch_file_path = os.path.join( os.getcwd(), "src", "joystick_launch", "config", "xbox.config.yaml")
+launch_file_path = os.path.join(
+      get_package_share_directory('pluto_launch'),
+      'config',
+      'xbox.config.yaml'
+      )
 print(launch_file_path)
 def generate_launch_description():
     joy_config = launch.substitutions.LaunchConfiguration('joy_config')
@@ -28,9 +32,7 @@ def generate_launch_description():
         #     launch.substitutions.TextSubstitution(text=os.path.join(
         #         get_package_share_directory('teleop_twist_joy'), 'config', '')),
         #     joy_config, launch.substitutions.TextSubstitution(text='.config.yaml')]),
-        launch.actions.DeclareLaunchArgument('config_filepath', default_value=[
-            launch.substitutions.TextSubstitution(text=os.path.join( os.getcwd(), "src", "joystick_launch","config", "")),
-            joy_config, launch.substitutions.TextSubstitution(text='.config.yaml')]),
+        launch.actions.DeclareLaunchArgument('config_filepath', default_value=[launch_file_path]),
 
         launch_ros.actions.Node(
             package='joy_linux', executable='joy_linux_node', name='joy_linux_node',
