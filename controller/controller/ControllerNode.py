@@ -3,7 +3,7 @@ from rclpy.node import Node
 
 from std_msgs.msg import UInt32
 from geometry_msgs.msg import Twist
-
+from .HelpFunction import calculate_pwm_from_velocity, convert_negative_pwm_to_positive_pwm_value
 # # #initial state
 # LEFT_NEUTRAL = 4555
 # RIGHT_NEUTRAL = 6955
@@ -118,13 +118,26 @@ class ControllerNode(Node):
         velocity_x = message.linear.x
         velocity_yaw = message.angular.z
         
+        #self.get_logger().info("Publish " + str(velocity_x) + " and " + str(velocity_yaw))
+        
         wheel_speed_left = ((velocity_x-(velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
         wheel_speed_right = ((velocity_x + (velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
         
+        
+        #self.get_logger().info("Left speed " + str(wheel_speed_left) + " and  Right speed" + str(wheel_speed_right))
         # Now, convert them to pwm values
         # since the servo is in linear. We assume that we are also in linear ratio.
-        self.new_left_pwm.data = int(self.calculate_pwm_from_velocity(wheel_speed_left, True))
-        self.new_right_pwm.data = int(self.calculate_pwm_from_velocity(wheel_speed_right, False))
+        
+        temp_left_pwm =  int(calculate_pwm_from_velocity(wheel_speed_left, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT)) 
+        temp_right_pwm =  int(calculate_pwm_from_velocity(wheel_speed_right, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT)) 
+        
+        
+        #self.get_logger().info("Left pwm " + str(temp_left_pwm) + " and  Right pwm" + str(temp_right_pwm))
+        self.new_left_pwm.data =  convert_negative_pwm_to_positive_pwm_value(self.LEFT_MAX, self.LEFT_NEUTRAL, self.LEFT_MIN, temp_left_pwm)
+        
+        #int(self.calculate_pwm_from_velocity(wheel_speed_left, True))
+        self.new_right_pwm.data = convert_negative_pwm_to_positive_pwm_value(self.RIGHT_MAX, self.RIGHT_NEUTRAL, self.RIGHT_MIN, temp_right_pwm)
+        #int(self.calculate_pwm_from_velocity(wheel_speed_right, False))
         
         if self.new_left_pwm.data > self.LEFT_MAX:
             self.new_left_pwm.data = self.LEFT_MAX
@@ -147,14 +160,14 @@ class ControllerNode(Node):
         Publish pwm value to '/steering_right'
         """
         self.right_server_publisher.publish(self.new_right_pwm)
-        #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
+        self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
     
     def left_servero_time_callback(self):
         """
         Publish pwm value to '/steering_left'
         """
         self.left_server_publisher.publish(self.new_left_pwm)
-        #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
+        self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
 
 
 def main(args=None):

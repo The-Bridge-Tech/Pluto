@@ -107,9 +107,9 @@ class JoystickInterpreter(Node):
         self.last_joy_message = message
         
     def cmd_vel_joy_listerner(self, message:Twist) -> None:
-        x =  self.last_twist_message.linear.x
-        yaw = self.last_twist_message.angular.z
-        self.get_logger().info("Publish " + str(x) + " and " + str(yaw))
+        # x =  self.last_twist_message.linear.x
+        # yaw = self.last_twist_message.angular.z
+        #self.get_logger().info("Publish " + str(x) + " and " + str(yaw))
         self.last_cmd_vel_joy_message = message
             
         # x =  self.last_twist_message.linear.x
