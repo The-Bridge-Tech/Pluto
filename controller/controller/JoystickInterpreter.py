@@ -150,8 +150,8 @@ class JoystickInterpreter(Node):
         print("right pwm" + str(right_pwm))
         
         # then conver to standard cmd_vel message
-        left_velocity =  calculate_velocity_from_pwm(left_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT)
-        right_velocity =  calculate_velocity_from_pwm(right_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT)
+        left_velocity =  calculate_velocity_from_pwm(left_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT, self.LEFT_MAX, self.LEFT_NEUTRAL, self.LEFT_MIN)
+        right_velocity =  calculate_velocity_from_pwm(right_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT,self.RIGHT_MAX, self.RIGHT_NEUTRAL, self.RIGHT_MIN)
         
         print("Velocity left" + str(left_velocity))
         print("Velocity right" + str(right_velocity))
@@ -174,7 +174,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     #TODO: modify later, right now is in mode 1
-    joy_interpreter = JoystickInterpreter(mode=2)
+    joy_interpreter = JoystickInterpreter(mode=1)
 
     rclpy.spin(joy_interpreter)
   
