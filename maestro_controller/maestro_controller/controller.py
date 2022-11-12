@@ -52,12 +52,12 @@ class MaestroController(Node):
     def listen_left(self, left_pwm: UInt32):
         # listen for left motor's pwm
 
-        self.servo_controller.setTarget(0, left_pwm.data)
+        self.servo_controller.setTarget(0, 4*left_pwm.data)
     
     def listen_right(self, right_pwm: UInt32):
         # listen for right motor's pwm
 
-        self.servo_controller.setTarget(1, right_pwm.data)
+        self.servo_controller.setTarget(1, 4*right_pwm.data)
             
     def convert_twist_to_wheel_velocity(self, goal_speed:Twist) -> Tuple[float, float]:
         vel_l = ((goal_speed.linear.x - (goal_speed.angular.z * self.wheel_bias / 2.0)) / self.wheel_radius) * 60/(2*3.14159)
