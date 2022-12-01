@@ -5,11 +5,11 @@
 [submodule "phidgets_drivers"]
 	path = phidgets_drivers
 	url = https://github.com/ros-drivers/phidgets_drivers.git
-	branch = foxy
+	branch = galactic
 [submodule "imu_tools"]
 	path = imu_tools
 	url = https://github.com/CCNYRoboticsLab/imu_tools
-	branch = foxy
+	branch = galactic
 [submodule "nmea_navsat_driver"]
 	path = nmea_navsat_driver
 	url = https://github.com/ros-drivers/nmea_navsat_driver.git
