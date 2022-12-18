@@ -5,7 +5,7 @@ from rclpy.node import Node
 
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
-from .HelpFunction import  calculate_velocity_from_pwm
+from .HelpFunction import  calculate_velocity_from_pwm2
 
 
 #from .ControllerNode import LEFT_NEUTRAL, RIGHT_NEUTRAL, RIGHT_MAX, LEFT_MAX, LEFT_MIN, RIGHT_MIN,WHEEL_RADIUS, WHEEL_SEPARATION, KNOW_VELOCITY, KNOW_PWM_RIGHT, KNOW_PWM_LEFT
@@ -70,11 +70,13 @@ class JoystickInterpreter(Node):
         self.LEFT_MAX = self.get_parameter("LEFT_MAX").get_parameter_value().integer_value
         self.RIGHT_MIN = self.get_parameter("RIGHT_MIN").get_parameter_value().integer_value
         self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
-        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().integer_value
-        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().integer_value
-        self.KNOW_VELOCITY = self.get_parameter("KNOW_VELOCITY").get_parameter_value().integer_value
-        self.KNOW_PWM_LEFT = self.get_parameter("KNOW_PWM_LEFT").get_parameter_value().integer_value
-        self.KNOW_PWM_RIGHT = self.get_parameter("KNOW_PWM_RIGHT").get_parameter_value().integer_value
+        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().double_value
+        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().double_value
+        
+        self.KNOW_LEFT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_RIGHT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_LEFT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_FORWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
         
         
         
@@ -85,12 +87,13 @@ class JoystickInterpreter(Node):
         self.declare_parameter('LEFT_MAX',0)
         self.declare_parameter('RIGHT_MIN',0)
         self.declare_parameter('LEFT_MIN',0)
-        self.declare_parameter('WHEEL_RADIUS',10)
-        self.declare_parameter('WHEEL_SEPARATION',20)
-        self.declare_parameter('KNOW_VELOCITY',1)
-        self.declare_parameter('KNOW_PWM_LEFT',4600)
-        self.declare_parameter('KNOW_PWM_RIGHT', 7000)
-    
+        self.declare_parameter('WHEEL_RADIUS',0.4318)
+        self.declare_parameter('WHEEL_SEPARATION',0.889)
+        self.declare_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED', -1.31065)
+        self.declare_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED', -1.0847)
+        self.declare_parameter('KNOW_LEFT_FULL_FORWARD_SPEED',1.514 )
+        self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
+
     def calculate_pwm_from_axis(self, axis: float, neutral, min, max):
         if axis == 0:
             return neutral
@@ -146,15 +149,21 @@ class JoystickInterpreter(Node):
         left_pwm = self.calculate_pwm_from_axis(left_axis_value, self.LEFT_NEUTRAL, self.LEFT_MIN, self.LEFT_MAX)
         right_pwm = self.calculate_pwm_from_axis(right_axis_value, self.RIGHT_NEUTRAL, self.RIGHT_MIN, self.RIGHT_MAX)
         
-        print("left pwm " + str(left_pwm))
-        print("right pwm" + str(right_pwm))
+        # self.get_logger().info('left pwm: ' + str(left_pwm))
+        # self.get_logger().info('left forward: ' + str(self.KNOW_LEFT_FULL_FORWARD_SPEED))
+        # self.get_logger().info('right forward: ' + str(self.KNOW_RIGHT_FULL_FORWARD_SPEED))
+        # self.get_logger().info('left backward: ' + str(self.KNOW_LEFT_FULL_FORWARD_SPEED))
+        # self.get_logger().info('right backward: ' + str(self.KNOW_RIGHT_FULL_BACKWARD_SPEED))
         
         # then conver to standard cmd_vel message
-        left_velocity =  calculate_velocity_from_pwm(left_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT, self.LEFT_MAX, self.LEFT_NEUTRAL, self.LEFT_MIN)
-        right_velocity =  calculate_velocity_from_pwm(right_pwm, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT,self.RIGHT_MAX, self.RIGHT_NEUTRAL, self.RIGHT_MIN)
+        left_velocity =  calculate_velocity_from_pwm2(left_pwm,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
+        right_velocity =  calculate_velocity_from_pwm2(right_pwm,self.KNOW_RIGHT_FULL_FORWARD_SPEED, self.KNOW_RIGHT_FULL_BACKWARD_SPEED, self.RIGHT_MAX, self.RIGHT_MIN, self.RIGHT_NEUTRAL)
         
-        print("Velocity left" + str(left_velocity))
-        print("Velocity right" + str(right_velocity))
+        
+        # self.get_logger().info('left velocity: ' + str(left_velocity))
+
+        # print("Velocity left" + str(left_velocity))
+        # print("Velocity right" + str(right_velocity))
         
         velocity_x = ( self.WHEEL_RADIUS*left_velocity) + (self.WHEEL_RADIUS*right_velocity - self.WHEEL_RADIUS*left_velocity)/2
         velocity_yaw = (right_velocity*self.WHEEL_RADIUS - left_velocity*self.WHEEL_RADIUS) / self.WHEEL_SEPARATION
@@ -174,7 +183,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     #TODO: modify later, right now is in mode 1
-    joy_interpreter = JoystickInterpreter(mode=1)
+    joy_interpreter = JoystickInterpreter(mode=2)
 
     rclpy.spin(joy_interpreter)
   

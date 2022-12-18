@@ -3,7 +3,7 @@ from rclpy.node import Node
 
 from std_msgs.msg import UInt32
 from geometry_msgs.msg import Twist
-from .HelpFunction import calculate_pwm_from_velocity, convert_negative_pwm_to_positive_pwm_value
+from .HelpFunction import calculate_pwm_from_velocity2
 # # #initial state
 # LEFT_NEUTRAL = 4555
 # RIGHT_NEUTRAL = 6955
@@ -51,12 +51,23 @@ class ControllerNode(Node):
         self.LEFT_MAX = self.get_parameter("LEFT_MAX").get_parameter_value().integer_value
         self.RIGHT_MIN = self.get_parameter("RIGHT_MIN").get_parameter_value().integer_value
         self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
-        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().integer_value
-        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().integer_value
-        self.KNOW_VELOCITY = self.get_parameter("KNOW_VELOCITY").get_parameter_value().integer_value
-        self.KNOW_PWM_LEFT = self.get_parameter("KNOW_PWM_LEFT").get_parameter_value().integer_value
-        self.KNOW_PWM_RIGHT = self.get_parameter("KNOW_PWM_RIGHT").get_parameter_value().integer_value
+        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().double_value
+        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().double_value
+        # self.KNOW_VELOCITY = self.get_parameter("KNOW_VELOCITY").get_parameter_value().integer_value
+        # self.KNOW_PWM_LEFT = self.get_parameter("KNOW_PWM_LEFT").get_parameter_value().integer_value
+        # self.KNOW_PWM_RIGHT = self.get_parameter("KNOW_PWM_RIGHT").get_parameter_value().integer_value
         
+        
+        self.KNOW_LEFT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_RIGHT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_LEFT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_FORWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
+        
+        
+        # self.KNOW_LEFT_FULL_BACKWARD_SPEED =  -1.31065
+        # self.KNOW_RIGHT_FULL_BACKWARD_SPEED = -1.0847
+        # self.KNOW_LEFT_FULL_FORWARD_SPEED = 1.514
+        # self.KNOW_RIGHT_FULL_FORWARD_SPEED = 1.5366 
         # set the servo to neutral at startup
         self.new_left_pwm.data = self.LEFT_NEUTRAL
         self.new_right_pwm.data = self.RIGHT_NEUTRAL
@@ -74,36 +85,40 @@ class ControllerNode(Node):
         self.declare_parameter('LEFT_MAX',0)
         self.declare_parameter('RIGHT_MIN',0)
         self.declare_parameter('LEFT_MIN',0)
-        self.declare_parameter('WHEEL_RADIUS',10)
-        self.declare_parameter('WHEEL_SEPARATION',20)
-        self.declare_parameter('KNOW_VELOCITY',1)
-        self.declare_parameter('KNOW_PWM_LEFT',4600)
-        self.declare_parameter('KNOW_PWM_RIGHT', 7000)
+        self.declare_parameter('WHEEL_RADIUS',0.4318)
+        self.declare_parameter('WHEEL_SEPARATION',0.889)
+        # self.declare_parameter('KNOW_VELOCITY',1)
+        # self.declare_parameter('KNOW_PWM_LEFT',4600)
+        # self.declare_parameter('KNOW_PWM_RIGHT', 7000)
+        self.declare_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED', -1.31065)
+        self.declare_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED', -1.0847)
+        self.declare_parameter('KNOW_LEFT_FULL_FORWARD_SPEED',1.514 )
+        self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
 
     
-    def calculate_pwm_from_velocity(self, goal_velocity:int, is_left:bool)-> float:
-        # we assume that the servo is linear
-        """
-        calculate servo's pwm base on given velocity
+    # def calculate_pwm_from_velocity(self, goal_velocity:int, is_left:bool)-> float:
+    #     # we assume that the servo is linear
+    #     """
+    #     calculate servo's pwm base on given velocity
 
-        Equations:
+    #     Equations:
         
-        known velocity        goal velocity
-        ---------------   ==  ----------------
-        know pwm value        goal pwm value
+    #     known velocity        goal velocity
+    #     ---------------   ==  ----------------
+    #     know pwm value        goal pwm value
         
-        Parameters
-        ----------
-        goal_velocity : int
+    #     Parameters
+    #     ----------
+    #     goal_velocity : int
         
-        Returns
-        -------
-        int
-        """ 
-        if is_left:
-            return (goal_velocity * self.KNOW_PWM_LEFT) / self.KNOW_VELOCITY
-        else:
-            return (goal_velocity * self.KNOW_PWM_RIGHT) / self.KNOW_VELOCITY
+    #     Returns
+    #     -------
+    #     int
+    #     """ 
+    #     if is_left:
+    #         return (goal_velocity * self.KNOW_PWM_LEFT) / self.KNOW_VELOCITY
+    #     else:
+    #         return (goal_velocity * self.KNOW_PWM_RIGHT) / self.KNOW_VELOCITY
     def listen_cmd_vel_callback(self, message:Twist):
         # do math to update the pwm
         
@@ -118,27 +133,42 @@ class ControllerNode(Node):
         velocity_x = message.linear.x
         velocity_yaw = message.angular.z
         
+        # self.get_logger().info("velocity_x" + str(velocity_x))
+        # self.get_logger().info("velocity_yaw" + str(velocity_yaw))
+        
         #self.get_logger().info("Publish " + str(velocity_x) + " and " + str(velocity_yaw))
         
-        wheel_speed_left = ((velocity_x-(velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
-        wheel_speed_right = ((velocity_x + (velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
+        # wheel_speed_left = ((velocity_x-(velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
+        # wheel_speed_right = ((velocity_x + (velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
+        
+        # https://navigation.ros.org/setup_guides/odom/setup_odom.html
+        wheel_speed_left = (2*velocity_x - velocity_yaw*self.WHEEL_SEPARATION)/2
+        wheel_speed_right = 2*velocity_x -wheel_speed_left
+        
+        # self.get_logger().info("wheel_speed_left" + str(wheel_speed_left))
+        # self.get_logger().info("wheel_speed_right" + str(wheel_speed_right))
         
         
         #self.get_logger().info("Left speed " + str(wheel_speed_left) + " and  Right speed" + str(wheel_speed_right))
         # Now, convert them to pwm values
         # since the servo is in linear. We assume that we are also in linear ratio.
         
-        temp_left_pwm =  int(calculate_pwm_from_velocity(wheel_speed_left, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT)) 
-        temp_right_pwm =  int(calculate_pwm_from_velocity(wheel_speed_right, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT)) 
+        # temp_left_pwm =  int(calculate_pwm_from_velocity(wheel_speed_left, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT)) 
+        # temp_right_pwm =  int(calculate_pwm_from_velocity(wheel_speed_right, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT)) 
         
         
-        #self.get_logger().info("Left pwm " + str(temp_left_pwm) + " and  Right pwm" + str(temp_right_pwm))
-        self.new_left_pwm.data =  convert_negative_pwm_to_positive_pwm_value(self.LEFT_MAX, self.LEFT_NEUTRAL, self.LEFT_MIN, temp_left_pwm)
+        # #self.get_logger().info("Left pwm " + str(temp_left_pwm) + " and  Right pwm" + str(temp_right_pwm))
+        # self.new_left_pwm.data =  convert_negative_pwm_to_positive_pwm_value(self.LEFT_MAX, self.LEFT_NEUTRAL, self.LEFT_MIN, temp_left_pwm)
         
-        #int(self.calculate_pwm_from_velocity(wheel_speed_left, True))
-        self.new_right_pwm.data = convert_negative_pwm_to_positive_pwm_value(self.RIGHT_MAX, self.RIGHT_NEUTRAL, self.RIGHT_MIN, temp_right_pwm)
-        #int(self.calculate_pwm_from_velocity(wheel_speed_right, False))
+        # #int(self.calculate_pwm_from_velocity(wheel_speed_left, True))
+        # self.new_right_pwm.data = convert_negative_pwm_to_positive_pwm_value(self.RIGHT_MAX, self.RIGHT_NEUTRAL, self.RIGHT_MIN, temp_right_pwm)
+        # #int(self.calculate_pwm_from_velocity(wheel_speed_right, False))
         
+        
+        self.new_left_pwm.data =  int(calculate_pwm_from_velocity2(wheel_speed_left,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL))
+        self.new_right_pwm.data = int(calculate_pwm_from_velocity2(wheel_speed_right,self.KNOW_RIGHT_FULL_FORWARD_SPEED, self.KNOW_RIGHT_FULL_BACKWARD_SPEED,self.RIGHT_MAX, self.RIGHT_MIN, self.RIGHT_NEUTRAL))
+        
+        #TODO: below might be unnecessary 
         if self.new_left_pwm.data > self.LEFT_MAX:
             self.new_left_pwm.data = self.LEFT_MAX
         elif self.new_left_pwm .data< self.LEFT_MIN:

@@ -4,7 +4,7 @@ teleop_twist_joy_node:
     axis_linear:  # Left thumb stick vertical
       x: 1
     scale_linear:
-      x: 5.0  # max speed is 5 m/s
+      x: 1.0  # max speed is 5 m/s
     scale_linear_turbo:
       x: 1.5
 

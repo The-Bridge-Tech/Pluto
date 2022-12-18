@@ -1,4 +1,3 @@
-
 /**: 
   ros__parameters:
     LEFT_NEUTRAL: 1376 # Left neutral pwm
@@ -7,8 +6,9 @@
     LEFT_MAX: 1765 # LEFT_NEUTRAL+ Increase in left servo's pwm
     RIGHT_MIN: 992 # LEFT_NEUTRAL+ Decrease in left servo's pwm
     LEFT_MIN: 992  # RIGHT_NEUTRAL+ Decrease in right servo's pwm
-    WHEEL_RADIUS: 10 
-    WHEEL_SEPARATION: 20
-    KNOW_VELOCITY: 1
-    KNOW_PWM_LEFT: 1500
-    KNOW_PWM_RIGHT: 1500
+    WHEEL_RADIUS: 0.2159
+    WHEEL_SEPARATION: 0.889
+    KNOW_LEFT_FULL_BACKWARD_SPEED: -1.31065
+    KNOW_RIGHT_FULL_BACKWARD_SPEED: -1.0847
+    KNOW_LEFT_FULL_FORWARD_SPEED: 1.514
+    KNOW_RIGHT_FULL_FORWARD_SPEED: 1.5366     # (68 *pi*0.4318)/60
