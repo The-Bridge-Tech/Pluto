@@ -29,23 +29,23 @@ def calculate_pwm_from_velocity( goal_velocity:int, know_velocity:int, know_pwm:
     
     
     return (goal_velocity * know_pwm) / know_velocity
-def calculate_pwm_from_velocity2( goal_velocity:int, forward_velocity, backward_velocity, MAX,MIN,NEUTRAL)-> int:
+def calculate_pwm_from_velocity2( goal_velocity:int, full_forward_velocity, full_backward_velocity, max_pwm,min_pwm,neutral_pwm)-> int:
     if(goal_velocity == 0):
-        return NEUTRAL
+        return neutral_pwm
     elif goal_velocity < 0:
-        if goal_velocity < backward_velocity:
-            goal_velocity = backward_velocity
-        delta = NEUTRAL - MIN
-        temp =  (goal_velocity * delta)/backward_velocity
+        if goal_velocity < full_backward_velocity:
+            goal_velocity = full_backward_velocity
+        delta = neutral_pwm - min_pwm
+        temp =  (goal_velocity * delta)/full_backward_velocity
 
-        return NEUTRAL-temp
+        return neutral_pwm-temp
     else:
-        if goal_velocity  > forward_velocity:
-            goal_velocity = forward_velocity
-        delta = MAX-NEUTRAL
-        temp = (goal_velocity*delta)/forward_velocity
+        if goal_velocity  > full_forward_velocity:
+            goal_velocity = full_forward_velocity
+        delta = max_pwm-neutral_pwm
+        temp = (goal_velocity*delta)/full_forward_velocity
         # print(NEUTRAL+temp)
-        return NEUTRAL+temp
+        return neutral_pwm+temp
 # def calculate_velocity_from_pwm( goal_pwm:int, know_velocity:int, know_pwm:int, max, neutral,min)-> int:
 #     # we assume that the servo is linear
 #     """
@@ -90,16 +90,16 @@ def calculate_pwm_from_velocity2( goal_velocity:int, forward_velocity, backward_
 #     temp_velocity =  (goal_pwm * know_velocity) / know_pwm_remove_neutral
 #     return temp_velocity
     
-def calculate_velocity_from_pwm2(goal_pwm:int, forward_velocity, backward_velocity, MAX,MIN,NEUTRAL)-> int:
-    if goal_pwm == NEUTRAL:
+def calculate_velocity_from_pwm2(goal_pwm:int, full_forward_velocity, full_backward_velocity, max_pwm,min_pwm,neutral_pwm)-> int:
+    if goal_pwm == neutral_pwm:
         return 0
-    elif goal_pwm > NEUTRAL:
-        delta = MAX-NEUTRAL
+    elif goal_pwm > neutral_pwm:
+        delta = max_pwm-neutral_pwm
         temp = goal_pwm
-        if temp > MAX:
-            temp = MAX
-        pwm_delta = temp-NEUTRAL
-        velocity = (pwm_delta*forward_velocity)/delta
+        if temp > max_pwm:
+            temp = max_pwm
+        pwm_delta = temp-neutral_pwm
+        velocity = (pwm_delta*full_forward_velocity)/delta
         # print(delta)
         # print(pwm_delta)
         # print(goal_pwm)
@@ -107,12 +107,12 @@ def calculate_velocity_from_pwm2(goal_pwm:int, forward_velocity, backward_veloci
         return velocity
     else:
         temp = goal_pwm
-        if temp < MIN:
-            temp = MIN
-        delta = NEUTRAL-MIN
-        pwm_delta = NEUTRAL - temp
+        if temp < min_pwm:
+            temp = min_pwm
+        delta = neutral_pwm-min_pwm
+        pwm_delta = neutral_pwm - temp
         
-        velocity = (pwm_delta*backward_velocity)/delta
+        velocity = (pwm_delta*full_backward_velocity)/delta
         # print(velocity)
         return velocity
 
