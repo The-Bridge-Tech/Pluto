@@ -6,15 +6,26 @@ import launch_ros.actions
 
 import time
 from ament_index_python.packages import get_package_share_directory
-
+from launch.actions import ExecuteProcess
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import GroupAction
 from launch_ros.actions import PushRosNamespace
 
-
+gazebo_config = os.path.join(
+      get_package_share_directory('pluto_launch'),
+      'config',
+      'gazebo.yaml'
+      )
 def generate_launch_description():
+  
+    #TODO: The following launch gazebo. Needed for it to publish /clock.
+    # In the future, I will replace gazebo with a launch file that launch robot's description
+    start_gazebo_cmd = ExecuteProcess(
+        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so','--ros-args', '--params-file', gazebo_config],
+        output='screen')
+    
     imu_launch = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('pluto_launch')),
@@ -44,7 +55,11 @@ def generate_launch_description():
       )
 
 
-    return LaunchDescription([
+    return LaunchDescription([        
+        start_gazebo_cmd,
+        launch_ros.actions.SetParameter(name='use_sim_time', value=True),
+        # 'use_sim_time' will be set on all nodes following the line above
+
         joystick_interpreter,
         
         camera_launch,
