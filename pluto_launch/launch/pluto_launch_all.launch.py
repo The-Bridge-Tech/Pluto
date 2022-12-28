@@ -22,6 +22,7 @@ def generate_launch_description():
   
     #TODO: The following launch gazebo. Needed for it to publish /clock.
     # In the future, I will replace gazebo with a launch file that launch robot's description
+    # warning info :https://answers.ros.org/question/378362/how-to-set-gazebo-clock-publish-rate-foxy/
     start_gazebo_cmd = ExecuteProcess(
         cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so','--ros-args', '--params-file', gazebo_config],
         output='screen')
@@ -59,7 +60,7 @@ def generate_launch_description():
         start_gazebo_cmd,
         launch_ros.actions.SetParameter(name='use_sim_time', value=True),
         # 'use_sim_time' will be set on all nodes following the line above
-
+        #https://answers.ros.org/question/371458/should-i-manually-pass-use_sim_time-to-all-nodes-in-a-ros-2-launchfile/
         joystick_interpreter,
         
         camera_launch,
