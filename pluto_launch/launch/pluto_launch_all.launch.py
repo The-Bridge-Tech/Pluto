@@ -23,8 +23,13 @@ def generate_launch_description():
     #TODO: The following launch gazebo. Needed for it to publish /clock.
     # In the future, I will replace gazebo with a launch file that launch robot's description
     # warning info :https://answers.ros.org/question/378362/how-to-set-gazebo-clock-publish-rate-foxy/
+    
+    
+    launch_gazebo_config_directory = 'extra_gazebo_args:="--ros-args --params-file {0}"', gazebo_config
     start_gazebo_cmd = ExecuteProcess(
-        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so','--ros-args', '--params-file', gazebo_config],
+        #ros2 launch gazebo_ros gzserver.launch.py extra_gazebo_args:="--ros-args --params-file params.yaml"
+
+        cmd=['ros2', 'launch','gazebo_ros', 'gzserver.launch.py', launch_gazebo_config_directory],
         output='screen')
     
     imu_launch = IncludeLaunchDescription(
