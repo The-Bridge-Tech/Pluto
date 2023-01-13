@@ -35,6 +35,22 @@ class JoystickInterpreter(Node):
 
         self.define_parameters()
             # call parameters 
+        self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
+        self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
+        self.RIGHT_MAX = self.get_parameter("RIGHT_MAX").get_parameter_value().integer_value
+        self.LEFT_MAX = self.get_parameter("LEFT_MAX").get_parameter_value().integer_value
+        self.RIGHT_MIN = self.get_parameter("RIGHT_MIN").get_parameter_value().integer_value
+        self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
+        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().double_value
+        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().double_value
+        
+        self.KNOW_LEFT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_RIGHT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_LEFT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_FORWARD_SPEED').get_parameter_value().double_value
+        self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
+        self.PUBLISH_RATE = self.get_parameter('PUBLISH_RATE').get_parameter_value().integer_value
+        
+        
 
         self.last_joy_message = Joy()
         self.last_cmd_vel_joy_message = Twist()
@@ -44,7 +60,7 @@ class JoystickInterpreter(Node):
                 Joy,'joy',self.joy_listerner,10)
         
         self.cmd_vel_publisher = self.create_publisher(Twist, 'cmd_vel', 10)
-        cmd_vel_publisher_period =0.1 # seconds
+        cmd_vel_publisher_period =1/self.PUBLISH_RATE # seconds
         self.cmd_vel_timer = self.create_timer(cmd_vel_publisher_period, self.interpret_message)
         
         if mode == 1:
@@ -64,20 +80,7 @@ class JoystickInterpreter(Node):
         else:
             raise ValueError("Unknown mode in joystick_interpret")
         
-        self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
-        self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
-        self.RIGHT_MAX = self.get_parameter("RIGHT_MAX").get_parameter_value().integer_value
-        self.LEFT_MAX = self.get_parameter("LEFT_MAX").get_parameter_value().integer_value
-        self.RIGHT_MIN = self.get_parameter("RIGHT_MIN").get_parameter_value().integer_value
-        self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
-        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().double_value
-        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().double_value
-        
-        self.KNOW_LEFT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_RIGHT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_LEFT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_FORWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
-        
+
         
         
     def define_parameters(self)->None:
@@ -93,7 +96,9 @@ class JoystickInterpreter(Node):
         self.declare_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED', -1.0847)
         self.declare_parameter('KNOW_LEFT_FULL_FORWARD_SPEED',1.514 )
         self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
-
+        self.declare_parameter('PUBLISH_RATE',30)
+        
+        
     def calculate_pwm_from_axis(self, axis: float, neutral, min, max):
         if axis == 0:
             return neutral
@@ -161,7 +166,7 @@ class JoystickInterpreter(Node):
         
         
         # self.get_logger().info('left velocity: ' + str(left_velocity))
-
+        # self.get_logger().info('right velocity: ' + str(right_velocity))
         # print("Velocity left" + str(left_velocity))
         # print("Velocity right" + str(right_velocity))
         

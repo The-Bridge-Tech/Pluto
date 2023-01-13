@@ -100,10 +100,6 @@ def calculate_velocity_from_pwm2(goal_pwm:int, full_forward_velocity, full_backw
             temp = max_pwm
         pwm_delta = temp-neutral_pwm
         velocity = (pwm_delta*full_forward_velocity)/delta
-        # print(delta)
-        # print(pwm_delta)
-        # print(goal_pwm)
-        # print(velocity)
         return velocity
     else:
         temp = goal_pwm
@@ -113,7 +109,6 @@ def calculate_velocity_from_pwm2(goal_pwm:int, full_forward_velocity, full_backw
         pwm_delta = neutral_pwm - temp
         
         velocity = (pwm_delta*full_backward_velocity)/delta
-        # print(velocity)
         return velocity
 
 # def convert_negative_pwm_to_positive_pwm_value(max:int, neutral:int, min:int, given_pwm:int):
@@ -144,9 +139,12 @@ RIGHT_MIN= 992 # LEFT_NEUTRAL+ Decrease in left servo's pwm
 LEFT_MIN= 992  # RIGHT_NEUTRAL+ Decrease in right servo's pwm
 
 
-res1=calculate_pwm_from_velocity2(-1,KNOW_LEFT_FULL_FORWARD_SPEED, KNOW_LEFT_FULL_BACKWARD_SPEED,LEFT_MAX, LEFT_MIN, LEFT_NEUTRAL)
+res1=calculate_pwm_from_velocity2(1.44,KNOW_LEFT_FULL_FORWARD_SPEED, KNOW_LEFT_FULL_BACKWARD_SPEED,LEFT_MAX, LEFT_MIN, LEFT_NEUTRAL)
 
 print(res1)
+
+res2  = calculate_velocity_from_pwm2(int(res1),KNOW_LEFT_FULL_FORWARD_SPEED, KNOW_LEFT_FULL_BACKWARD_SPEED,LEFT_MAX, LEFT_MIN, LEFT_NEUTRAL)
+print(res2)
 #calculate_pwm_from_velocity2(0.1,KNOW_LEFT_FULL_FORWARD_SPEED, KNOW_LEFT_FULL_BACKWARD_SPEED,LEFT_MAX, LEFT_MIN, LEFT_NEUTRAL)
 # # res1 = (calculate_pwm_from_velocity(-0.1,know_velocity= KNOW_LEFT_FULL_BACKWARD_SPEED,know_pwm=LEFT_MIN))
 # calculate_velocity_from_pwm2(1300,KNOW_LEFT_FULL_FORWARD_SPEED,KNOW_LEFT_FULL_BACKWARD_SPEED,LEFT_MAX,LEFT_MIN,LEFT_NEUTRAL)

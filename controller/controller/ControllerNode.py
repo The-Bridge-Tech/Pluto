@@ -2,8 +2,8 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import UInt32
-from geometry_msgs.msg import Twist
-from .HelpFunction import calculate_pwm_from_velocity2
+from geometry_msgs.msg import Twist, TwistStamped
+from .HelpFunction import calculate_pwm_from_velocity2, calculate_velocity_from_pwm2
 # # #initial state
 # LEFT_NEUTRAL = 4555
 # RIGHT_NEUTRAL = 6955
@@ -30,20 +30,6 @@ class ControllerNode(Node):
     def __init__(self):
         super().__init__('controller_node')
         self.define_parameters()
-        
-        self.right_server_publisher = self.create_publisher(UInt32, 'steering_right', 10)
-        self.left_server_publisher = self.create_publisher(UInt32, 'steering_left', 10)        
-       
-        timer_period = 0.1  # publish speed evey 0.1 seconds
-        self.right_timer = self.create_timer(timer_period, self.right_servero_timer_callback)
-        self.left_timer = self.create_timer(timer_period, self.left_servero_time_callback)
-        self.i = 0
-    
-    
-        self.new_left_pwm = UInt32()
-        self.new_right_pwm = UInt32()
-        
-        
         # call parameters 
         self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
         self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
@@ -53,21 +39,31 @@ class ControllerNode(Node):
         self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
         self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().double_value
         self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().double_value
-        # self.KNOW_VELOCITY = self.get_parameter("KNOW_VELOCITY").get_parameter_value().integer_value
-        # self.KNOW_PWM_LEFT = self.get_parameter("KNOW_PWM_LEFT").get_parameter_value().integer_value
-        # self.KNOW_PWM_RIGHT = self.get_parameter("KNOW_PWM_RIGHT").get_parameter_value().integer_value
-        
         
         self.KNOW_LEFT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
         self.KNOW_RIGHT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
         self.KNOW_LEFT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_FORWARD_SPEED').get_parameter_value().double_value
         self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
+        self.PUBLISH_RATE = self.get_parameter('PUBLISH_RATE').get_parameter_value().integer_value
         
+        self.right_server_publisher = self.create_publisher(UInt32, 'steering_right', 10)
+        self.left_server_publisher = self.create_publisher(UInt32, 'steering_left', 10)        
+        self.differential_raw_twist_publisher = self.create_publisher(TwistStamped, 'differential_raw_twist', 10)
         
-        # self.KNOW_LEFT_FULL_BACKWARD_SPEED =  -1.31065
-        # self.KNOW_RIGHT_FULL_BACKWARD_SPEED = -1.0847
-        # self.KNOW_LEFT_FULL_FORWARD_SPEED = 1.514
-        # self.KNOW_RIGHT_FULL_FORWARD_SPEED = 1.5366 
+        timer_period = 1/self.PUBLISH_RATE  # publish speed
+        self.right_timer = self.create_timer(timer_period, self.right_servero_timer_callback)
+        self.left_timer = self.create_timer(timer_period, self.left_servero_time_callback)
+        self.differential_raw_twist_timer = self.create_timer(timer_period, self.differential_raw_twist_callback)
+        self.i = 0
+    
+    
+        self.new_left_pwm = UInt32()
+        self.new_right_pwm = UInt32()
+        self.differential_twist  = TwistStamped()
+        self.differential_twist_frame_id = "differential_twist"
+        
+
+
         # set the servo to neutral at startup
         self.new_left_pwm.data = self.LEFT_NEUTRAL
         self.new_right_pwm.data = self.RIGHT_NEUTRAL
@@ -94,31 +90,10 @@ class ControllerNode(Node):
         self.declare_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED', -1.0847)
         self.declare_parameter('KNOW_LEFT_FULL_FORWARD_SPEED',1.514 )
         self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
+        self.declare_parameter('PUBLISH_RATE',30)
 
     
-    # def calculate_pwm_from_velocity(self, goal_velocity:int, is_left:bool)-> float:
-    #     # we assume that the servo is linear
-    #     """
-    #     calculate servo's pwm base on given velocity
 
-    #     Equations:
-        
-    #     known velocity        goal velocity
-    #     ---------------   ==  ----------------
-    #     know pwm value        goal pwm value
-        
-    #     Parameters
-    #     ----------
-    #     goal_velocity : int
-        
-    #     Returns
-    #     -------
-    #     int
-    #     """ 
-    #     if is_left:
-    #         return (goal_velocity * self.KNOW_PWM_LEFT) / self.KNOW_VELOCITY
-    #     else:
-    #         return (goal_velocity * self.KNOW_PWM_RIGHT) / self.KNOW_VELOCITY
     def listen_cmd_vel_callback(self, message:Twist):
         # do math to update the pwm
         
@@ -145,8 +120,8 @@ class ControllerNode(Node):
         wheel_speed_left = (2*velocity_x - velocity_yaw*self.WHEEL_SEPARATION)/2
         wheel_speed_right = 2*velocity_x -wheel_speed_left
         
-        # self.get_logger().info("wheel_speed_left" + str(wheel_speed_left))
-        # self.get_logger().info("wheel_speed_right" + str(wheel_speed_right))
+        self.get_logger().info("wheel_speed_left" + str(wheel_speed_left))
+        self.get_logger().info("wheel_speed_right" + str(wheel_speed_right))
         
         
         #self.get_logger().info("Left speed " + str(wheel_speed_left) + " and  Right speed" + str(wheel_speed_right))
@@ -183,7 +158,24 @@ class ControllerNode(Node):
         else:
             pass
         
+    def differential_raw_twist_callback(self):
+        """
+        Calculate differential odometry base on pwm value on both left and right servo. Publish result to /differential_raw_twist.
+        """
+        # 1. Calculate left and right wheel's velocity base on current pwm
+        current_left_vel = calculate_velocity_from_pwm2(self.new_left_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
+        current_right_vel = calculate_velocity_from_pwm2(self.new_right_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
         
+        
+        self.differential_twist.twist.linear.x = (current_right_vel + current_left_vel)/2
+        self.differential_twist.twist.angular.z = (current_right_vel - current_left_vel)/self.WHEEL_SEPARATION
+        
+        
+        # setting the header part
+        self.differential_twist.header.stamp = self.get_clock().now().to_msg()
+        self.differential_twist.header.frame_id = self.differential_twist_frame_id
+        # 2. publish this odometry
+        self.differential_raw_twist_publisher.publish(self.differential_twist)
         
     def right_servero_timer_callback(self):
         """
