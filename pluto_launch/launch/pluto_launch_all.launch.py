@@ -37,6 +37,11 @@ def generate_launch_description():
          get_package_share_directory('pluto_launch')),
          '/imu.launch.py'])
       )
+    imu_filter_launch = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('pluto_launch')),
+         '/imu_filter.launch.py'])
+      )
 
     joystick_interpreter = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
@@ -59,20 +64,27 @@ def generate_launch_description():
          get_package_share_directory('realsense2_camera'),"launch"),
          '/rs_launch.py'])
       )
+    static_transform_launch = IncludeLaunchDescription(
+      
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('pluto_launch')),
+         '/static_transform_launch.py'])
+    )
 
-
-    return LaunchDescription([        
+    return LaunchDescription([ 
+        imu_launch,       
         start_gazebo_cmd,
         launch_ros.actions.SetParameter(name='use_sim_time', value=True),
         # 'use_sim_time' will be set on all nodes following the line above
         #https://answers.ros.org/question/371458/should-i-manually-pass-use_sim_time-to-all-nodes-in-a-ros-2-launchfile/
         joystick_interpreter,
-        
+        imu_filter_launch,
         camera_launch,
-        imu_launch,
+      
 
         controller_launch,
         gps_launch,
+        static_transform_launch,
         launch_ros.actions.Node(
             package='maestro_controller',
             executable='controller', 
