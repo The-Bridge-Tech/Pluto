@@ -6,13 +6,14 @@
 import rclpy
 from rclpy.node import Node
 
+from tf2_ros import TransformBroadcaster
 import numpy as np
 import math
 from math import atan2, pi, sin, cos, atan
 
 from std_msgs.msg import Float32  #TODO: need to change to standard message type later
 from sensor_msgs.msg import Imu # http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/Imu.html
-
+from geometry_msgs.msg import Vector3Stamped
 
 
 #TODO: load the following information from a configuration file
@@ -122,8 +123,18 @@ class CompassPublisher(Node):
             'imu/data',
             self.convert_quaternion_to_euler_angle,
             10)
+        
+        self.imu_debug_listener = self.create_subscription(
+            Vector3Stamped, '/imu/rpy/filtered', self.publish_debug_heading,10
+            
+            
+        )
 
         self.yaw_angle = Float32()
+    def publish_debug_heading(self, message:Vector3Stamped):
+        
+        result = ( message.vector.z * 3.14 )/180
+        print( "Debug heading is " + str(self.yaw_angle.data))    
     def publish_heading(self):
         self.heading_publisher.publish(self.yaw_angle)
         print( "heading is " + str(self.yaw_angle.data))
