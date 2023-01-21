@@ -160,7 +160,13 @@ class ControllerNode(Node):
         
     def differential_raw_twist_callback(self):
         """
-        Calculate differential odometry base on pwm value on both left and right servo. Publish result to /differential_raw_twist.
+        Calculate differential twist base on pwm value on both left and right servo. Publish result to /differential_raw_twist.
+        
+        Note
+        -----
+        One might ask why did the function calcuate speed base on pwm value send to maestro, not base on value read from maestro.
+        But if you read https://github.com/The-Bridge-Tech/Pluto/blob/devel/maestro_controller/maestro_controller/maestro.py#L123
+        It shows that the maestro just return the recent received value. Thus, it does not make a difference in this case.
         """
         # 1. Calculate left and right wheel's velocity base on current pwm
         current_left_vel = calculate_velocity_from_pwm2(self.new_left_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
