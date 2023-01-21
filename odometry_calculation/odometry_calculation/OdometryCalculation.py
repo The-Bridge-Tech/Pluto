@@ -72,7 +72,7 @@ class OdometryCalculation(Node):
         self.VELOCITY_YAW_ACCURACY = self.get_parameter('VELOCITY_YAW_ACCURACY').get_parameter_value().double_value
         
         time_period = 1/self.PUBLISH_RATE
-        self.differential_raw_odometry_publisher = self.create_publisher(Odometry, 'differential_raw_odometry', 10)
+        self.differential_raw_odometry_publisher = self.create_publisher(Odometry, 'odometry/wheel', 10)
         self.differential_raw_odometry_timer = self.create_timer(time_period, self.calculate_odometry_callback)
         self.differential_odometry = Odometry()
         
@@ -112,7 +112,7 @@ class OdometryCalculation(Node):
         self.declare_parameter('YAW_ACCURACY',0.1)
         self.declare_parameter('VELOCITY_X_ACCURACY',0.3)
         self.declare_parameter('VELOCITY_Y_ACCURACY',0.3)
-        self.declare_parameter('VELOCITY_Z_ACCURACY',0)
+        self.declare_parameter('VELOCITY_Z_ACCURACY',0.0)
         self.declare_parameter('VELOCITY_ROLL_ACCURACY',0.0)
         self.declare_parameter('VELOCITY_PITCH_ACCURACY',0.0)
         self.declare_parameter('VELOCITY_YAW_ACCURACY',0.1)
@@ -134,8 +134,7 @@ class OdometryCalculation(Node):
             #/clock is not ready yet
             return
         else:
-            time_difference_in_second:float =(self.current_twist.header.stamp.sec + self.current_twist.header.stamp.nanosec/(10**9)  )
-            - (self.last_twist.header.stamp.sec + self.last_twist.header.stamp.nanosec/(10**9) )
+            time_difference_in_second:float =(self.current_twist.header.stamp.sec + self.current_twist.header.stamp.nanosec/(10**9)) - (self.last_twist.header.stamp.sec + self.last_twist.header.stamp.nanosec/(10**9) )
 
             if(time_difference_in_second >1 ):
                 raise ValueError("Time difference between /differential_twist is greater than 1 seconds {0}-{1}  {2}-{3}  {4}", self.last_twist.header.stamp.sec, self.last_twist.header.stamp.nanosec,
@@ -159,7 +158,7 @@ class OdometryCalculation(Node):
             
             self.differential_odometry.pose.pose.position.x = self.x
             self.differential_odometry.pose.pose.position.y = self.y
-            self.differential_odometry.pose.pose.position.z = 0
+            self.differential_odometry.pose.pose.position.z = 0.0
             
             
             quaternion = quaternion_from_euler(0,0, self.theta)

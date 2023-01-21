@@ -31,7 +31,7 @@ def generate_launch_description():
     return LaunchDescription([
         
         launch_ros.actions.Node(
-            package='odometry_calcuation',
+            package='odometry_calculation',
             executable='differentialOdometry',
             name='differentialOdometry',
             parameters=[differential_odometry_config]
