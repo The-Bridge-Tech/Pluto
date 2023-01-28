@@ -62,7 +62,12 @@ def generate_launch_description():
     camera_launch = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('realsense2_camera'),"launch"),
-         '/rs_launch.py'])
+         '/rs_launch.py']),
+          launch_arguments={
+                'pointcloud.enable': 'true',
+                'enable_gyro': 'true',
+                'enable_accel': 'true',          
+                }.items()
       )
     static_transform_launch = IncludeLaunchDescription(
       
