@@ -41,5 +41,11 @@ def generate_launch_description():
             executable='joystickInterpreter', 
             name='joystickInterpreter',
             parameters=[controller_node_config]
+        ),
+        launch_ros.actions.Node(
+            package='controller',
+            executable='autonomousController', 
+            name='autonomousController',
+            # parameters=[controller_node_config]
         )
     ])

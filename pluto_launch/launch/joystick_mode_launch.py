@@ -11,14 +11,14 @@ from ament_index_python.packages import get_package_share_directory
 
 import launch
 import launch_ros.actions
-
+from launch.substitutions import LaunchConfiguration
 
 launch_file_path = os.path.join(
       get_package_share_directory('pluto_launch'),
       'config',
       'xbox.config.yaml'
       )
-print(launch_file_path)
+# print(launch_file_path)
 def generate_launch_description():
     joy_config = launch.substitutions.LaunchConfiguration('joy_config')
     joy_dev = launch.substitutions.LaunchConfiguration('joy_dev')
@@ -27,7 +27,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument('joy_vel', default_value='cmd_vel_joy'),
         launch.actions.DeclareLaunchArgument('joy_config', default_value='xbox'),
-        launch.actions.DeclareLaunchArgument('joy_dev', default_value='/dev/input/js5'),
+        launch.actions.DeclareLaunchArgument('joy_dev', default_value='/dev/input/js0'),
         # launch.actions.DeclareLaunchArgument('config_filepath', default_value=[
         #     launch.substitutions.TextSubstitution(text=os.path.join(
         #         get_package_share_directory('teleop_twist_joy'), 'config', '')),

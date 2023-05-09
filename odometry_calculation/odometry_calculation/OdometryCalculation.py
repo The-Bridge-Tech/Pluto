@@ -3,12 +3,36 @@ from rclpy.node import Node
 from rclpy.clock import Clock
 from rclpy.time import Time
 from geometry_msgs.msg import TwistStamped
+from sensor_msgs.msg import Imu
 from nav_msgs.msg import Odometry
 
 from math import cos, sin
 import math
 import numpy as np
 
+def euler_from_quaternion(quaternion):
+    """
+    Converts quaternion (w in last place) to euler roll, pitch, yaw
+    quaternion = [x, y, z, w]
+    Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+    """
+    x = quaternion.x
+    y = quaternion.y
+    z = quaternion.z
+    w = quaternion.w
+
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x * x + y * y)
+    roll = np.arctan2(sinr_cosp, cosr_cosp)
+
+    sinp = 2 * (w * y - z * x)
+    pitch = np.arcsin(sinp)
+
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y * y + z * z)
+    yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+    return roll, pitch, yaw
 
 def quaternion_from_euler(ai:float, aj:float, ak:float):
     """
@@ -90,15 +114,21 @@ class OdometryCalculation(Node):
         )
         self.cmd_vel_subscription
         
+        # subscribe to imu_data, to get initial heading
+        self.imu_data_subscription=self.create_subscription(
+            Imu, "imu/data",self.listen_imu_data_callback,10
+        )
+        self.imu_data_subscription
+        
         
         
         
         self.x = 0
         self.y = 0
-        self.theta= 0
+        self.theta= None
         self.last_twist = None
         self.current_twist = None
-
+       
 
     
     
@@ -117,7 +147,11 @@ class OdometryCalculation(Node):
         self.declare_parameter('VELOCITY_PITCH_ACCURACY',0.0)
         self.declare_parameter('VELOCITY_YAW_ACCURACY',0.1)
         
-    
+    def listen_imu_data_callback(self, message:Imu) -> None:
+        if(self.theta is None): 
+            # means initial heading is None
+            row, pitch, yaw= euler_from_quaternion( message.orientation)
+            self.theta = yaw
     def listen_cmd_vel_callback(self, message:TwistStamped)->None:
         if(self.last_twist is None):
             # initalize twist to be the same at first
@@ -129,6 +163,9 @@ class OdometryCalculation(Node):
         
 
     def calculate_odometry_callback(self)->None:
+        if(self.current_twist is None or self.theta is None):
+            self.get_logger().info("Waiting for a cmd_vel or imu/data message")
+            return
 
         if(self.current_twist.header.stamp.sec == 0 and self.current_twist.header.stamp.nanosec == 0):
             #/clock is not ready yet
@@ -142,13 +179,15 @@ class OdometryCalculation(Node):
             
         
             
-            delta_s = self.current_twist.twist.linear.x * time_difference_in_second
+            #delta_s = self.current_twist.twist.linear.x * time_difference_in_second
             delta_theta = self.current_twist.twist.angular.z * time_difference_in_second
             
             #https://github.com/Sollimann/CleanIt/blob/main/autonomy/src/slam/README.md
             
-            self.x += delta_s * cos(self.theta + delta_theta/2)
-            self.y += delta_s * sin(self.theta+ delta_theta/2)
+            # self.x += delta_s * cos(self.theta + delta_theta/2)
+            # self.y += delta_s * sin(self.theta+ delta_theta/2)
+            self.x += self.current_twist.twist.linear.x* time_difference_in_second
+            self.y += self.current_twist.twist.linear.y * time_difference_in_second
             self.theta += delta_theta
             
         

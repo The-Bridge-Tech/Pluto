@@ -17,3 +17,4 @@
 [submodule "YOLOX-ROS"]
 	path = YOLOX-ROS
 	url = https://github.com/Ar-Ray-code/YOLOX-ROS
+	branch = main

@@ -15,3 +15,4 @@ imu_filter:
     mag_bias_z: 0.0
     orientation_stddev: 0.323
     publish_debug_topics: true
+

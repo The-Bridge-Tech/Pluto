@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
-from std_msgs.msg import UInt32
+from std_msgs.msg import UInt32, Bool
 from geometry_msgs.msg import Twist, TwistStamped
 from .HelpFunction import calculate_pwm_from_velocity2, calculate_velocity_from_pwm2
 # # #initial state
@@ -74,6 +74,18 @@ class ControllerNode(Node):
         )
         self.cmd_vel_subscription
         
+        # subscribte to 'autonomous_button'
+        
+        self.autonomous_button_subscription = self.create_subscription(
+            Bool, 'autonomous_button', self.listen_autonomous_button_callback, 10
+        )
+        # publish the if is in autonomous state
+        self.is_autonomous_state = Bool()
+        self.is_autonomous_state.data = False
+        self.is_autonomous_state_publisher =  self.create_publisher(Bool, 'is_autonomous_mode', 10)
+        self.is_autonomous_state_publisher_timer = self.create_timer(0.5, self.publish_autonomous_mode)
+        
+    
     def define_parameters(self)->None:
         self.declare_parameter('LEFT_NEUTRAL', 0)
         self.declare_parameter('RIGHT_NEUTRAL',0)
@@ -92,8 +104,20 @@ class ControllerNode(Node):
         self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
         self.declare_parameter('PUBLISH_RATE',30)
 
-    
-
+    def publish_autonomous_mode(self):
+        self.is_autonomous_state_publisher.publish(self.is_autonomous_state)
+    def listen_autonomous_button_callback(self, mes:Bool):
+        if(mes.data == True):
+            if self.is_autonomous_state.data == False:
+                self.is_autonomous_state.data = True
+            else:
+                self.is_autonomous_state.data = False
+            # k = Bool()
+            # k.data = False
+            # now, publish this message out
+        
+        
+    # interpret from cmd_vel to both left&right servo
     def listen_cmd_vel_callback(self, message:Twist):
         # do math to update the pwm
         
@@ -102,6 +126,7 @@ class ControllerNode(Node):
             # 2. velocity in z (yaw)
             # Note: we don't take velocity of y into consideration, because we simply can't move in the y direction
             
+        #self.get_logger().info("I heard cmd_vel in controller")
         # https://answers.ros.org/question/334022/how-to-split-cmd_vel-into-left-and-right-wheel-of-2wd-robot/
         # https://answers.ros.org/question/308340/exact-rotational-speed-of-a-wheel/
         
@@ -120,8 +145,8 @@ class ControllerNode(Node):
         wheel_speed_left = (2*velocity_x - velocity_yaw*self.WHEEL_SEPARATION)/2
         wheel_speed_right = 2*velocity_x -wheel_speed_left
         
-        self.get_logger().info("wheel_speed_left" + str(wheel_speed_left))
-        self.get_logger().info("wheel_speed_right" + str(wheel_speed_right))
+        #self.get_logger().info("wheel_speed_left" + str(wheel_speed_left))
+        #self.get_logger().info("wheel_speed_right" + str(wheel_speed_right))
         
         
         #self.get_logger().info("Left speed " + str(wheel_speed_left) + " and  Right speed" + str(wheel_speed_right))
@@ -188,14 +213,14 @@ class ControllerNode(Node):
         Publish pwm value to '/steering_right'
         """
         self.right_server_publisher.publish(self.new_right_pwm)
-        self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
+        #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
     
     def left_servero_time_callback(self):
         """
         Publish pwm value to '/steering_left'
         """
         self.left_server_publisher.publish(self.new_left_pwm)
-        self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
+        #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
 
 
 def main(args=None):

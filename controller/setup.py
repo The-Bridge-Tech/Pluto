@@ -26,7 +26,8 @@ setup(
     entry_points={
         'console_scripts': [
              'controller = controller.ControllerNode:main',
-             'joystickInterpreter = controller.JoystickInterpreter:main'
+             'joystickInterpreter = controller.JoystickInterpreter:main',
+             'autonomousController = controller.AutonomousNodeController:main'
         ],
     },
 )
