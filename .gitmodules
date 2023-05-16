@@ -14,7 +14,9 @@
 	path = nmea_navsat_driver
 	url = https://github.com/ros-drivers/nmea_navsat_driver.git
 	branch = ros2
-[submodule "YOLOX-ROS"]
-	path = YOLOX-ROS
-	url = https://github.com/Ar-Ray-code/YOLOX-ROS
-	branch = main
+[submodule "YOLOv5-ROS"]
+	path = YOLOv5-ROS
+	url = https://github.com/Ar-Ray-code/YOLOv5-ROS.git
+[submodule "bbox_ex_msgs"]
+	path = bbox_ex_msgs
+	url = https://github.com/Ar-Ray-code/bbox_ex_msgs.git
