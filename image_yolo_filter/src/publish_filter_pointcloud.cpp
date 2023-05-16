@@ -228,8 +228,8 @@ ImageYoloFilter::ImageYoloFilter() : Node("ImageYoloFilter"), count_(0), qosCoun
   imagePublisher = this->create_publisher<sensor_msgs::msg::Image>("/filtered_image", 1);
   timer_ = this->create_wall_timer(500ms, std::bind(&ImageYoloFilter::timer_callback, this));
 
-  alignedPictureSubscription.subscribe(this, "/camera/aligned_depth_to_color/image_raw");
-  //alignedPictureSubscription.subscribe(this, "/camera/color/image_raw");
+  // alignedPictureSubscription.subscribe(this, "/camera/aligned_depth_to_color/image_raw");
+  alignedPictureSubscription.subscribe(this, "/camera/color/image_raw");
   // //alignedPictureSubscription= message_filters::Subscriber<sensor_msgs::msg::Image>(this,
   // "/camera/aligned_depth_to_color/image_raw");
   // // alignedPictureSubscription = this->create_subscription<sensor_msgs::msg::Image>(
@@ -276,13 +276,14 @@ void ImageYoloFilter::timer_callback()
     // row_step
     // data
     // this->filteredPointCloud.is_dense = this->alignedPointcloud->is_dense;
-    //processPointCloud();
+    // processPointCloud();
     // this->filteredPointCloud.is_dense=false;
-    if(this->debug){
+    if (this->debug)
+    {
       processPointCloudInDens();
       // debugging purpose
-      //this->filteredPointCloud.is_dense=false;
-      //pcl::toROSMsg(*(this->alignedPointcloud.get()), filteredImage);
+      // this->filteredPointCloud.is_dense=false;
+      // pcl::toROSMsg(*(this->alignedPointcloud.get()), filteredImage);
       pcl::toROSMsg((this->filteredPointCloud), filteredImage);
       // filteredImage.header.frame_id="camera_color_optical_frame";
 
@@ -291,16 +292,14 @@ void ImageYoloFilter::timer_callback()
       convertToPng(filteredImage, "/home/shouyu/ros2_ws/filered.png");
 
       // pcl::toROSMsg((*(this->alignedPointcloud.get())), filteredImage);
-      // convertToPng(filteredImage, "/home/shouyu/ros2_ws/unfilered.png"); 
-      
-    }else{
+      // convertToPng(filteredImage, "/home/shouyu/ros2_ws/unfilered.png");
+    }
+    else
+    {
       processPointCloud();
     }
 
     this->pointcloudPublisher->publish(this->filteredPointCloud);
-
-
-
   }
 }
 
@@ -345,21 +344,27 @@ bool ImageYoloFilter::isMessageWithinTimeTolerance(double toleranceSecond)
 
 void ImageYoloFilter::processPointCloudInDens()
 {
-  this->filteredPointCloud.is_dense=false; // since there are invalid data
+  this->filteredPointCloud.is_dense = false;  // since there are invalid data
   // output a dense version of the point cloud
   int numberOfPoint = 0;
-  int k, i, startIndex, endIndex;
+  int_fast64_t k, i, startIndex, endIndex;
+  k = i = startIndex = endIndex = -1;
   bboxes_ex_msgs::msg::BoundingBox box_info;
-  
-  int debugCount =0;
-  // this->filteredPointCloud.data = std::vector<std::numeric_limits<float>>(19,std::numeric_limits<float>::quiet_NaN());
-  for(int ii = 0; ii < this->alignedImage->height; ii++){
-    for(int kk =0; kk < this->alignedImage->width; kk++){
-      for(int q= 0; q< this->alignedPointcloud->point_step;q++){
-          this->filteredPointCloud.data.push_back(std::numeric_limits<uint8_t>::quiet_NaN());
-          debugCount++;
-      }
+  uint16_t image_height = this->alignedImage->height;
+  uint16_t image_width = this->alignedImage->width;
 
+  int debugCount = 0;
+  // this->filteredPointCloud.data =
+  // std::vector<std::numeric_limits<float>>(19,std::numeric_limits<float>::quiet_NaN());
+  for (uint16_t ii = 0; ii < this->alignedImage->height; ii++)
+  {
+    for (uint16_t kk = 0; kk < this->alignedImage->width; kk++)
+    {
+      for (uint16_t q = 0; q < this->alignedPointcloud->point_step; q++)
+      {
+        this->filteredPointCloud.data.push_back(std::numeric_limits<uint8_t>::quiet_NaN());
+        debugCount++;
+      }
     }
   }
 
@@ -369,9 +374,9 @@ void ImageYoloFilter::processPointCloudInDens()
     {
       box_info = this->objectBoundingBoxes->bounding_boxes.at(boxNum);
 
-      for (i = std::max(0, box_info.ymin - 1); i < std::min(box_info.ymax, box_info.img_height); i++)
+      for (i = std::max(0, box_info.ymin - 1); i < std::min(box_info.ymax, image_height); i++)
       {
-        for (k = std::max(0, box_info.xmin - 1); k < std::min(box_info.xmax, box_info.img_width); k++)
+        for (k = std::max(0, box_info.xmin - 1); k < std::min(box_info.xmax, image_width); k++)
         {
           startIndex =
               i * this->alignedPointcloud->point_step * alignedPointcloud->width + k * alignedPointcloud->point_step;
@@ -380,7 +385,7 @@ void ImageYoloFilter::processPointCloudInDens()
           // int pointByteSize = alignedPointcloud->point_step / alignedPointcloud->fields.size();
           for (int dataInd = startIndex; dataInd < endIndex; dataInd++)
           {
-            this->filteredPointCloud.data[dataInd]= (this->alignedPointcloud->data.at(dataInd));
+            this->filteredPointCloud.data[dataInd] = (this->alignedPointcloud->data.at(dataInd));
           }
 
           numberOfPoint++;
@@ -399,7 +404,7 @@ void ImageYoloFilter::processPointCloudInDens()
     std::cout << " start Index" << startIndex << " end index" << endIndex << std::endl;
     std::cout << "xmin ,xmax" << box_info.xmin << "," << box_info.xmax << std::endl;
     std::cout << "ymin ,ymax" << box_info.ymin << "," << box_info.ymax << std::endl;
-    std::cout << "img_height, img_width" << box_info.img_height << "," << box_info.img_width << std::endl;
+    std::cout << "img_height, img_width" << image_height << "," << image_width << std::endl;
   }
 }
 void ImageYoloFilter::processPointCloud()
@@ -407,6 +412,9 @@ void ImageYoloFilter::processPointCloud()
   this->filteredPointCloud.is_dense = this->alignedPointcloud->is_dense;
   int numberOfPoint = 0;
   int k, i, startIndex, endIndex;
+  k = i = startIndex = endIndex = -1;
+  uint16_t image_height = this->alignedImage->height;
+  uint16_t image_width = this->alignedImage->width;
   bboxes_ex_msgs::msg::BoundingBox box_info;
   try
   {
@@ -414,9 +422,9 @@ void ImageYoloFilter::processPointCloud()
     {
       box_info = this->objectBoundingBoxes->bounding_boxes.at(boxNum);
 
-      for (i = std::max(0, box_info.ymin - 1); i < std::min(box_info.ymax, box_info.img_height); i++)
+      for (i = std::max(0, box_info.ymin - 1); i < std::min(box_info.ymax, image_height); i++)
       {
-        for (k = std::max(0, box_info.xmin - 1); k < std::min(box_info.xmax, box_info.img_width); k++)
+        for (k = std::max(0, box_info.xmin - 1); k < std::min(box_info.xmax, image_width); k++)
         {
           startIndex =
               i * this->alignedPointcloud->point_step * alignedPointcloud->width + k * alignedPointcloud->point_step;
@@ -444,7 +452,7 @@ void ImageYoloFilter::processPointCloud()
     std::cout << " start Index" << startIndex << " end index" << endIndex << std::endl;
     std::cout << "xmin ,xmax" << box_info.xmin << "," << box_info.xmax << std::endl;
     std::cout << "ymin ,ymax" << box_info.ymin << "," << box_info.ymax << std::endl;
-    std::cout << "img_height, img_width" << box_info.img_height << "," << box_info.img_width << std::endl;
+    std::cout << "img_height, img_width" << image_height << "," << image_width << std::endl;
   }
 }
 

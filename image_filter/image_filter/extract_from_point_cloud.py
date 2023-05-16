@@ -98,9 +98,9 @@ def extra_pointcloud(original_pointcloud:PointCloud2, original_picture:Image, bo
         box_info:BoundingBox = box_message
         
         
-        for i in range(box_info.ymin-1,min(box_info.ymax, box_info.img_height)):
+        for i in range( max(0,box_info.ymin-1),min(box_info.ymax, original_picture.height)):
 
-            for k in range(box_info.xmin-1, box_info.xmax):
+            for k in range( max(0, box_info.xmin-1), min(box_info.xmax,original_picture.width)):
                 # assume pointcloud2 is organized
                 
                 # assume each point contain x,y,z,depth, color
