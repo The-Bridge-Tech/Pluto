@@ -252,6 +252,8 @@ ImageYoloFilter::ImageYoloFilter() : Node("ImageYoloFilter"), count_(0), qosCoun
   //     new Sync(MySyncPolicy(10), alignedPictureSubscription, alignedPointcloudSubscription,
   //     boundingBoxesSubscription));
   // this->_sync->registerCallback(std::bind(&ImageYoloFilter::syncMessageSubscription, this, _1, _2, _3));
+
+  this->lastDataTimeStamp = this->get_clock()->now();
 }
 
 void ImageYoloFilter::timer_callback()
@@ -278,6 +280,9 @@ void ImageYoloFilter::timer_callback()
     // this->filteredPointCloud.is_dense = this->alignedPointcloud->is_dense;
     // processPointCloud();
     // this->filteredPointCloud.is_dense=false;
+
+    auto timeDifference = this->get_clock()->now() - this->lastDataTimeStamp;
+    RCLCPP_INFO(this->get_logger(), "time lagged for collecting data is %f" timeDifference.seconds + timeDifference.nanoseconds/ std::pow(10,9) );
     if (this->debug)
     {
       processPointCloudInDens();
@@ -289,7 +294,7 @@ void ImageYoloFilter::timer_callback()
 
       filteredImage.header = this->filteredPointCloud.header;
       this->imagePublisher->publish(this->filteredImage);
-      convertToPng(filteredImage, "/home/shouyu/ros2_ws/filered.png");
+      // convertToPng(filteredImage, "/home/shouyu/ros2_ws/filered.png");
 
       // pcl::toROSMsg((*(this->alignedPointcloud.get())), filteredImage);
       // convertToPng(filteredImage, "/home/shouyu/ros2_ws/unfilered.png");
@@ -300,6 +305,7 @@ void ImageYoloFilter::timer_callback()
     }
 
     this->pointcloudPublisher->publish(this->filteredPointCloud);
+    this->lastDataTimeStamp = this->get_clock()->now();
   }
 }
 

@@ -75,6 +75,8 @@ private:
   void processPointCloud();
   void processPointCloudInDens();
   std::unique_ptr<Synchronizer> sync;
+
+  rclcpp::Time lastDataTimeStamp;
 };
 
 #endif
