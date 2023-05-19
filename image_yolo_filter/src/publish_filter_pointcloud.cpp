@@ -282,7 +282,7 @@ void ImageYoloFilter::timer_callback()
     // this->filteredPointCloud.is_dense=false;
 
     auto timeDifference = this->get_clock()->now() - this->lastDataTimeStamp;
-    RCLCPP_INFO(this->get_logger(), "time lagged for collecting data is %f" timeDifference.seconds + timeDifference.nanoseconds/ std::pow(10,9) );
+    RCLCPP_INFO(this->get_logger(), "time lagged for collecting data is %f", timeDifference.seconds() + timeDifference.nanoseconds()/ std::pow(10,9) );
     if (this->debug)
     {
       processPointCloudInDens();
