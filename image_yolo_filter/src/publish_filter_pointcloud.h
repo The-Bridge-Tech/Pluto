@@ -19,6 +19,7 @@
 #include "message_filters/time_synchronizer.h"
 #include "message_filters/time_sequencer.h"
 #include "message_filters/synchronizer.h"
+#include "message_filters/cache.h"
 #include <message_filters/sync_policies/approximate_time.h>
 using namespace std::chrono_literals;
 
@@ -43,9 +44,9 @@ public:
   ImageYoloFilter();
   bool debug=false;
   void convertToPng(const sensor_msgs::msg::Image& image_msg, const std::string& filename);
-
-private:
   void timer_callback();
+private:
+
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloudPublisher;
@@ -76,7 +77,15 @@ private:
   void processPointCloudInDens();
   std::unique_ptr<Synchronizer> sync;
 
+
+  std::unique_ptr< message_filters::Cache<sensor_msgs::msg::Image>> imageCache;
+  std::unique_ptr<message_filters::Cache<sensor_msgs::msg::PointCloud2>> pointcloudCache;
+  std::unique_ptr<message_filters::Cache<bboxes_ex_msgs::msg::BoundingBoxes>> boundingBoxesCache;
   rclcpp::Time lastDataTimeStamp;
+  
+
+  rclcpp::Time calculationTimeStamp;
+  double timeLagTolerance;
 };
 
 #endif
