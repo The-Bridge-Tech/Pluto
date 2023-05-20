@@ -165,6 +165,7 @@
 #include <memory>
 #include <string>
 #include <cmath>
+#include <inttypes.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/time.hpp"
@@ -224,11 +225,13 @@ void ImageYoloFilter::convertToPng(const sensor_msgs::msg::Image& image_msg, con
   }
 }
 
-ImageYoloFilter::ImageYoloFilter() : Node("ImageYoloFilter"), count_(0), qosCount(10), timeLagTolerance(0.5)
-{
+ImageYoloFilter::ImageYoloFilter() : Node("ImageYoloFilter"), count_(0), qosCount(10), timeLagTolerance(0.1)
+{ 
+
+  // lag tolerance is 100 ms
   pointcloudPublisher = this->create_publisher<sensor_msgs::msg::PointCloud2>("/filtered_pointcloud", 10);
   imagePublisher = this->create_publisher<sensor_msgs::msg::Image>("/filtered_image", 10);
-  timer_ = this->create_wall_timer(500ms, std::bind(&ImageYoloFilter::timer_callback, this));
+  // timer_ = this->create_wall_timer(50ms, std::bind(&ImageYoloFilter::timer_callback, this));
 
   // alignedPictureSubscription.subscribe(this, "/camera/aligned_depth_to_color/image_raw");
   alignedPictureSubscription.subscribe(this, "/camera/color/image_raw");
@@ -247,11 +250,13 @@ ImageYoloFilter::ImageYoloFilter() : Node("ImageYoloFilter"), count_(0), qosCoun
   // );
 
 
-  this->imageCache.reset(new message_filters::Cache<sensor_msgs::msg::Image>(this->alignedPictureSubscription,30));
-  this->pointcloudCache.reset(new message_filters::Cache<sensor_msgs::msg::PointCloud2>(this->alignedPointcloudSubscription,30 ));
-  this->boundingBoxesCache.reset(new message_filters::Cache<bboxes_ex_msgs::msg::BoundingBoxes>(this->boundingBoxesSubscription,5));
+  this->imageCache.reset(new message_filters::Cache<sensor_msgs::msg::Image>(this->alignedPictureSubscription,100));
+  this->pointcloudCache.reset(new message_filters::Cache<sensor_msgs::msg::PointCloud2>(this->alignedPointcloudSubscription,100 ));
+  this->boundingBoxesCache.reset(new message_filters::Cache<bboxes_ex_msgs::msg::BoundingBoxes>(this->boundingBoxesSubscription,2));
 
   this->boundingBoxesCache->registerCallback( std::bind(&ImageYoloFilter::timer_callback,this));
+
+
   // this->sync.reset(new message_filters::Synchronizer<approximate_policy>(
   //     approximate_policy(10), alignedPictureSubscription, alignedPointcloudSubscription, boundingBoxesSubscription));
   // this->sync->registerCallback(std::bind(&ImageYoloFilter::syncMessageSubscription, this, std::placeholders::_1,
@@ -273,11 +278,42 @@ void ImageYoloFilter::timer_callback()
   // RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
   // publisher_->publish(message);
   this->calculationTimeStamp=this->get_clock()->now();
-  auto latestTimeStamp = this->boundingBoxesCache->getLatestTime();
+  const rclcpp::Time  latestTimeStamp = this->boundingBoxesCache->getLatestTime();
 
-  this->objectBoundingBoxes = this->boundingBoxesCache->getElemBeforeTime(latestTimeStamp);
-  this->alignedImage = this->imageCache->getElemBeforeTime(latestTimeStamp);
-  this->alignedPointcloud = this->pointcloudCache->getElemBeforeTime(latestTimeStamp);
+
+  // uint32_t lag = 100000000;
+  // RCLCPP_INFO(this->get_logger() ,"second: %" PRIu32 " nanosec: %" PRIu32 " difference %" PRIu32
+  // , latestTimeStamp.seconds(), latestTimeStamp.nanoseconds(), latestTimeStamp.nanoseconds() - lag);
+  const rclcpp::Time res = latestTimeStamp -   rclcpp::Duration(100000000);
+
+  // double temp = latestTimeStamp.seconds() + latestTimeStamp.nanoseconds()/ std::pow(10,9);
+  // double timeFinal =  temp -   (this->timeLagTolerance/std::pow(10,9) ) ;
+  // uint64_t calculateNanoSec = timeFinal * std::pow(10,9);
+  
+  // RCLCPP_INFO(this->get_logger(), "time total is %lf, final is %lf, in unsigned is %" PRIu64 " ",temp, timeFinal, calculateNanoSec );
+
+  RCLCPP_INFO(this->get_logger(), "1:second %lf  nano%ld", latestTimeStamp.seconds(), latestTimeStamp.nanoseconds());
+  RCLCPP_INFO(this->get_logger(), "2:second %lf  nano%ld", res.seconds(), res.nanoseconds());
+  // this->objectBoundingBoxes = this->boundingBoxesCache->getElemBeforeTime(latestTimeStamp);
+  // this->alignedImage = this->imageCache->getElemBeforeTime(latestTimeStamp);
+  // this->alignedPointcloud = this->pointcloudCache->getElemBeforeTime(latestTimeStamp);
+
+  auto boxes= this->boundingBoxesCache->getInterval(res,latestTimeStamp);
+  if(boxes.size() > 0){
+    this->objectBoundingBoxes = boxes.back();
+  }
+
+  auto images = this->imageCache->getInterval(res, latestTimeStamp);
+  if(images.size() > 0){
+    this->alignedImage = images.back();
+  }
+
+  auto pointclouds = this->pointcloudCache->getInterval(res,latestTimeStamp);
+  if(pointclouds.size() > 0){
+    this->alignedPointcloud = pointclouds.back();
+  }
+  // this->alignedImage = this->imageCache->getInterval(res,latestTimeStamp);
+  // this->alignedPointcloud = this->pointcloudCache->getInterval(res,latestTimeStamp);
 
 
   if (isMessageWithinTimeTolerance(this->timeLagTolerance))
@@ -341,6 +377,7 @@ void ImageYoloFilter::syncMessageSubscription(const sensor_msgs::msg::Image::Con
   this->alignedImage = alignedImage;
   this->alignedPointcloud = alignedPointCloud;
   this->objectBoundingBoxes = boundingBoxes;
+  this->timer_callback(); // process the newest
 }
 
 bool ImageYoloFilter::isMessageWithinTimeTolerance(double toleranceSecond)
