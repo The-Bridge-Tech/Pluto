@@ -42,12 +42,11 @@ class ImageYoloFilter : public rclcpp::Node
 {
 public:
   ImageYoloFilter();
-  bool debug=false;
+  bool debug = false;
   void convertToPng(const sensor_msgs::msg::Image& image_msg, const std::string& filename);
   void timer_callback();
+
 private:
-
-
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloudPublisher;
   rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr imagePublisher;
@@ -77,15 +76,15 @@ private:
   void processPointCloudInDens();
   std::unique_ptr<Synchronizer> sync;
 
-
-  std::unique_ptr< message_filters::Cache<sensor_msgs::msg::Image>> imageCache;
+  std::unique_ptr<message_filters::Cache<sensor_msgs::msg::Image>> imageCache;
   std::unique_ptr<message_filters::Cache<sensor_msgs::msg::PointCloud2>> pointcloudCache;
   std::unique_ptr<message_filters::Cache<bboxes_ex_msgs::msg::BoundingBoxes>> boundingBoxesCache;
   rclcpp::Time lastDataTimeStamp;
-  
 
   rclcpp::Time calculationTimeStamp;
-  double timeLagTolerance;
+  float timeLagTolerance;
+  int lagInNanoSecond;
+  int cacheSize;
 };
 
 #endif
