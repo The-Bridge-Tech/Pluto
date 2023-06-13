@@ -191,7 +191,8 @@ def generate_launch_description():
         gps_launch,
         static_transform_launch,
         maestro_launch,
-        gps_filter_launch
+        gps_filter_launch,
+        ekf_filter
 
 
 
