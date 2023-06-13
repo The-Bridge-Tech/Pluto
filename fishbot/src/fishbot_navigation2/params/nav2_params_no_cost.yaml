@@ -136,8 +136,8 @@ local_costmap:
       robot_base_frame: base_link
       use_sim_time: False
       rolling_window: true
-      width: 5
-      height: 5
+      width: 3
+      height: 3
       resolution: 0.05
       footprint: "[ [0.21, 0.195], [0.21, -0.195], [-0.21, -0.195], [-0.21, 0.195] ]"
       plugins: [ "inflation_layer"]
@@ -178,12 +178,7 @@ global_costmap:
       robot_base_frame: base_link
       use_sim_time: False
       robot_radius: 0.3
-      resolution: 0.05
-      track_unknown_space: false
-      static_map: false
-      rolling_window: false
-      width: 10
-      height: 10
+      resolution: 0.05  # Width, Height, and resolution will override by static_layer, by the publish mpa server 
       track_unknown_space: true
       plugins: ["static_layer"]
       obstacle_layer:
@@ -218,7 +213,8 @@ global_costmap:
 map_server:
   ros__parameters:
     # use_sim_time: True
-    yaml_filename: "/home/shouyu/nav2_ws/src/fishbot/src/fishbot_navigation2/maps/fishbot_map.yaml"
+    #TODO: change to relative
+    yaml_filename: "/home/shouyu/nav2_ws/src/fishbot/src/fishbot_navigation2/maps/fishbot_map.yaml" # this is being overrided
 
 # map_saver:
 #   ros__parameters:
