@@ -164,7 +164,7 @@ class OdometryCalculation(Node):
 
     def calculate_odometry_callback(self)->None:
         if(self.current_twist is None or self.theta is None):
-            self.get_logger().info("Waiting for a cmd_vel or imu/data message")
+            #self.get_logger().info("Waiting for a cmd_vel or imu/data message")
             return
 
         if(self.current_twist.header.stamp.sec == 0 and self.current_twist.header.stamp.nanosec == 0):
