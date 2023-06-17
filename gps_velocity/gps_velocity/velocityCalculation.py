@@ -128,8 +128,9 @@ class GPSVelocity(Node):
                 0.0,      0.0,  0.0,  0.0,  0.0,  0.0,
                 0.0,      0.0,  0.0,  0.0,  0.0,  0.0,
             ]
-            self.latest_twist.header.frame_id="gps_link"  
-            # the static tf transform should do the geometry offset from base_link to gps_link
+            # although there is a tf transform between gps_link and base_link
+            # however, the calculate_gps_offset has already convert yaw from NED to ENU
+            self.latest_twist.header.frame_id="base_link"  
             self.initialized = True
             
 
