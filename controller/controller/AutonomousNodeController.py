@@ -186,17 +186,21 @@ class AutonomousNodeController(Node):
         # local_costmap = navigator.getLocalCostmap()
 
         #
-        
+        gps_data = self.latest_gps_coor
         for point in coord_list:
             goal_pose = PoseStamped()
             goal_pose.header.frame_id = 'map'
             goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
             #geopy.distance.geodesic(self.latest_gps_coor, point).
             
-            x,y = self.calc_goal(self.latest_gps_coor.latitude, self.latest_gps_coor.longitude,point[0], point[1])
+            x,y = self.calc_goal(gps_data.latitude, gps_data.longitude,point[0], point[1])
             goal_pose.pose.position.x =x
             goal_pose.pose.position.y = y
             goal_pose.pose.orientation.w = 1.0
+            
+            
+            self.get_logger().info('Origin: {} {}  goal: {} {}'.format(gps_data.latitude, gps_data.longitude,point[0], point[1]))
+        
 
             # sanity check a valid path exists
             # path = navigator.getPath(initial_pose, goal_pose)
