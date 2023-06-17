@@ -14,29 +14,18 @@ ekf_filter_node_odom:
     base_link_frame: base_link
     world_frame: odom
 
-    odom0: odometry/wheel
-    odom0_config: [false, false, false,
+
+
+    twist0: /velocity/gps
+    twist0_config: [false, false, false,
                   false, false, false,
-                  true,  true,  false,
-                  false, false, true,
+                  true,  false,  false,
+                  false, false, false,
                   false, false, false]
-    odom0_queue_size: 10
-    odom0_nodelay: true
-    odom0_differential: false
-    odom0_relative: false
-
-
-
-    # twist0: /twist/gps_vel
-    # twist0_config: [false, false, false,
-    #               false, false, false,
-    #               true,  true,  false,
-    #               false, false, true,
-    #               false, false, false]
-    # twist0_queue_size: 10
-    # twist0_nodelay: true
-    # twist0_differential: false
-    # twist0_relative: false
+    twist0_queue_size: 10
+    twist0_nodelay: true
+    twist0_differential: false
+    twist0_relative: false
 
     
 
@@ -102,39 +91,39 @@ ekf_filter_node_map:
     base_link_frame: base_link
     world_frame: map
 
-    odom0: odometry/wheel
-    odom0_config: [false, false, false,
+    # odom0: odometry/wheel
+    # odom0_config: [false, false, false,
+    #               false, false, false,
+    #               true,  true,  false,
+    #               false, false, true,
+    #               false, false, false]
+    # odom0_queue_size: 10
+    # odom0_nodelay: true
+    # odom0_differential: false
+    # odom0_relative: false
+
+    twist0: /velocity/gps
+    twist0_config: [false, false, false,
                   false, false, false,
-                  true,  true,  false,
-                  false, false, true,
+                  true,  false,  false,
+                  false, false, false,
+                  false, false, false]
+    twist0_queue_size: 10
+    twist0_nodelay: true
+    twist0_differential: false
+    twist0_relative: false
+
+
+    odom0: odometry/gps
+    odom0_config: [true,  true,  false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, false,
                   false, false, false]
     odom0_queue_size: 10
     odom0_nodelay: true
     odom0_differential: false
     odom0_relative: false
-
-    # twist0: /twist/gps_vel
-    # twist0_config: [false, false, false,
-    #               false, false, false,
-    #               true,  true,  false,
-    #               false, false, true,
-    #               true, false, false]
-                  
-    # twist0_queue_size: 10
-    # twist0_nodelay: true
-    # twist0_differential: false
-    # twist0_relative: false
-
-    odom1: odometry/gps
-    odom1_config: [true,  true,  false,
-                  false, false, false,
-                  false, false, false,
-                  false, false, false,
-                  false, false, false]
-    odom1_queue_size: 10
-    odom1_nodelay: true
-    odom1_differential: false
-    odom1_relative: false
 
     imu0: /imu/data
     imu0_config: [false, false, false,
