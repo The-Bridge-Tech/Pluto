@@ -165,7 +165,17 @@ def generate_launch_description():
         # launch_arguments={
         #     "use_sim_time": use_sim_time
         # }.items(),
+    ),
+    gps_velocity_launch =IncludeLaunchDescription(
+
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('pluto_launch')),
+            '/gps_velocity_launch.py']),
+        # launch_arguments={
+        #     "use_sim_time": use_sim_time
+        # }.items(),
     )
+
 
     return LaunchDescription([
         # #imu_launch,
@@ -192,7 +202,8 @@ def generate_launch_description():
         static_transform_launch,
         maestro_launch,
         gps_filter_launch,
-        ekf_filter
+        ekf_filter,
+        gps_velocity_launch
 
 
 
