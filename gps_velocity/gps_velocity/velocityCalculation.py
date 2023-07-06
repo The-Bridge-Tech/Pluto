@@ -10,7 +10,7 @@ from geographiclib.geodesic import Geodesic
 
 from math import sin, atan2, sqrt, cos
 import math
-
+import geopy.distance
 from rclpy.qos import ReliabilityPolicy
 
 
@@ -33,42 +33,42 @@ class GPSVelocity(Node):
 
         self.last_gps_coordinate: NavSatFix = None
 
-    # modify base on https://github.com/danielsnider/gps_goal
-    def calculate_gps_offset(self, origin_lat: float, origin_long: float, goal_lat: float, goal_long: float, unitOfMeasurement: str = "ENU") -> Tuple[float, float]:
-        # Calculate distance and azimuth between GPS points
-        geod = Geodesic.WGS84  # define the WGS84 ellipsoid
-        # Compute several geodesic calculations between two GPS points
-        g = geod.Inverse(origin_lat, origin_long, goal_lat, goal_long)
-        hypotenuse = distance = g['s12']  # access distance
+    # # modify base on https://github.com/danielsnider/gps_goal
+    # def calculate_gps_offset(self, origin_lat: float, origin_long: float, goal_lat: float, goal_long: float, unitOfMeasurement: str = "ENU") -> Tuple[float, float]:
+    #     # Calculate distance and azimuth between GPS points
+    #     geod = Geodesic.WGS84  # define the WGS84 ellipsoid
+    #     # Compute several geodesic calculations between two GPS points
+    #     g = geod.Inverse(origin_lat, origin_long, goal_lat, goal_long)
+    #     hypotenuse = distance = g['s12']  # access distance
 
-        degree_to_rad = float(math.pi / 180.0)
+    #     degree_to_rad = float(math.pi / 180.0)
 
-        d_lat = (goal_lat - origin_lat) * degree_to_rad
-        d_long = (goal_long - origin_long) * degree_to_rad
+    #     d_lat = (goal_lat - origin_lat) * degree_to_rad
+    #     d_long = (goal_long - origin_long) * degree_to_rad
 
-        a = pow(sin(d_lat / 2), 2) + cos(origin_lat * degree_to_rad) * \
-            cos(goal_lat * degree_to_rad) * pow(sin(d_long / 2), 2)
-        c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        km = 6367 * c
-        mi = 3956 * c
+    #     a = pow(sin(d_lat / 2), 2) + cos(origin_lat * degree_to_rad) * \
+    #         cos(goal_lat * degree_to_rad) * pow(sin(d_long / 2), 2)
+    #     c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    #     km = 6367 * c
+    #     mi = 3956 * c
 
-        # self.get_logger().info("The distance from the origin to the goal is {:.3f} m.".format(distance))
-        if unitOfMeasurement == "ENU":
-            # https://answers.ros.org/question/219182/how-to-determine-yaw-angle-from-gps-bearing/
-            azimuth = 90 - g['azi1']
-        else:
-            azimuth = g['azi1']
-        # self.get_logger().info("The azimuth from the origin to the goal is {:.3f} degrees.".format(azimuth))
+    #     # self.get_logger().info("The distance from the origin to the goal is {:.3f} m.".format(distance))
+    #     if unitOfMeasurement == "ENU":
+    #         # https://answers.ros.org/question/219182/how-to-determine-yaw-angle-from-gps-bearing/
+    #         azimuth = 90 - g['azi1']
+    #     else:
+    #         azimuth = g['azi1']
+    #     # self.get_logger().info("The azimuth from the origin to the goal is {:.3f} degrees.".format(azimuth))
 
-        # Convert polar (distance and azimuth) to x,y translation in meters (needed for ROS) by finding side lenghs of a right-angle triangle
-        # Convert azimuth to radians
-        # print(azimuth)
-        azimuth = math.radians(azimuth)
-        x = adjacent = math.cos(azimuth) * hypotenuse
-        y = opposite = math.sin(azimuth) * hypotenuse
-        # self.get_logger().info("The translation from the origin to the goal is (x,y) {:.3f}, {:.3f} m.".format(x, y))
+    #     # Convert polar (distance and azimuth) to x,y translation in meters (needed for ROS) by finding side lenghs of a right-angle triangle
+    #     # Convert azimuth to radians
+    #     # print(azimuth)
+    #     azimuth = math.radians(azimuth)
+    #     x = adjacent = math.cos(azimuth) * hypotenuse
+    #     y = opposite = math.sin(azimuth) * hypotenuse
+    #     # self.get_logger().info("The translation from the origin to the goal is (x,y) {:.3f}, {:.3f} m.".format(x, y))
 
-        return x, y
+    #     return x, y
 
     def update_gps_velocity(self, message: NavSatFix):
         """
@@ -87,9 +87,14 @@ class GPSVelocity(Node):
             self.last_gps_coordinate = message
         else:
             # do velocity calculation
-            x, y = self.calculate_gps_offset(self.last_gps_coordinate.latitude, self.last_gps_coordinate.longitude,
-                                             message.latitude, message.longitude)
-            distance = sqrt(x*x + y*y)
+            # x, y = self.calculate_gps_offset(self.last_gps_coordinate.latitude, self.last_gps_coordinate.longitude,
+                        
+            #                                  message.latitude, message.longitude)
+            # distance = sqrt(x*x + y*y)
+            distance  = geopy.distance.geodesic( (self.last_gps_coordinate.latitude, self.last_gps_coordinate.longitude),
+                                        (message.latitude, message.longitude)).km * 1000
+            
+            
             time_difference_in_second: float = (message.header.stamp.sec + message.header.stamp.nanosec/(
                 10**9)) - (self.last_gps_coordinate.header.stamp.sec + self.last_gps_coordinate.header.stamp.nanosec/(10**9))
 
