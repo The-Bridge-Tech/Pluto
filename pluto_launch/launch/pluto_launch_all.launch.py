@@ -165,7 +165,7 @@ def generate_launch_description():
         # launch_arguments={
         #     "use_sim_time": use_sim_time
         # }.items(),
-    ),
+    )
     gps_velocity_launch =IncludeLaunchDescription(
 
         PythonLaunchDescriptionSource([os.path.join(
@@ -175,7 +175,6 @@ def generate_launch_description():
         #     "use_sim_time": use_sim_time
         # }.items(),
     )
-
 
     return LaunchDescription([
         # #imu_launch,
@@ -202,8 +201,8 @@ def generate_launch_description():
         static_transform_launch,
         maestro_launch,
         gps_filter_launch,
-        ekf_filter,
-        gps_velocity_launch
+        gps_velocity_launch,
+        ekf_filter
 
 
 
