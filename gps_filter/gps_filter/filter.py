@@ -49,8 +49,8 @@ class GPSFilter(Node):
         else:
             tempx = message.twist.linear.x
             tempy = message.twist.linear.y
-            tempTwistedWithCovariance.twist.twist.linear.x = tempy
-            tempTwistedWithCovariance.twist.twist.linear.y = tempx
+            tempTwistedWithCovariance.twist.twist.linear.x = tempx
+            tempTwistedWithCovariance.twist.twist.linear.y = tempy
             
         
         tempTwistedWithCovariance.twist.covariance = [VELOCITY_COVARIANCE **2,      0.0,                    0.0,                    0.0,                    0.0,                    0.0,
