@@ -59,8 +59,7 @@ namespace nav2_coverage_planner
     this->needUpdateCoverageMap = true;
     this->costmap_last_x_cell = costmap_->getSizeInCellsX();
     this->costmap_last_y_cell = costmap_->getSizeInCellsY();
-    // extractPlannerCostMap();
-
+   
     coverageService = this->node_->create_service<coverage_area_interface::srv::SelectSquare>("SelectSquare", std::bind(&CoveragePlanner::receiveNewCoverageArea, this, std::placeholders::_1, std::placeholders::_2));
   }
 
@@ -93,25 +92,21 @@ namespace nav2_coverage_planner
   void CoveragePlanner::extractPlannerCostMap()
   {
     RCLCPP_INFO(node_->get_logger(), "x, y %d %d", this->costmap_->getSizeInCellsX(), this->costmap_->getSizeInCellsY());
-    // std::vector<double> pose = {-2, 0, 2, 0,
-    //                             -2, -2, 2, -2};
-    // x, y of each coordidnates
-    // std::vector<double> pose = {0, 0, 1, -1,
-    //                             -1, -1, 0, -2};
-    auto pose = coveragePose;
-    if (pose.size() != 8)
+
+    // using pose = coveragePose;
+    if (coveragePose.size() != 8)
     {
       RCLCPP_ERROR(node_->get_logger(), "Incorrect coveragePose Size");
     }
 
     std::vector<nav2_costmap_2d::MapLocation> map_polygon;
-    for (size_t i = 0; i < pose.size(); i += 2)
+    for (size_t i = 0; i < coveragePose.size(); i += 2)
     {
       nav2_costmap_2d::MapLocation loc;
-      if (!this->costmap_->worldToMap(pose[i], pose[i + 1], loc.x, loc.y))
+      if (!this->costmap_->worldToMap(coveragePose[i], coveragePose[i + 1], loc.x, loc.y))
       {
         // failed to convert;
-        RCLCPP_INFO(node_->get_logger(), "extractPlannerCostMap(): failed to convert x,y: %f %f", pose[i], pose[i + 1]);
+        RCLCPP_INFO(node_->get_logger(), "extractPlannerCostMap(): failed to convert x,y: %f %f", coveragePose[i], coveragePose[i + 1]);
       }
       else
       {
@@ -153,8 +148,8 @@ namespace nav2_coverage_planner
     //   create a new map
     map_res = costmap_->getResolution();
 
-    double x_size_in_meter = std::sqrt(std::pow((pose[0] - pose[2]), 2) + std::pow((pose[1] - pose[3]), 2));
-    double y_size_in_meter = std::sqrt(std::pow((pose[0] - pose[4]), 2) + std::pow((pose[1] - pose[5]), 2));
+    double x_size_in_meter = std::sqrt(std::pow((coveragePose[0] - coveragePose[2]), 2) + std::pow((coveragePose[1] - coveragePose[3]), 2));
+    double y_size_in_meter = std::sqrt(std::pow((coveragePose[0] - coveragePose[4]), 2) + std::pow((coveragePose[1] - coveragePose[5]), 2));
 
     // TOOD: need to round up?
 
