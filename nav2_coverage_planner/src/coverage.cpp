@@ -107,7 +107,6 @@ namespace nav2_coverage_planner
     {
         // for the costmap
         // view all area according to ros standard
-        //
         COSTTYPE *cm = costarr;
         if (isROS)
         { // ROS-type cost array
@@ -213,60 +212,10 @@ namespace nav2_coverage_planner
 
             pathArray = new mapXY[n];
             npathbuf = n;
-            // if (pathx)
-            // {
-            //     delete[] pathx;
-            // }
-            // if (pathy)
-            // {
-            //     delete[] pathy;
-            // }
-            // pathx = new float[n];
-            // pathy = new float[n];
-            // npathbuf = n;
+
         }
         npath = 0;
     }
-    // int
-    // Coverage::calcPath()
-    // {
-    //     // test write
-    //     // savemap("test");
-
-    //     // check path arrays, initialize if necessary
-
-    //     int n = this->nx * this->ny;
-    //     if (npathbuf < n)
-    //     {
-    //         if (pathx)
-    //         {
-    //             delete[] pathx;
-    //         }
-    //         if (pathy)
-    //         {
-    //             delete[] pathy;
-    //         }
-    //         pathx = new float[n];
-    //         pathy = new float[n];
-    //         npathbuf = n;
-    //     }
-
-    //     // set up offset
-    //     float dx = 0;
-    //     float dy = 0;
-    //     npath = 0;
-
-    //     // // go for <n> cycles at most
-    //     // for (int i = 0; i < n; i++)
-    //     // {
-
-    //     // }
-
-    //     //  return npath;  // out of cycles, return failure
-    //     RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "[PathCalc] No path found, path too long");
-    //     // savemap("navfn_pathlong");
-    //     return 0; // out of cycles, return failure
-    // }
 
     bool Coverage::isObstacle(mapXY &p)
     {
@@ -286,17 +235,17 @@ namespace nav2_coverage_planner
 
         int index = convertMapXYToIndex(p);
 
-        this->costarr[index] = lethalObstacle; // nav2_costmap_2d::LETHAL_OBSTACLE;
+        this->costarr[index] = lethalObstacle;
     }
 
     bool Coverage::findNearbyFreeSpace(mapXY &p, char &direction)
     {
-        mapXY cur_pos = p;
+        mapXY cur_pos = p; // copy of the original position (row, column)
 
-        char currentDir = direction;
+        char currentDir = direction; // copy of the original moving direction
 
         bool hasFound = false;
-        for (char i = 0; i < 4 && !hasFound; i++)
+        for (char i = 0; i < 4 && !hasFound; i++) // only try 4 times, since 4 possible moving direction
         {
             switch (currentDir)
             {
@@ -381,7 +330,6 @@ namespace nav2_coverage_planner
     }
     void Coverage::squareMovement()
     {
-        // only n times,
 
         // moving direction
         // up -> right > down -> left
@@ -401,9 +349,7 @@ namespace nav2_coverage_planner
         mapXY startPos = {start[0], start[1]}; // this->start[0] + this->start[1] * nx;
 
         char direction = Up;
-        // only change direction if
-        // 1. the previous direction is moveable. Example if we are moving up, change to left it is empty and movable
-        // 2. change to next direction if has obstacle in front
+        // only change direction if has obstacle in front of the current moving direction
         mapXY currentPos = startPos;
         // mapXY lastPost = startPos;
 
@@ -426,23 +372,7 @@ namespace nav2_coverage_planner
             markVisited(currentPos);
 
             // then determine which direction we should move next
-
             hasPath = findNearbyFreeSpace(currentPos, direction);
-            // // 1. check the previous direction see if valid
-            // mapXY temp = currentPos;
-            // moveLeft(temp);
-            // if (!(isObstacle(temp)))
-            // {
-            //     // change heading back to left
-            //     currentPos = temp;
-            //     direction = Left;
-            // }
-            // else
-            // {
-            //     /// find new path from this case
-            //     hasPath = findNearbyFreeSpace(currentPos, Up);
-            // }
-            //}
         }
     }
 
@@ -450,7 +380,6 @@ namespace nav2_coverage_planner
     // debug writes
     // saves costmap and start/goal
     //
-
     void
     Coverage::savemap(const char *fname)
     {
