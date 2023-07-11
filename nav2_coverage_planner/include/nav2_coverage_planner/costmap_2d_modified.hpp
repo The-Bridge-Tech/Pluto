@@ -16,28 +16,7 @@
 
 namespace nav2_costmap_2d
 {
-    class RectangleLineCells
-    {
-    public:
-        RectangleLineCells(
-            const Costmap2D &costmap,
-            std::vector<MapLocation> &cells)
-            : costmap_(costmap), cells_(cells)
-        {
-        }
 
-        // just push the relevant cells back onto the list
-        inline void operator()(unsigned int offset)
-        {
-            MapLocation loc;
-            costmap_.indexToCells(offset, loc.x, loc.y);
-            cells_.push_back(loc);
-        }
-
-    private:
-        const Costmap2D &costmap_;
-        std::vector<MapLocation> &cells_;
-    };
     // define a class tha inherits costmap_2d, but provide interface for
     class Costmap2DModified : public nav2_costmap_2d::Costmap2D
     {
@@ -46,15 +25,17 @@ namespace nav2_costmap_2d
             unsigned int size_x, unsigned int size_y, double resolution,
             double origin_x, double origin_y, unsigned char default_value);
 
-        // the only different is that it will add a method
-
-
-        // void extractCostmap(
-
-        //     const std::vector<MapLocation> &polygon,
-
-        //     std::vector<MapLocation> &areaLocation,
-        //     unsigned int &polygon_x_size, unsigned int &polygon_y_size);
+        /**
+         * @brief Store all cell for a given rectangle shape.
+         * 
+         * @param lowerLeft The lowerLeft corner of the costmap.
+         * @param upperLeft The upperLeft corner of the costmap.
+         * @param lowerRight The lowerRight corner of the costmap.
+         * @param upperRight The upperRight corner of the costmap.
+         * @param areaLocation Vector that store all the cell location in rectangle define by lowerLeft, upperLeft, lowerRight & upperRight
+         * @param polygon_x_size The row size in cell number
+         * @param polygon_y_size The column size in cell number
+         */
         void extractCostmap(const MapLocation &lowerLeft, const MapLocation &upperLeft,
                                      const MapLocation &lowerRight, const MapLocation &upperRight, std::vector<MapLocation> &areaLocation,
                                      unsigned int &polygon_x_size, unsigned int &polygon_y_size);

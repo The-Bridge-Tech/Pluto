@@ -18,7 +18,6 @@ namespace nav2_costmap_2d
         unsigned int size_x, unsigned int size_y, double resolution,
         double origin_x, double origin_y, unsigned char default_value)
     {
-        // access_ = new mutex_t();
 
         // create the costmap
         costmap_ = NULL;
@@ -36,7 +35,7 @@ namespace nav2_costmap_2d
                                            unsigned int &polygon_x_size, unsigned int &polygon_y_size)
     {
 
-        // first, get the left boundary
+     
         std::vector<nav2_costmap_2d::MapLocation> left_side;
         std::vector<nav2_costmap_2d::MapLocation> right_side;
 
@@ -44,26 +43,23 @@ namespace nav2_costmap_2d
         PolygonOutlineCells left_cell_gatherer(*this, costmap_, left_side);
         auto start = lowerLeft;
         auto end = upperLeft;
-        raytraceLine(left_cell_gatherer, start.x, start.y, end.x, end.y);
+        raytraceLine(left_cell_gatherer, start.x, start.y, end.x, end.y);   // first, get the left boundary
 
         start = lowerRight;
         end = upperRight;
-        raytraceLine(right_cell_gatherer, start.x, start.y, end.x, end.y);
+        raytraceLine(right_cell_gatherer, start.x, start.y, end.x, end.y); // then get the right side
 
         std::size_t xSize = std::min(left_side.size(), right_side.size());
         std::size_t ySize = 0;
 
-        bool needinitalizYSize = true;
         for (std::size_t i = 0; i < xSize; i++)
         {
             std::vector<nav2_costmap_2d::MapLocation> temp;
-            PolygonOutlineCells temp_gather(*this, costmap_, temp);
+            PolygonOutlineCells temp_gather(*this, costmap_, temp); // find lines from left to right 
 
             MapLocation s = left_side.at(i);
             MapLocation e = right_side.at(i);
             raytraceLine(temp_gather, s.x, s.y, e.x, e.y);
-
-            // TODO: undo  later?
 
             ySize = std::max(temp.size(), ySize);
 
