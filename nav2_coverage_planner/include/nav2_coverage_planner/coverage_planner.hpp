@@ -22,28 +22,7 @@
 
 namespace nav2_coverage_planner
 {
-  class PolygonOutlineCells
-  {
-  public:
-    PolygonOutlineCells(
-        const nav2_costmap_2d::Costmap2D &costmap, const unsigned char * /*char_map*/,
-        std::vector<nav2_costmap_2d::MapLocation> &cells)
-        : costmap_(costmap), cells_(cells)
-    {
-    }
 
-    // just push the relevant cells back onto the list
-    inline void operator()(unsigned int offset)
-    {
-      nav2_costmap_2d::MapLocation loc;
-      costmap_.indexToCells(offset, loc.x, loc.y);
-      cells_.push_back(loc);
-    }
-
-  private:
-    const nav2_costmap_2d::Costmap2D &costmap_;
-    std::vector<nav2_costmap_2d::MapLocation> &cells_;
-  };
   class CoveragePlanner : public nav2_core::GlobalPlanner
   {
   public:
@@ -70,12 +49,20 @@ namespace nav2_coverage_planner
         const geometry_msgs::msg::PoseStamped &start,
         const geometry_msgs::msg::PoseStamped &goal) override;
 
+    /**
+     * @brief Transform PoseStamped message to another tf frame.
+     * 
+     * @param input_pose The source of the PoseStamped message to transform.
+     * @param transformed_pose The result where the transformed PoseStamped wil be stored
+     * @param goalFrame The frame name
+     * @return true if success. False otherwise.
+     */
     bool transformPoseToAnotherFrame(const geometry_msgs::msg::PoseStamped &input_pose,
                                      geometry_msgs::msg::PoseStamped &transformed_pose, const std::string &goalFrame);
 
-    bool transformPoseToGlobalFrame(
-        const geometry_msgs::msg::PoseStamped &input_pose,
-        geometry_msgs::msg::PoseStamped &transformed_pose);
+    // bool transformPoseToGlobalFrame(
+    //     const geometry_msgs::msg::PoseStamped &input_pose,
+    //     geometry_msgs::msg::PoseStamped &transformed_pose);
 
   //  void mapToWorld(double mx, double my, double & wx, double & wy, nav2_costmap_2d::Costmap2D *costmap);
   //  bool worldToMap(double wx, double wy, unsigned int &mx, unsigned int &my, nav2_costmap_2d::Costmap2D *costmap);
@@ -91,7 +78,7 @@ namespace nav2_coverage_planner
      * @return true if planner object is out of date
      */
     bool isPlannerOutOfDate();
-
+    
     void extractPlannerCostMap();
 
     void linearInterpolation(const geometry_msgs::msg::PoseStamped curr_start, const geometry_msgs::msg::PoseStamped cur_goal, nav_msgs::msg::Path &global_path);
@@ -122,15 +109,15 @@ namespace nav2_coverage_planner
     int planner_path_index;
 
     std::unique_ptr<Coverage> planner_;
-    bool movedToOrigin;
+    bool movedToOrigin;   // flag indicate if the robot moved to the origin of the "planner" costmap
 
     // service for receive the area to cover
     rclcpp::Service<coverage_area_interface::srv::SelectSquare>::SharedPtr coverageService;
     std::vector<double> coveragePose;
 
     // for checking if need to update planner's costmap
-    
-    bool needUpdateCoverageMap; 
+    bool needUpdateCoverageMap;  // flag whenever being reset with new coverage area
+                                // use to indicate if need to replan a new coverage path
     unsigned int costmap_last_x_cell, costmap_last_y_cell; // record the number of cell for the global costmap
                                                           // use for checking of global costmap has been update by map server
   };

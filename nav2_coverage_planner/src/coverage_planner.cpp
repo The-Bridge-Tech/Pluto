@@ -252,9 +252,7 @@ namespace nav2_coverage_planner
       RCLCPP_INFO(logger_, "Waiting for servive on /SelectArea");
       return global_path;
     }
-    // // clear the starting cell within the costmap because we know it can't be an obstacle
-    // //TODO transform that  into "map" frame first?
-    // clearRobotCell(mx, my);
+
 
     std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap_->getMutex()));
 
@@ -283,11 +281,10 @@ namespace nav2_coverage_planner
     // Checking if the goal and start state is in the global frame
     if (curr_start.header.frame_id != planner_frame_)
     {
-      RCLCPP_ERROR(
+      RCLCPP_INFO(
           node_->get_logger(), "Planner try to transform position to %s frame",
           planner_frame_.c_str());
       transformPoseToAnotherFrame(start, curr_start, planner_frame_);
-      // return global_path;
     }
 
     if (cur_goal.header.frame_id != planner_frame_)
@@ -296,7 +293,6 @@ namespace nav2_coverage_planner
           node_->get_logger(), "Planner try to transform position to %s frame",
           planner_frame_.c_str());
       transformPoseToAnotherFrame(goal, cur_goal, planner_frame_);
-      // return global_path;
     }
 
     double wx = curr_start.pose.position.x;
@@ -515,21 +511,21 @@ namespace nav2_coverage_planner
           goalFrame, transform_tolerance_);
     }
   }
-  bool CoveragePlanner::transformPoseToGlobalFrame(const geometry_msgs::msg::PoseStamped &input_pose,
-                                                   geometry_msgs::msg::PoseStamped &transformed_pose)
-  {
-    if (input_pose.header.frame_id == global_frame_)
-    {
-      transformed_pose = input_pose;
-      return true;
-    }
-    else
-    {
-      return nav2_util::transformPoseInTargetFrame(
-          input_pose, transformed_pose, *(this->tf_),
-          global_frame_, transform_tolerance_);
-    }
-  }
+  // bool CoveragePlanner::transformPoseToGlobalFrame(const geometry_msgs::msg::PoseStamped &input_pose,
+  //                                                  geometry_msgs::msg::PoseStamped &transformed_pose)
+  // {
+  //   if (input_pose.header.frame_id == global_frame_)
+  //   {
+  //     transformed_pose = input_pose;
+  //     return true;
+  //   }
+  //   else
+  //   {
+  //     return nav2_util::transformPoseInTargetFrame(
+  //         input_pose, transformed_pose, *(this->tf_),
+  //         global_frame_, transform_tolerance_);
+  //   }
+  // }
 
   // bool CoveragePlanner::worldToMap(double wx, double wy, unsigned int &mx, unsigned int &my) const
 
