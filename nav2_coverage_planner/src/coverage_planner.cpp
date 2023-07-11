@@ -392,7 +392,7 @@ namespace nav2_coverage_planner
           if (start_index[0] == p.x && start_index[1] == p.y)
           {
             planner_path_index = j;
-            //RCLCPP_INFO(logger_, "The index for path is %d", planner_path_index); //debug purpose
+            RCLCPP_INFO(logger_, "The index for path is %d", planner_path_index); //debug purpose
           }
         }
 
@@ -619,7 +619,7 @@ namespace nav2_coverage_planner
     // upper_left x,y
     // lower_right x,y
     // upper_right x,y
-
+    this->coveragePose.clear();
     this->coveragePose.push_back(request->lower_left_x);
     this->coveragePose.push_back(request->lower_left_y);
     this->coveragePose.push_back(request->upper_left_x);
