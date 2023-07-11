@@ -1,0 +1,5 @@
+<library path="nav2_coverage_planner_plugin">
+	<class name="nav2_coverage_planner/CoveragePlanner" type="nav2_coverage_planner::CoveragePlanner" base_class_type="nav2_core::GlobalPlanner">
+	  <description>This is an example plugin which produces full coverage path.</description>
+	</class>
+</library>

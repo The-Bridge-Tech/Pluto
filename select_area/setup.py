@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'py_pubsub'
+package_name = 'select_area'
 
 setup(
     name=package_name,
@@ -13,15 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='bridgetech',
-    maintainer_email='developer@thebridgetech.org',
+    maintainer='shouyu',
+    maintainer_email='joeldushouyu@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = py_pubsub.publisher_member_function:main',
-            'listener = py_pubsub.subscriber_member_function:main',
+                'coverageClient = select_area.CoveragePlannerClient:main',
         ],
     },
 )
