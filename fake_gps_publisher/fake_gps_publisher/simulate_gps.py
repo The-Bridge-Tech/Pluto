@@ -4,13 +4,13 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 from sensor_msgs.msg import NavSatFix
-
+gps_list = [(34.84136489243739, -82.41178985244608),(34.84131419440653, -82.41170652710007)]
 class FakeGpsPublisher(Node):
 
     def __init__(self):
         super().__init__('minimal_publisher')
         self.publisher_ = self.create_publisher(NavSatFix, '/fix', 10)
-        timer_period = 0.5  # seconds
+        timer_period = 1 # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
@@ -21,8 +21,10 @@ class FakeGpsPublisher(Node):
         msg.header.frame_id = "gps_link"
         msg.status.status=0
         msg.status.service=1
-        msg.latitude=34.8413
-        msg.longitude=-82.4117
+        
+        gps_coord = gps_list[self.i]
+        msg.latitude=gps_coord[0]
+        msg.longitude=gps_coord[1]
         msg.altitude=278.299
         msg.position_covariance = [0.0169, 0.0, 0.0,
                                 0.0, 0.0169, 0.0,
@@ -42,6 +44,7 @@ class FakeGpsPublisher(Node):
         #                             0.0, 0.0, 0.2720]
         #     msg.position_covariance_type=1
         self.i+=1
+        self.i %= len(gps_list)
         self.publisher_.publish(msg)
         
         
