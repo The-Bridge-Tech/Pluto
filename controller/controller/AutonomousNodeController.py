@@ -245,7 +245,10 @@ class AutonomousNodeController(Node):
         # geopy.distance.geodesic(coords_1, coords_2).m
         goal_pose.pose.position.x = distance
         goal_pose.pose.position.y = 0.0
-        goal_pose.pose.orientation.w = 1.0
+        goal_pose.pose.position.x = 0.0
+        goal_pose.pose.position.y = 0.0
+        goal_pose.pose.position.z = -0.7071068
+        goal_pose.pose.orientation.w = 0.7071068
 
         # sanity check a valid path exists
         # path = navigator.getPath(initial_pose, goal_pose)
@@ -270,9 +273,9 @@ class AutonomousNodeController(Node):
                     Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9)
                     + ' seconds.')
 
-                # Some navigation timeout to demo cancellation
-                if Duration.from_msg(feedback.navigation_time) > Duration(seconds=600.0):
-                    self.navigator.cancelTask()
+                # # Some navigation timeout to demo cancellation
+                # if Duration.from_msg(feedback.navigation_time) > Duration(seconds=600.0):
+                #     self.navigator.cancelTask()
 
                 # # Some navigation request change to demo preemption
                 # if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
