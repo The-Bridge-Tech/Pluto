@@ -243,8 +243,8 @@ class AutonomousNodeController(Node):
         goal_pose.header.frame_id = 'map'
         goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
         # geopy.distance.geodesic(coords_1, coords_2).m
-        goal_pose.pose.position.x = distance
-        goal_pose.pose.position.y = 0.0
+        goal_pose.pose.position.x = 0.0
+        goal_pose.pose.position.y = -distance
         goal_pose.pose.position.x = 0.0
         goal_pose.pose.position.y = 0.0
         goal_pose.pose.position.z = -0.7071068
