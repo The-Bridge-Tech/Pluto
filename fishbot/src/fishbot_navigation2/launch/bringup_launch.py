@@ -1,4 +1,3 @@
-
 # Copyright (c) 2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +27,7 @@ from launch_ros.actions import PushRosNamespace
 
 def generate_launch_description():
     # Get the launch directory
-    bringup_dir = get_package_share_directory('fishbot_navigation2')
+    bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     # Create the launch configuration variables
@@ -90,15 +89,16 @@ def generate_launch_description():
         #                       'autostart': autostart,
         #                       'params_file': params_file}.items()),
 
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(launch_dir,
-                                                       'map_server_saver.launch.py')), #map_server_saver.launch.py
-            launch_arguments={'namespace': namespace,
-                              'map': map_yaml_file,
-                              'use_sim_time': use_sim_time,
-                              'autostart': autostart,
-                              'params_file': params_file,
-                              'use_lifecycle_mgr': 'false'}.items()),
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource(os.path.join(launch_dir,
+        #                                                'localization_launch.py')),
+        #     condition=IfCondition(PythonExpression(['not ', slam])),
+        #     launch_arguments={'namespace': namespace,
+        #                       'map': map_yaml_file,
+        #                       'use_sim_time': use_sim_time,
+        #                       'autostart': autostart,
+        #                       'params_file': params_file,
+        #                       'use_lifecycle_mgr': 'false'}.items()),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
@@ -106,7 +106,7 @@ def generate_launch_description():
                               'use_sim_time': use_sim_time,
                               'autostart': autostart,
                               'params_file': params_file,
-                              'use_lifecycle_mgr': 'true',
+                              'use_lifecycle_mgr': 'false',
                               'map_subscribe_transient_local': 'true'}.items()),
     ])
 
