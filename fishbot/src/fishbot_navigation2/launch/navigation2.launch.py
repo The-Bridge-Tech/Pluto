@@ -37,7 +37,7 @@ def generate_launch_description():
                 'map': map_yaml_path,
                 'use_sim_time': use_sim_time,
                 'params_file': nav2_param_path,
-                'autostart':"true"  #TODO: configure this way
+                'autostart':"false"  #TODO: configure this way
                  # "default_nav_through_poses_bt_xml": bt_path
                 }.items(),
         )
