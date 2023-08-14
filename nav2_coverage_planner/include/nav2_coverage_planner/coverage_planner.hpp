@@ -79,12 +79,27 @@ namespace nav2_coverage_planner
      */
     bool isPlannerOutOfDate();
     
+    /**
+     * @brief Extract coverage costmap(base on area defined by 4 x,y point in coveragePose) from global costmap
+     * 
+     */
     void extractPlannerCostMap();
 
+    /**
+     * @brief Calculate the linear, straight path between 2 pose.
+     * 
+     * @param curr_start The current position of the robot
+     * @param cur_goal  The end position.
+     * @param global_path  Array that store poses that form a linear, straight path between curr_start and cur_goal
+     */
     void linearInterpolation(const geometry_msgs::msg::PoseStamped curr_start, const geometry_msgs::msg::PoseStamped cur_goal, nav_msgs::msg::Path &global_path);
 
     void receiveNewCoverageArea(const std::shared_ptr<coverage_area_interface::srv::SelectSquare::Request> request, // CHANGE
                                 std::shared_ptr<coverage_area_interface::srv::SelectSquare::Response> response);
+    /**
+     * @brief Extract the costmap and call planner to plan a new path.
+     * 
+     */
     void planNewPath();
   private:
     // TF buffer
@@ -115,8 +130,9 @@ namespace nav2_coverage_planner
     // service for receive the area to cover
     rclcpp::Service<coverage_area_interface::srv::SelectSquare>::SharedPtr coverageService;  // a Service server that listen to request from client to update this->coveragePose, 
         // which represent the rectangle area (in "planner_frame_") to cover.
-    std::vector<double> coveragePose;  // vector contain 4 (x, y) (in "planner_frame_"). The four x,y point represent the 4 corner that define the rectangle shape that the planner is covering
 
+    std::vector<double> coveragePose;  // vector contain 4 (x, y) (in "planner_frame_"). The four x,y point represent the 4 corner that define the rectangle shape that the planner is covering
+        // The pose are store in the following order. lower_left x,y, upper_left x,y   lower_right x,y upper_right x,y
     // for checking if need to update planner's costmap
     bool needUpdateCoverageMap;  // flag whenever being reset with new coverage area
                                 // use to indicate if need to replan a new coverage path

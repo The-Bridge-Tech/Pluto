@@ -54,10 +54,13 @@ namespace nav2_coverage_planner
     movedToOrigin = false;
     planner_path_index = 0;
 
-    this->needUpdateCoverageMap = true;
-    this->costmap_last_x_cell = costmap_->getSizeInCellsX();
+    this->needUpdateCoverageMap = true;  // indicate that need to extract costmap for coverage algorithm
+    
+    // record the global costmap's x,y size. Use for determine change in global costmap, like reloading a costmap.
+    this->costmap_last_x_cell = costmap_->getSizeInCellsX();  
     this->costmap_last_y_cell = costmap_->getSizeInCellsY();
-    planner_start[0] = 0; // the origin -x of the "planner" frame grid
+
+    planner_start[0] = 0; 
     planner_start[1] = 0;
 
     coverageService = this->node_->create_service<coverage_area_interface::srv::SelectSquare>("SelectSquare", std::bind(&CoveragePlanner::receiveNewCoverageArea, this, std::placeholders::_1, std::placeholders::_2));
@@ -93,11 +96,12 @@ namespace nav2_coverage_planner
   {
     RCLCPP_INFO(node_->get_logger(), "costmapSize:  x, y %d %d", this->costmap_->getSizeInCellsX(), this->costmap_->getSizeInCellsY());
 
-    if (coveragePose.size() != 8) // check if has 4 x,y (the corner of the area to cover)
+    if (coveragePose.size() != 8) // check if has 4 x,y (the corner of the rectangle area to cover)
     {
       RCLCPP_ERROR(node_->get_logger(), "Incorrect coveragePose Size");
     }
 
+    // now, turn the 4 (x,y) point into costmap_2d:MapLocation. This is a preparation for extracting coverage costmap from the global costmap
     std::vector<nav2_costmap_2d::MapLocation> map_polygon;
     for (size_t i = 0; i < coveragePose.size(); i += 2) // turn those four coordinate into nav2_costmap_2d::MapLocation object
     {
@@ -115,16 +119,10 @@ namespace nav2_coverage_planner
       map_polygon.push_back(loc);
     }
 
-    std::vector<nav2_costmap_2d::MapLocation> coverageLocation;
-
-    // nav2_costmap_2d::Costmap2D resMap(134,118,this->costmap_->getResolution(), 0,0);//= this->costmap_->extractPolygonMap(map_polygon);
+    std::vector<nav2_costmap_2d::MapLocation> coverageLocation; // Vector use to store all (x,y) grid location (in global costmap) that are within the coverage costmap (define by the 4 x,y)
     unsigned int x_size;
     unsigned int y_size;
     double map_res;
-    // nav2_costmap_2d::Costmap2D debugMap = this->costmap_->extractPolygonMap(map_polygon, coverageLocation, x_size, y_size,false); // debug purpose
-
-    //
-    // this->costmap_->extractPolygonMap(map_polygon, coverageLocation, x_size, y_size, false);
 
     nav2_costmap_2d::Costmap2DModified extractTool(
         this->costmap_->getSizeInCellsX(),
@@ -136,43 +134,29 @@ namespace nav2_coverage_planner
 
     );
 
+    // call function to extractCostmap
     extractTool.extractCostmap(map_polygon[0], map_polygon[1], map_polygon[2], map_polygon[3], coverageLocation, x_size, y_size); // extract all grid base on the 4 corner defined
 
     //   create a new map
     map_res = costmap_->getResolution();
+    // using pythagorean theorem
     double x_size_in_meter = std::sqrt(std::pow((coveragePose[0] - coveragePose[2]), 2) + std::pow((coveragePose[1] - coveragePose[3]), 2));
     double y_size_in_meter = std::sqrt(std::pow((coveragePose[0] - coveragePose[4]), 2) + std::pow((coveragePose[1] - coveragePose[5]), 2));
 
-    // TOOD: need to round up?
 
-    // TODO: very important note: robot should never touch the 4 corner,
-    //  moreover, should never stay or cross the boundary map
-    x_size = std::ceil(x_size_in_meter / map_res); // TODO: is this correct?
+    x_size = std::ceil(x_size_in_meter / map_res); 
     y_size = std::ceil(y_size_in_meter / map_res);
 
     coverageMap = nav2_costmap_2d::Costmap2D(x_size, y_size, map_res, (-1 * (x_size_in_meter) / 2), (-1 * (y_size_in_meter) / 2));
-    // coverageMap = nav2_costmap_2d::Costmap2D(x_size, y_size, map_res, 0.0, 0.0);
-    // coverageMap.resizeMap(x_size, y_size, map_res, (-1 * (x_size * map_res) / 2), (-1 * (y_size * map_res) / 2) );
     RCLCPP_INFO(this->node_->get_logger(), "x_size %d y_size %d x_origin %f y_origin %f resolution %f", coverageMap.getSizeInCellsX(),
                 coverageMap.getSizeInCellsY(), coverageMap.getOriginX(), coverageMap.getOriginY(), coverageMap.getResolution());
 
-    // debug action
-
-    // for(std::size_t i = 0; i <coverageLocation.size(); i++){
-    //   // convert the i,j to meters
-    //   double x_world, y_world;
-    //   double x_world2, y_world2;
-    //   this->costmap_->mapToWorld(coverageLocation[i].x, coverageLocation[i].y, x_world2, y_world2);
-    //   mapToWorld(coverageLocation[i].x, coverageLocation[i].y, x_world, y_world, this->costmap_);
-    //   RCLCPP_INFO(this->node_->get_logger(), "index: %d %d meter: %f %f  2nd %f %f", coverageLocation[i].x, coverageLocation[i].y, x_world, y_world,x_world2, y_world2);
-    // }
     for (std::size_t i = 0; i < coverageLocation.size(); i++)
     {
       geometry_msgs::msg::PoseStamped coveragePose;
       geometry_msgs::msg::PoseStamped mapPose;
 
-      // 1. transform the index to meter unit for "map" frame
-
+      // 1. transform the index (in 2d grid array) to meter unit for "map" frame, and then use TF tree to transform pose from "map" to planner_frame_
       double map_x, map_y;
       costmap_->mapToWorld(coverageLocation[i].x, coverageLocation[i].y, map_x, map_y);
       // mapToWorld(coverageLocation[i].x, coverageLocation[i].y, map_x, map_y, costmap_);
@@ -189,7 +173,7 @@ namespace nav2_coverage_planner
 
       auto cost = this->costmap_->getCost(coverageLocation[i].x, coverageLocation[i].y);
 
-      // 2. get the  map index of this "planner" map base on the tf result
+      // 2. get the  map index(in 2d grid array) of this planner_frame_
       unsigned int planner_m_x, planner_m_y;
 
       if (!coverageMap.worldToMap(coveragePose.pose.position.x, coveragePose.pose.position.y, planner_m_x, planner_m_y))
@@ -208,7 +192,6 @@ namespace nav2_coverage_planner
       //              planner_m_x, planner_m_y);
     }
 
-    // debugMap.saveMap("debugMap.pgm");
     // coverageMap.saveMap("Testmap.pgm");
     // RCLCPP_INFO(
     //     node_->get_logger(), "save map!!!");
@@ -219,7 +202,7 @@ namespace nav2_coverage_planner
 
     RCLCPP_INFO(node_->get_logger(), "x meter %f ymeter %f res %f", xSize, ySize, resolution);
 
-    // try to publish the extracted map
+    // try to publish the coverage costmap that is extracted from global costmap
     plannnerMapPub->publishCostmap();
   }
 
@@ -237,7 +220,7 @@ namespace nav2_coverage_planner
 
     if (this->coveragePose.size() != 8)
     {
-      RCLCPP_INFO(logger_, "Waiting for servive on /SelectArea");
+      RCLCPP_INFO(logger_, "Waiting for service on /SelectArea");
       return global_path;
     }
 
@@ -270,13 +253,11 @@ namespace nav2_coverage_planner
       transformPoseToAnotherFrame(goal, cur_goal, planner_frame_);
     }
 
-    double wx = curr_start.pose.position.x;
-    double wy = curr_start.pose.position.y;
-
     // RCLCPP_DEBUG(
     //     logger_, "Making plan from (%.2f,%.2f) to (%.2f,%.2f)",
     //     start.pose.position.x, start.pose.position.y, goal.pose.position.x, goal.pose.position.y);
-
+    double wx = curr_start.pose.position.x;
+    double wy = curr_start.pose.position.y;
     unsigned int mx, my;
     if (!this->coverageMap.worldToMap(wx, wy, mx, my))
     {
@@ -285,10 +266,6 @@ namespace nav2_coverage_planner
           "Cannot create a plan: the robot's start position is off the global"
           " costmap. Planning will always fail, are you sure"
           " the robot has been properly localized?");
-    }
-    else
-    {
-      // RCLCPP_INFO(logger_, "start: transform from [meter] %f %f to [matrix] %u %u", wx, wy, mx, my);
     }
 
     int start_pose_x_y[2];
@@ -383,34 +360,13 @@ namespace nav2_coverage_planner
         }
 
         // debug purpose
-        RCLCPP_INFO(
-            node_->get_logger(), "The last pose of the planner x: %f y: %f", global_path.poses.back().pose.position.x, global_path.poses.back().pose.position.y);
-        // RCLCPP_INFO(logger_, "The origin of planner costmap x: %f y: %f", coverageMap.getOriginX(), coverageMap.getOriginY());
+        // RCLCPP_INFO(
+        //     node_->get_logger(), "The last pose of the planner x: %f y: %f", global_path.poses.back().pose.position.x, global_path.poses.back().pose.position.y);
 
-        // linearInterpolation(curr_start, latestPost, global_path);
       }
     }
 
-    // at last, do something that move to the goal_pose
-
-    // wx = cur_goal.pose.position.x;
-    // wy = cur_goal.pose.position.y;
-    // //TODO: any relvant in this case?
-    // if (! this->coverageMap.worldToMap(wx, wy, mx, my))
-    // {
-    //   RCLCPP_WARN(
-    //       logger_,
-    //       "The goal sent to the planner is off the global costmap."
-    //       " Planning will always fail to this goal.");
-    // }
-
-    // RCLCPP_INFO(logger_, "goal: transform from [meter] %f %f to [matrix] %u %u",wx,wy, mx, my );
-
-    // int map_goal[2];
-    // map_goal[0] = mx;
-    // map_goal[1] = my;
-
-    // TODO: later
+    // Optional: at last, do something that move to the goal_pose
 
     RCLCPP_INFO(
         node_->get_logger(), "Planner has total %ld pose in path", global_path.poses.size());
@@ -510,47 +466,6 @@ namespace nav2_coverage_planner
           goalFrame, transform_tolerance_);
     }
   }
-  // bool CoveragePlanner::transformPoseToGlobalFrame(const geometry_msgs::msg::PoseStamped &input_pose,
-  //                                                  geometry_msgs::msg::PoseStamped &transformed_pose)
-  // {
-  //   if (input_pose.header.frame_id == global_frame_)
-  //   {
-  //     transformed_pose = input_pose;
-  //     return true;
-  //   }
-  //   else
-  //   {
-  //     return nav2_util::transformPoseInTargetFrame(
-  //         input_pose, transformed_pose, *(this->tf_),
-  //         global_frame_, transform_tolerance_);
-  //   }
-  // }
-
-  // bool CoveragePlanner::worldToMap(double wx, double wy, unsigned int &mx, unsigned int &my) const
-
-  //   double origin_x_ = costmap_->getOriginX();
-  //   double origin_y_ = costmap->getOriginY();
-  //   if (wx < costmap_->get_ || wy < origin_y_)
-  //   {
-  //     RCLCPP_ERROR(
-  //       node_->get_logger(), "smaller than origin %d %d origin %d %", wx, wy, );
-  //     return false;
-  //   }
-
-  //   mx = static_cast<unsigned int>((wx - origin_x_) / resolution_);
-  //   my = static_cast<unsigned int>((wy - origin_y_) / resolution_);
-
-  //   double size_x_ = costmap_->get
-  //   if (mx < size_x_ && my < size_y_)
-  //   {
-
-  //     return true;
-  //   }
-  //   RCLCPP_ERROR(
-  //       node_->get_logger(), "index bigger than size %d %d  maxIndex %d %d", mx,my,
-  //     )
-  //   return false;
-  // }
 
   // bool
   // CoveragePlanner::worldToMap(double wx, double wy, unsigned int &mx, unsigned int &my, nav2_costmap_2d::Costmap2D *costmap)
