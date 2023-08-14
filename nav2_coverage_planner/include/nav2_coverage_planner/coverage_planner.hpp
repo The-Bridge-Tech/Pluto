@@ -112,8 +112,9 @@ namespace nav2_coverage_planner
     bool movedToOrigin;   // flag indicate if the robot moved to the origin of the "planner" costmap
 
     // service for receive the area to cover
-    rclcpp::Service<coverage_area_interface::srv::SelectSquare>::SharedPtr coverageService;
-    std::vector<double> coveragePose;
+    rclcpp::Service<coverage_area_interface::srv::SelectSquare>::SharedPtr coverageService;  // a Service server that listen to request from client to update this->coveragePose, 
+        // which represent the rectangle area (in "planner_frame_") to cover.
+    std::vector<double> coveragePose;  // vector contain 4 (x, y) (in "planner_frame_"). The four x,y point represent the 4 corner that define the rectangle shape that the planner is covering
 
     // for checking if need to update planner's costmap
     bool needUpdateCoverageMap;  // flag whenever being reset with new coverage area
