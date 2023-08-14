@@ -16,7 +16,6 @@ import math
 
 from geometry_msgs.msg import TransformStamped
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
-
 import numpy as np
 
 import rclpy
@@ -141,8 +140,13 @@ class CoveragePlannerClient(Node):
         self.req.frame = "map"
         
         self.future = self.select_area_client.call_async(self.req)
+        rclpy.spin_until_future_complete(self, self.future)
+        response = self.future.result()
+        print(response.goal_end_pose)
         
-        print(self.future)
+        
+        # now, send the goal_end_pose as a co
+        
         
     def publish_map_to_planner_transform(self):
         t = TransformStamped()

@@ -54,11 +54,12 @@ namespace nav2_coverage_planner
     movedToOrigin = false;
     planner_path_index = 0;
 
-    // TODO: initalize costmap here?
     this->needUpdateCoverageMap = true;
     this->costmap_last_x_cell = costmap_->getSizeInCellsX();
     this->costmap_last_y_cell = costmap_->getSizeInCellsY();
-   
+    planner_start[0] = 0; // the origin -x of the "planner" frame grid
+    planner_start[1] = 0;
+
     coverageService = this->node_->create_service<coverage_area_interface::srv::SelectSquare>("SelectSquare", std::bind(&CoveragePlanner::receiveNewCoverageArea, this, std::placeholders::_1, std::placeholders::_2));
   }
 
@@ -134,18 +135,11 @@ namespace nav2_coverage_planner
         0
 
     );
-    // nav2_costmap_2d::Costmap2DModified extractTool;
 
     extractTool.extractCostmap(map_polygon[0], map_polygon[1], map_polygon[2], map_polygon[3], coverageLocation, x_size, y_size); // extract all grid base on the 4 corner defined
 
-    // extractTool.extractCostmap(
-    //     tempCost,
-    //     map_polygon[0], map_polygon[1], map_polygon[2], map_polygon[3],
-    //     coverageLocation, x_size, y_size);
-    // extractTool.extractCostmap(map_polygon, coverageLocation, x_size, y_size);
     //   create a new map
     map_res = costmap_->getResolution();
-
     double x_size_in_meter = std::sqrt(std::pow((coveragePose[0] - coveragePose[2]), 2) + std::pow((coveragePose[1] - coveragePose[3]), 2));
     double y_size_in_meter = std::sqrt(std::pow((coveragePose[0] - coveragePose[4]), 2) + std::pow((coveragePose[1] - coveragePose[5]), 2));
 
@@ -181,6 +175,7 @@ namespace nav2_coverage_planner
 
       double map_x, map_y;
       costmap_->mapToWorld(coverageLocation[i].x, coverageLocation[i].y, map_x, map_y);
+      // mapToWorld(coverageLocation[i].x, coverageLocation[i].y, map_x, map_y, costmap_);
       mapPose.pose.position.x = map_x;
       mapPose.pose.position.y = map_y;
       mapPose.pose.position.z = 0.0;
@@ -246,7 +241,6 @@ namespace nav2_coverage_planner
       return global_path;
     }
 
-
     std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(costmap_->getMutex()));
 
     // make sure to resize the underlying array that Coverage uses
@@ -254,19 +248,7 @@ namespace nav2_coverage_planner
 
     if (isPlannerOutOfDate())
     {
-      needUpdateCoverageMap = false;
-      movedToOrigin = false; // let robot move back to origin
-      costmap_last_x_cell = this->costmap_->getSizeInCellsX();
-      costmap_last_y_cell = this->costmap_->getSizeInCellsY();
-
-      extractPlannerCostMap();
-      planner_->setNavArr(
-          this->coverageMap.getSizeInCellsX(),
-          this->coverageMap.getSizeInCellsY());
-      planner_->setupPathArray(coverageMap.getSizeInCellsX() * coverageMap.getSizeInCellsY());
-
-      RCLCPP_INFO(logger_, "detect change of map size, did you reset the global costmap?");
-      planner_->setCostmap(coverageMap.getCharMap(), true);
+        planNewPath();
     }
 
     lock.unlock();
@@ -309,13 +291,9 @@ namespace nav2_coverage_planner
       // RCLCPP_INFO(logger_, "start: transform from [meter] %f %f to [matrix] %u %u", wx, wy, mx, my);
     }
 
-    int start_index[2];
-    start_index[0] = mx;
-    start_index[1] = my;
-
-    int planner_start[2]; // start row, col index of planner to start planning
-    planner_start[0] = 0; // mx;
-    planner_start[1] = 0;
+    int start_pose_x_y[2];
+    start_pose_x_y[0] = mx;
+    start_pose_x_y[1] = my;
 
     if (movedToOrigin == false)
     {
@@ -358,19 +336,7 @@ namespace nav2_coverage_planner
       // second stage of planner(after moved to (0,0) grid in coverageMap)
       if (planner_->getPathLen() == 0)
       {
-
-        //planner_->savemap("beforePlanner.pgm"); // debug purpose
-        if (!planner_->setStart(planner_start))
-        {
-          RCLCPP_ERROR(logger_, "unexpected error when initialize planner with start");
-          // since is not on one of the edge
-
-          // use assume to move to the edge
-        }
-
-        planner_->squareMovement();
-
-        //planner_->savemap("afterPlanner.pgm"); debug purpose
+        RCLCPP_FATAL(logger_, "No Coverage path, unexpected error!");
       }
       else
       {
@@ -380,7 +346,7 @@ namespace nav2_coverage_planner
 
           mapXY p = this->planner_->getPathXY()[j];
 
-          if (start_index[0] == p.x && start_index[1] == p.y)
+          if (start_pose_x_y[0] == p.x && start_pose_x_y[1] == p.y)
           {
             planner_path_index = j;
             RCLCPP_INFO(logger_, "The index for path is %d", planner_path_index); // debug purpose
@@ -394,8 +360,8 @@ namespace nav2_coverage_planner
           geometry_msgs::msg::PoseStamped planner_pose;
           geometry_msgs::msg::PoseStamped map_pose;
 
-          double worldX = 0; 
-          double worldY = 0; 
+          double worldX = 0;
+          double worldY = 0;
           mapXY p = this->planner_->getPathXY()[i];
 
           coverageMap.mapToWorld(p.x, p.y, worldX, worldY);
@@ -452,6 +418,40 @@ namespace nav2_coverage_planner
     return global_path;
   }
 
+  void CoveragePlanner::planNewPath()
+  {
+    needUpdateCoverageMap = false; // indicate start a new round of updating the planner
+
+    movedToOrigin = false; // let robot move back to origin
+    planner_start[0] = 0;  // the origin -x of the "planner" frame grid
+    planner_start[1] = 0;
+
+    costmap_last_x_cell = this->costmap_->getSizeInCellsX();
+    costmap_last_y_cell = this->costmap_->getSizeInCellsY();
+
+    extractPlannerCostMap();
+    planner_->setNavArr(
+        this->coverageMap.getSizeInCellsX(),
+        this->coverageMap.getSizeInCellsY());
+    planner_->setupPathArray(coverageMap.getSizeInCellsX() * coverageMap.getSizeInCellsY());
+
+    RCLCPP_INFO(logger_, "detect change of map size, did you reset the global costmap?");
+    planner_->setCostmap(coverageMap.getCharMap(), true);
+
+
+
+    // planner_->savemap("beforePlanner.pgm"); // debug purpose
+    if (!planner_->setStart(planner_start))
+    {
+      RCLCPP_ERROR(logger_, "unexpected error when initialize planner with start");
+      // since is not on one of the edge
+      // use assume to move to the edge
+    }
+
+    planner_->squareMovement(); // calculate a coverage path
+
+    // planner_->savemap("afterPlanner.pgm"); //debug purpose
+  }
   void CoveragePlanner::linearInterpolation(const geometry_msgs::msg::PoseStamped start, const geometry_msgs::msg::PoseStamped goal, nav_msgs::msg::Path &global_path)
   {
 
@@ -634,7 +634,30 @@ namespace nav2_coverage_planner
         request->upper_right_x, request->upper_right_y
 
     );
-    response->result = true;
+
+
+    planNewPath();
+    // convert the planner_origin
+    double planner_end_x, planner_end_y;
+    geometry_msgs::msg::PoseStamped final_end_pose, map_pose;
+
+    mapXY p = this->planner_->getPathXY()[this->planner_->getPathLen()-1];
+
+    coverageMap.mapToWorld(p.x, p.y, planner_end_x, planner_end_y);
+
+    final_end_pose.pose.position.x = planner_end_x;
+    final_end_pose.pose.position.y = planner_end_y;
+    final_end_pose.pose.position.z = 0.0;
+    final_end_pose.pose.orientation.x = 0.0;
+    final_end_pose.pose.orientation.y = 0.0;
+    final_end_pose.pose.orientation.z = 0.0;
+    final_end_pose.pose.orientation.w = 1.0;
+    final_end_pose.header.stamp = node_->now();
+    final_end_pose.header.frame_id = planner_frame_;
+
+    transformPoseToAnotherFrame(final_end_pose, map_pose, global_frame_);
+
+    response->goal_end_pose = map_pose;
   }
 
 }

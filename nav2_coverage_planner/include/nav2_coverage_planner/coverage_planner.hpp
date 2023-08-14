@@ -85,7 +85,7 @@ namespace nav2_coverage_planner
 
     void receiveNewCoverageArea(const std::shared_ptr<coverage_area_interface::srv::SelectSquare::Request> request, // CHANGE
                                 std::shared_ptr<coverage_area_interface::srv::SelectSquare::Response> response);
-
+    void planNewPath();
   private:
     // TF buffer
     std::shared_ptr<tf2_ros::Buffer> tf_;
@@ -110,6 +110,7 @@ namespace nav2_coverage_planner
 
     std::unique_ptr<Coverage> planner_;
     bool movedToOrigin;   // flag indicate if the robot moved to the origin of the "planner" costmap
+    int planner_start[2]; // start row, col index of "planner" frame to start planning
 
     // service for receive the area to cover
     rclcpp::Service<coverage_area_interface::srv::SelectSquare>::SharedPtr coverageService;  // a Service server that listen to request from client to update this->coveragePose, 

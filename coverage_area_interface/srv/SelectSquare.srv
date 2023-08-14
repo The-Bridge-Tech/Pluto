@@ -8,4 +8,4 @@ float64 lower_right_y
 float64 upper_right_x
 float64 upper_right_y
 ---
-bool result
+geometry_msgs/PoseStamped goal_end_pose
