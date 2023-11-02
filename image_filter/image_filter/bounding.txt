@@ -1,0 +1,32 @@
+header:
+  stamp:
+    sec: 1683742518
+    nanosec: 482405637
+  frame_id: camera
+image_header:
+  stamp:
+    sec: 0
+    nanosec: 0
+  frame_id: ''
+bounding_boxes:
+- probability: 0.8055945634841919
+  xmin: 44
+  ymin: 93
+  xmax: 600
+  ymax: 482
+  id: 0
+  img_width: 640
+  img_height: 480
+  center_dist: 0
+  class_id: person
+- probability: 0.6454174518585205
+  xmin: 287
+  ymin: 263
+  xmax: 384
+  ymax: 413
+  id: 0
+  img_width: 640
+  img_height: 480
+  center_dist: 0
+  class_id: cell phone
+---
