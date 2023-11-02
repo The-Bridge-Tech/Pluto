@@ -1,0 +1,9 @@
+string frame
+geometry_msgs/PoseStamped lower_left
+geometry_msgs/PoseStamped upper_left
+geometry_msgs/PoseStamped lower_right
+geometry_msgs/PoseStamped  upper_right
+---
+geometry_msgs/PoseStamped end_point
+---
+bool is_valid_data

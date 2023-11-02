@@ -1,10 +1,6 @@
 from setuptools import setup
 
-<<<<<<< HEAD:customize_local_planner/setup.py
-package_name = 'customize_local_planner'
-=======
-package_name = 'gps_velocity'
->>>>>>> devel:gps_velocity/setup.py
+package_name = 'select_area'
 
 setup(
     name=package_name,
@@ -24,11 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-<<<<<<< HEAD:customize_local_planner/setup.py
-            'localMovingPlanner = customize_local_planner.local_planner:main',
-=======
-            "gps_velocity=gps_velocity.velocityCalculation:main"
->>>>>>> devel:gps_velocity/setup.py
+                'coverageClient = select_area.CoveragePlannerClient:main',
         ],
     },
 )
