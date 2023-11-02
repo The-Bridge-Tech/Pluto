@@ -134,10 +134,11 @@ class CompassPublisher(Node):
     def publish_debug_heading(self, message:Vector3Stamped):
         
         result = ( message.vector.z * 3.14 )/180
-        print( "Debug heading is " + str(self.yaw_angle.data))    
+        #print( "Debug heading is " + str(self.yaw_angle.data))    
     def publish_heading(self):
         self.heading_publisher.publish(self.yaw_angle)
-        print( "heading is " + str(self.yaw_angle.data))
+        #print( "heading is " + str(self.yaw_angle.data))
+        self.get_logger().error('Publishing: "%s"' % self.yaw_angle.data)
     def convert_quaternion_to_euler_angle(self, imu_message:Imu):
         xyzw :list = imu_message.orientation
         
