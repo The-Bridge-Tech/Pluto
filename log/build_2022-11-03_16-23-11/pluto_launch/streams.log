@@ -1,0 +1,35 @@
+[1.448s] Invoking command in '/home/shouyu/ros2_ws/src/Pluto/pluto_launch': PYTHONPATH=/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/pluto_launch build --build-base /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build install --prefix /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch --record /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/install.log --single-version-externally-managed
+[2.037s] running egg_info
+[2.038s] creating ../build/pluto_launch/pluto_launch.egg-info
+[2.038s] writing ../build/pluto_launch/pluto_launch.egg-info/PKG-INFO
+[2.038s] writing dependency_links to ../build/pluto_launch/pluto_launch.egg-info/dependency_links.txt
+[2.038s] writing entry points to ../build/pluto_launch/pluto_launch.egg-info/entry_points.txt
+[2.038s] writing requirements to ../build/pluto_launch/pluto_launch.egg-info/requires.txt
+[2.038s] writing top-level names to ../build/pluto_launch/pluto_launch.egg-info/top_level.txt
+[2.039s] writing manifest file '../build/pluto_launch/pluto_launch.egg-info/SOURCES.txt'
+[2.040s] reading manifest file '../build/pluto_launch/pluto_launch.egg-info/SOURCES.txt'
+[2.041s] writing manifest file '../build/pluto_launch/pluto_launch.egg-info/SOURCES.txt'
+[2.041s] running build
+[2.041s] running build_py
+[2.041s] creating /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build
+[2.041s] creating /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build/lib
+[2.041s] creating /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build/lib/pluto_launch
+[2.041s] copying pluto_launch/__init__.py -> /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build/lib/pluto_launch
+[2.042s] running install
+[2.042s] running install_lib
+[2.042s] creating /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages/pluto_launch
+[2.042s] copying /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build/lib/pluto_launch/__init__.py -> /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages/pluto_launch
+[2.045s] byte-compiling /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages/pluto_launch/__init__.py to __init__.cpython-310.pyc
+[2.045s] running install_data
+[2.045s] creating /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/ament_index
+[2.045s] creating /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/ament_index/resource_index
+[2.046s] creating /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/ament_index/resource_index/packages
+[2.046s] copying resource/pluto_launch -> /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/ament_index/resource_index/packages
+[2.046s] copying package.xml -> /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch
+[2.046s] copying launch/example_substitutions.launch.py -> /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch
+[2.046s] copying launch/example_main.launch.py -> /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/share/pluto_launch
+[2.046s] running install_egg_info
+[2.049s] Copying ../build/pluto_launch/pluto_launch.egg-info to /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages/pluto_launch-0.0.0-py3.10.egg-info
+[2.050s] running install_scripts
+[2.086s] writing list of installed files to '/home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/install.log'
+[2.113s] Invoked command in '/home/shouyu/ros2_ws/src/Pluto/pluto_launch' returned '0': PYTHONPATH=/home/shouyu/ros2_ws/src/Pluto/install/pluto_launch/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/pluto_launch build --build-base /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/build install --prefix /home/shouyu/ros2_ws/src/Pluto/install/pluto_launch --record /home/shouyu/ros2_ws/src/Pluto/build/pluto_launch/install.log --single-version-externally-managed

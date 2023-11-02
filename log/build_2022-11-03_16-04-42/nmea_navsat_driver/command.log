@@ -1,0 +1,2 @@
+Invoking command in '/home/bridgetech/ros2_ws/src/Pluto/build/nmea_navsat_driver': /usr/bin/cmake /home/bridgetech/ros2_ws/src/Pluto/nmea_navsat_driver -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/bridgetech/ros2_ws/src/Pluto/install/nmea_navsat_driver
+Invoked command in '/home/bridgetech/ros2_ws/src/Pluto/build/nmea_navsat_driver' returned '1': /usr/bin/cmake /home/bridgetech/ros2_ws/src/Pluto/nmea_navsat_driver -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/bridgetech/ros2_ws/src/Pluto/install/nmea_navsat_driver

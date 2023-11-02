@@ -1,3 +1,22 @@
 [submodule "realsense-ros"]
 	path = realsense-ros
 	url = https://github.com/IntelRealSense/realsense-ros.git
+	branch = ros2-development
+[submodule "phidgets_drivers"]
+	path = phidgets_drivers
+	url = https://github.com/ros-drivers/phidgets_drivers.git
+	branch = galactic
+[submodule "imu_tools"]
+	path = imu_tools
+	url = https://github.com/CCNYRoboticsLab/imu_tools
+	branch = galactic
+[submodule "nmea_navsat_driver"]
+	path = nmea_navsat_driver
+	url = https://github.com/ros-drivers/nmea_navsat_driver.git
+	branch = ros2
+[submodule "YOLOv5-ROS"]
+	path = YOLOv5-ROS
+	url = https://github.com/Ar-Ray-code/YOLOv5-ROS.git
+[submodule "bbox_ex_msgs"]
+	path = bbox_ex_msgs
+	url = https://github.com/Ar-Ray-code/bbox_ex_msgs.git
