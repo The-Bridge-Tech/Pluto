@@ -38,12 +38,18 @@ namespace customize_global_planner
     this->declare_parameter("odometryTopic", "/odom"); // TODO: change to /odometry/global
 
     this->declare_parameter("xy_goal_tolerance", 0.5);
+    this->declare_parameter("global_planner_frequency", 10);
 
     std::string odometryTopic = this->get_parameter("odometryTopic").get_parameter_value().get<std::string>();
     this->xy_goal_tolerance = this->get_parameter("xy_goal_tolerance").get_parameter_value().get<double>();
+
+    double planner_frequency = this->get_parameter("global_planner_frequency").get_parameter_value().get<int>();
+
+
     publisher_ = this->create_publisher<std_msgs::msg::String>("topic", 10);
+    unsigned int milliSecond = (1/planner_frequency)*1000;
     timer_ = this->create_wall_timer(
-        std::chrono::milliseconds(500), std::bind(&GlobalPlanner::timer_callback, this));
+        std::chrono::milliseconds( (milliSecond) ), std::bind(&GlobalPlanner::timer_callback, this));
 
     map_subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
         "/map", 10, std::bind(&GlobalPlanner::map_subscriber_callback, this, std::placeholders::_1));

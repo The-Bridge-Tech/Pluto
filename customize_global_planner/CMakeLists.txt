@@ -52,11 +52,11 @@ endif()
 
 
 include_directories(include)
-add_executable(talker src/planner.cpp src/coverage.cpp src/costmap_2d_modified.cpp)
-ament_target_dependencies(talker rclcpp std_msgs nav2_common visualization_msgs nav2_util nav2_msgs nav_msgs geometry_msgs  builtin_interfaces tf2_ros nav2_costmap_2d pluginlib nav2_core coverage_area_interface)
+add_executable(globalPlanner src/planner.cpp src/coverage.cpp src/costmap_2d_modified.cpp)
+ament_target_dependencies(globalPlanner rclcpp std_msgs nav2_common visualization_msgs nav2_util nav2_msgs nav_msgs geometry_msgs  builtin_interfaces tf2_ros nav2_costmap_2d pluginlib nav2_core coverage_area_interface)
 
 install(TARGETS
-talker
+globalPlanner
   DESTINATION lib/${PROJECT_NAME})
 
 # install(DIRECTORY
