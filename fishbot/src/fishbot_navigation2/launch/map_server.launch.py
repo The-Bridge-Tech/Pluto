@@ -42,7 +42,7 @@ def generate_launch_description():
     free_thresh_default = 0.25
     occupied_thresh_default = 0.65
     
-    default_map_params = os.path.join(bringup_dir,'maps','fishbot_map.yaml')
+    default_map_params = os.path.join(bringup_dir,'maps','zeroCost.yaml')
     
     # print(bringup_dir)
     # print("^^^^^^^^^^^^^^")
