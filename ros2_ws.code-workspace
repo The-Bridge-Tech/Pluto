@@ -1,0 +1,9 @@
+{
+	"folders": [
+		{
+			"uri": "vscode-remote://attached-container+7b22636f6e7461696e65724e616d65223a222f726f73325f67616c6163746963227d/home/docker/ros2_ws"
+		}
+	],
+	"remoteAuthority": "attached-container+7b22636f6e7461696e65724e616d65223a222f726f73325f67616c6163746963227d",
+	"settings": {}
+}
