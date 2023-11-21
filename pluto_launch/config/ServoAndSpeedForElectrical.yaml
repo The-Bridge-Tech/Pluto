@@ -1,0 +1,16 @@
+
+/**: 
+  ros__parameters:
+    LEFT_NEUTRAL: 120 # Left neutral pwm
+    RIGHT_NEUTRAL: 120
+    RIGHT_MAX: 360 # RIGHT_NEUTRAL+ Increase in right servo's pwm
+    LEFT_MAX: 360 # LEFT_NEUTRAL+ Increase in left servo's pwm
+    RIGHT_MIN: 0 # LEFT_NEUTRAL+ Decrease in left servo's pwm
+    LEFT_MIN: 0  # RIGHT_NEUTRAL+ Decrease in right servo's pwm
+    WHEEL_RADIUS: 0.254
+    WHEEL_SEPARATION: 0.736
+    KNOW_LEFT_FULL_BACKWARD_SPEED: -1.59 # in meter/second
+    KNOW_RIGHT_FULL_BACKWARD_SPEED: -1.59
+    KNOW_LEFT_FULL_FORWARD_SPEED: 3.19
+    KNOW_RIGHT_FULL_FORWARD_SPEED: 3.19     # (68 *pi*0.4318)/60
+    PUBLISH_RATE: 200 # in HZ
