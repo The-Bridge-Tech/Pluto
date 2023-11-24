@@ -325,21 +325,23 @@ namespace nav2_coverage_planner
 
           if (start_pose_x_y[0] == p.x && start_pose_x_y[1] == p.y)
           {
-            planner_path_index = j;
+            planner_path_index = j+1;
             RCLCPP_INFO(logger_, "The index for path is %d", planner_path_index); // debug purpose
           }
         }
 
-        global_path.poses.push_back(start); // in map coordinates
-        geometry_msgs::msg::PoseStamped latestPost;
-        for (int i = planner_path_index; i < this->planner_->getPathLen(); i++)
-        {
+
+        if(planner_path_index >= this->planner_->getPathLen()){
+          global_path.poses.push_back(start); // in map coordinates
+          RCLCPP_INFO(logger_, "End of path planning");
+          geometry_msgs::msg::PoseStamped latestPost;
+
           geometry_msgs::msg::PoseStamped planner_pose;
           geometry_msgs::msg::PoseStamped map_pose;
 
           double worldX = 0;
           double worldY = 0;
-          mapXY p = this->planner_->getPathXY()[i];
+          mapXY p = this->planner_->getPathXY()[this->planner_->getPathLen()-1];
 
           coverageMap.mapToWorld(p.x, p.y, worldX, worldY);
 
@@ -357,7 +359,39 @@ namespace nav2_coverage_planner
 
           // RCLCPP_INFO(logger_, "coordinates x: %d y: %d   map x: %f y %f planner x: %f y: %f", p.x, p.y, map_pose.pose.position.x, map_pose.pose.position.y,worldX,worldY);
           global_path.poses.push_back(map_pose);
+
+        }else{
+          //global_path.poses.push_back(start); // in map coordinates
+          geometry_msgs::msg::PoseStamped latestPost;
+          for (int i = planner_path_index; i < this->planner_->getPathLen(); i++)
+          {
+            geometry_msgs::msg::PoseStamped planner_pose;
+            geometry_msgs::msg::PoseStamped map_pose;
+
+            double worldX = 0;
+            double worldY = 0;
+            mapXY p = this->planner_->getPathXY()[i];
+
+            coverageMap.mapToWorld(p.x, p.y, worldX, worldY);
+
+            planner_pose.pose.position.x = worldX;
+            planner_pose.pose.position.y = worldY;
+            planner_pose.pose.position.z = 0.0;
+            planner_pose.pose.orientation.x = 0.0;
+            planner_pose.pose.orientation.y = 0.0;
+            planner_pose.pose.orientation.z = 0.0;
+            planner_pose.pose.orientation.w = 1.0;
+            planner_pose.header.stamp = node_->now();
+            planner_pose.header.frame_id = planner_frame_;
+            latestPost = planner_pose;
+            transformPoseToAnotherFrame(planner_pose, map_pose, global_frame_);
+
+            // RCLCPP_INFO(logger_, "coordinates x: %d y: %d   map x: %f y %f planner x: %f y: %f", p.x, p.y, map_pose.pose.position.x, map_pose.pose.position.y,worldX,worldY);
+            global_path.poses.push_back(map_pose);
+          }
         }
+
+
 
         // debug purpose
         // RCLCPP_INFO(
