@@ -52,7 +52,17 @@ class TurningPIDController(Controller):
 
         compensate_value = pidCalculation(
             self.kp, self.kd, self.ki, error, self.previous_error, self.accumulate_error)
-        _, left, right = determine_Wheel_to_compensate_base_on_angle_error(
+        
+        
+        direction, left, right = determine_Wheel_to_compensate_base_on_angle_error(
             angle_error=self.angle_off_error, init_pwm=self.initial_pwm, compensate_pwm=compensate_value)
-        self.left_value = left
-        self.right_value = right
+        
+        
+        self.left_value = self.initial_pwm
+        self.right_value = self.initial_pwm
+        if direction == "none":
+            pass
+        elif direction == "right":
+            self.right_value += compensate_value
+        else:
+            self.right_value -= compensate_value
