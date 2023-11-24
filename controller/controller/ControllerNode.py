@@ -48,7 +48,7 @@ class ControllerNode(Node):
         
         self.right_server_publisher = self.create_publisher(UInt32, 'steering_right', 10)
         self.left_server_publisher = self.create_publisher(UInt32, 'steering_left', 10)        
-        self.differential_raw_twist_publisher = self.create_publisher(TwistStamped, 'differential_raw_twist', 10)
+        #self.differential_raw_twist_publisher = self.create_publisher(TwistStamped, 'differential_raw_twist', 10)
         
         timer_period = 1/self.PUBLISH_RATE  # publish speed
         self.right_timer = self.create_timer(timer_period, self.right_servero_timer_callback)
@@ -82,8 +82,8 @@ class ControllerNode(Node):
         # publish the if is in autonomous state
         self.is_autonomous_state = Bool()
         self.is_autonomous_state.data = False
-        self.is_autonomous_state_publisher =  self.create_publisher(Bool, 'is_autonomous_mode', 10)
-        self.is_autonomous_state_publisher_timer = self.create_timer(0.5, self.publish_autonomous_mode)
+        # self.is_autonomous_state_publisher =  self.create_publisher(Bool, 'is_autonomous_mode', 10)
+        # self.is_autonomous_state_publisher_timer = self.create_timer(0.5, self.publish_autonomous_mode)
         
     
     def define_parameters(self)->None:
@@ -104,123 +104,112 @@ class ControllerNode(Node):
         self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
         self.declare_parameter('PUBLISH_RATE',30)
 
-    def publish_autonomous_mode(self):
-        self.is_autonomous_state_publisher.publish(self.is_autonomous_state)
+    # def publish_autonomous_mode(self):
+    #     self.is_autonomous_state_publisher.publish(self.is_autonomous_state)
     def listen_autonomous_button_callback(self, mes:Bool):
         if(mes.data == True):
             if self.is_autonomous_state.data == False:
                 self.is_autonomous_state.data = True
             else:
                 self.is_autonomous_state.data = False
-            # k = Bool()
-            # k.data = False
-            # now, publish this message out
+
         
         
     # interpret from cmd_vel to both left&right servo
     def listen_cmd_vel_callback(self, message:Twist):
-        # do math to update the pwm
-        
-        # calculate left and right wheel's velocity base on 
-            # 1. velocity in x
-            # 2. velocity in z (yaw)
-            # Note: we don't take velocity of y into consideration, because we simply can't move in the y direction
+        if self.is_autonomous_state.data == False:
+            # do math to update the pwm
             
-        #self.get_logger().info("I heard cmd_vel in controller")
-        # https://answers.ros.org/question/334022/how-to-split-cmd_vel-into-left-and-right-wheel-of-2wd-robot/
-        # https://answers.ros.org/question/308340/exact-rotational-speed-of-a-wheel/
-        
-        velocity_x = message.linear.x
-        velocity_yaw = message.angular.z
-        
-        # self.get_logger().info("velocity_x" + str(velocity_x))
-        # self.get_logger().info("velocity_yaw" + str(velocity_yaw))
-        
-        #self.get_logger().info("Publish " + str(velocity_x) + " and " + str(velocity_yaw))
-        
-        # wheel_speed_left = ((velocity_x-(velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
-        # wheel_speed_right = ((velocity_x + (velocity_yaw*self.WHEEL_SEPARATION/2.0)) / self.WHEEL_RADIUS)
-        
-        # https://navigation.ros.org/setup_guides/odom/setup_odom.html
-        wheel_speed_left = (2*velocity_x - velocity_yaw*self.WHEEL_SEPARATION)/2
-        wheel_speed_right = 2*velocity_x -wheel_speed_left
-        
-        #self.get_logger().info("wheel_speed_left" + str(wheel_speed_left))
-        #self.get_logger().info("wheel_speed_right" + str(wheel_speed_right))
-        
-        
-        #self.get_logger().info("Left speed " + str(wheel_speed_left) + " and  Right speed" + str(wheel_speed_right))
-        # Now, convert them to pwm values
-        # since the servo is in linear. We assume that we are also in linear ratio.
-        
-        # temp_left_pwm =  int(calculate_pwm_from_velocity(wheel_speed_left, self.KNOW_VELOCITY, self.KNOW_PWM_LEFT)) 
-        # temp_right_pwm =  int(calculate_pwm_from_velocity(wheel_speed_right, self.KNOW_VELOCITY, self.KNOW_PWM_RIGHT)) 
-        
-        
-        # #self.get_logger().info("Left pwm " + str(temp_left_pwm) + " and  Right pwm" + str(temp_right_pwm))
-        # self.new_left_pwm.data =  convert_negative_pwm_to_positive_pwm_value(self.LEFT_MAX, self.LEFT_NEUTRAL, self.LEFT_MIN, temp_left_pwm)
-        
-        # #int(self.calculate_pwm_from_velocity(wheel_speed_left, True))
-        # self.new_right_pwm.data = convert_negative_pwm_to_positive_pwm_value(self.RIGHT_MAX, self.RIGHT_NEUTRAL, self.RIGHT_MIN, temp_right_pwm)
-        # #int(self.calculate_pwm_from_velocity(wheel_speed_right, False))
-        
-        
-        self.new_left_pwm.data =  int(calculate_pwm_from_velocity2(wheel_speed_left,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL))
-        self.new_right_pwm.data = int(calculate_pwm_from_velocity2(wheel_speed_right,self.KNOW_RIGHT_FULL_FORWARD_SPEED, self.KNOW_RIGHT_FULL_BACKWARD_SPEED,self.RIGHT_MAX, self.RIGHT_MIN, self.RIGHT_NEUTRAL))
-        
-        #TODO: below might be unnecessary 
-        if self.new_left_pwm.data > self.LEFT_MAX:
-            self.new_left_pwm.data = self.LEFT_MAX
-        elif self.new_left_pwm .data< self.LEFT_MIN:
-            self.new_left_pwm.data = self.LEFT_MIN
+            # calculate left and right wheel's velocity base on 
+                # 1. velocity in x
+                # 2. velocity in z (yaw)
+                # Note: we don't take velocity of y into consideration, because we simply can't move in the y direction
+                
+            #self.get_logger().info("I heard cmd_vel in controller")
+            # https://answers.ros.org/question/334022/how-to-split-cmd_vel-into-left-and-right-wheel-of-2wd-robot/
+            # https://answers.ros.org/question/308340/exact-rotational-speed-of-a-wheel/
+            
+            velocity_x = message.linear.x
+            velocity_yaw = message.angular.z
+            
+
+            
+            # https://navigation.ros.org/setup_guides/odom/setup_odom.html
+            wheel_speed_left = (2*velocity_x - velocity_yaw*self.WHEEL_SEPARATION)/2
+            wheel_speed_right = 2*velocity_x -wheel_speed_left
+            
+
+            
+            new_calculated_left_pwm =  int(calculate_pwm_from_velocity2(wheel_speed_left,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL))
+            new_calculated_right_pwm = int(calculate_pwm_from_velocity2(wheel_speed_right,self.KNOW_RIGHT_FULL_FORWARD_SPEED, self.KNOW_RIGHT_FULL_BACKWARD_SPEED,self.RIGHT_MAX, self.RIGHT_MIN, self.RIGHT_NEUTRAL))
+
+            # Ensure pwm value fall within the limit
+            if new_calculated_left_pwm > self.LEFT_MAX:
+                new_calculated_left_pwm= self.LEFT_MAX
+            elif new_calculated_left_pwm< self.LEFT_MIN:
+                new_calculated_left_pwm = self.LEFT_MIN
+            else:
+                pass
+            
+            if new_calculated_right_pwm  > self.RIGHT_MAX:
+                new_calculated_right_pwm  = self.RIGHT_MAX
+            elif new_calculated_right_pwm  < self.RIGHT_MIN:
+                new_calculated_right_pwm  = self.RIGHT_MIN
+            else:
+                pass
+            
+            if new_calculated_left_pwm != self.new_left_pwm.data or new_calculated_right_pwm != self.new_right_pwm.data:
+                self.new_left_pwm.data = new_calculated_left_pwm
+                self.new_right_pwm.data = new_calculated_right_pwm
+                
+                # Now, publish them out
+                self.left_server_publisher.publish(self.new_left_pwm)
+                self.right_server_publisher.publish(self.new_right_pwm)
+            else:
+                pass  # there is no point of updating the message then 
+            
+            # now, publish out the message to public
         else:
-            pass
+            pass  # do nothing at autonomous mode
+            
+    # def differential_raw_twist_callback(self):
+    #     """
+    #     Calculate differential twist base on pwm value on both left and right servo. Publish result to /differential_raw_twist.
         
-        if self.new_right_pwm.data > self.RIGHT_MAX:
-            self.new_right_pwm.data = self.RIGHT_MAX
-        elif self.new_right_pwm.data < self.RIGHT_MIN:
-            self.new_right_pwm.data = self.RIGHT_MIN
-        else:
-            pass
-        
-    def differential_raw_twist_callback(self):
-        """
-        Calculate differential twist base on pwm value on both left and right servo. Publish result to /differential_raw_twist.
-        
-        Note
-        -----
-        One might ask why did the function calcuate speed base on pwm value send to maestro, not base on value read from maestro.
-        But if you read https://github.com/The-Bridge-Tech/Pluto/blob/devel/maestro_controller/maestro_controller/maestro.py#L123
-        It shows that the maestro just return the recent received value. Thus, it does not make a difference in this case.
-        """
-        # 1. Calculate left and right wheel's velocity base on current pwm
-        current_left_vel = calculate_velocity_from_pwm2(self.new_left_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
-        current_right_vel = calculate_velocity_from_pwm2(self.new_right_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
+    #     Note
+    #     -----
+    #     One might ask why did the function calcuate speed base on pwm value send to maestro, not base on value read from maestro.
+    #     But if you read https://github.com/The-Bridge-Tech/Pluto/blob/devel/maestro_controller/maestro_controller/maestro.py#L123
+    #     It shows that the maestro just return the recent received value. Thus, it does not make a difference in this case.
+    #     """
+    #     # 1. Calculate left and right wheel's velocity base on current pwm
+    #     current_left_vel = calculate_velocity_from_pwm2(self.new_left_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
+    #     current_right_vel = calculate_velocity_from_pwm2(self.new_right_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
         
         
-        self.differential_twist.twist.linear.x = (current_right_vel + current_left_vel)/2
-        self.differential_twist.twist.angular.z = (current_right_vel - current_left_vel)/self.WHEEL_SEPARATION
+    #     self.differential_twist.twist.linear.x = (current_right_vel + current_left_vel)/2
+    #     self.differential_twist.twist.angular.z = (current_right_vel - current_left_vel)/self.WHEEL_SEPARATION
         
         
-        # setting the header part
-        self.differential_twist.header.stamp = self.get_clock().now().to_msg()
-        self.differential_twist.header.frame_id = self.differential_twist_frame_id
-        # 2. publish this odometry
-        self.differential_raw_twist_publisher.publish(self.differential_twist)
+    #     # setting the header part
+    #     self.differential_twist.header.stamp = self.get_clock().now().to_msg()
+    #     self.differential_twist.header.frame_id = self.differential_twist_frame_id
+    #     # 2. publish this odometry
+    #     self.differential_raw_twist_publisher.publish(self.differential_twist)
         
-    def right_servero_timer_callback(self):
-        """
-        Publish pwm value to '/steering_right'
-        """
-        self.right_server_publisher.publish(self.new_right_pwm)
-        #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
+    # def right_servero_timer_callback(self):
+    #     """
+    #     Publish pwm value to '/steering_right'
+    #     """
+    #     self.right_server_publisher.publish(self.new_right_pwm)
+    #     #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
     
-    def left_servero_time_callback(self):
-        """
-        Publish pwm value to '/steering_left'
-        """
-        self.left_server_publisher.publish(self.new_left_pwm)
-        #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
+    # def left_servero_time_callback(self):
+    #     """
+    #     Publish pwm value to '/steering_left'
+    #     """
+    #     self.left_server_publisher.publish(self.new_left_pwm)
+    #     #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
 
 
 def main(args=None):
