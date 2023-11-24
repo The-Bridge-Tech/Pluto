@@ -82,8 +82,8 @@ class ControllerNode(Node):
         # publish the if is in autonomous state
         self.is_autonomous_state = Bool()
         self.is_autonomous_state.data = False
-        # self.is_autonomous_state_publisher =  self.create_publisher(Bool, 'is_autonomous_mode', 10)
-        # self.is_autonomous_state_publisher_timer = self.create_timer(0.5, self.publish_autonomous_mode)
+        self.is_autonomous_state_publisher =  self.create_publisher(Bool, 'is_autonomous_mode', 10)
+        self.is_autonomous_state_publisher_timer = self.create_timer(1, self.publish_autonomous_mode)
         
     
     def define_parameters(self)->None:
@@ -104,8 +104,8 @@ class ControllerNode(Node):
         self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
         self.declare_parameter('PUBLISH_RATE',30)
 
-    # def publish_autonomous_mode(self):
-    #     self.is_autonomous_state_publisher.publish(self.is_autonomous_state)
+    def publish_autonomous_mode(self):
+        self.is_autonomous_state_publisher.publish(self.is_autonomous_state)
     def listen_autonomous_button_callback(self, mes:Bool):
         if(mes.data == True):
             if self.is_autonomous_state.data == False:
