@@ -1,7 +1,7 @@
 from .controller import Controller
 
 from nav_msgs.msg import Odometry, Path
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
 from .untilit import *
 
 
@@ -39,9 +39,8 @@ class MovingStraightPIDController(Controller):
     def right_pwm(self) -> int:
         return self.right_value
 
-    def execute_movement(self, current_loc: Odometry, global_path: Path):
-        goal_angle = process_from_global_path(
-            global_path=global_path, forward_prediction_step=self.forward_prediction_step)
+    def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
+        goal_angle = calculateEulerAngleFromPoseStamped(pose_to_navigate)
         current_angle = calculateEulerAngleFromOdometry(current_loc)
         error = self.determine_error_(
             current_angle=current_angle, goal_angle=goal_angle)

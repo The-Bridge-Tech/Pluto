@@ -4,7 +4,7 @@ from math import atan2, pi, sin, cos, atan
 from typing import Tuple
 from nav_msgs.msg import Odometry, Path
 from geometry_msgs.msg import Pose, PoseStamped
-
+import tf_transformations
 
 def roundPwmValue(max_pwm, min_pwm,  pwm_value) -> float:
     if pwm_value > max_pwm:
@@ -17,60 +17,68 @@ def roundPwmValue(max_pwm, min_pwm,  pwm_value) -> float:
 
 def calculateEulerAngleFromOdometry(odom: Odometry):
     # angle are returned in -180 to 180 degree
-    rpy = euler_from_quaternion(odom.pose.pose.orientation)
+    
+    q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+    rpy = tf_transformations.euler_from_quaternion(q)
     angle = rpy[2]*(180/pi)
     # if(angle < 0):
     #     angle +=360
     return angle
 
+def calculateEulerAngleFromPoseStamped(pose: PoseStamped):
+    q = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
+    rpy = tf_transformations.euler_from_quaternion(q)
+    angle = rpy[2]*(180/pi)
+    # if(angle < 0):
+    #     angle +=360
+    return angle
+# def quaternion_from_euler(ai, aj, ak):
+#     ai /= 2.0
+#     aj /= 2.0
+#     ak /= 2.0
+#     ci = math.cos(ai)
+#     si = math.sin(ai)
+#     cj = math.cos(aj)
+#     sj = math.sin(aj)
+#     ck = math.cos(ak)
+#     sk = math.sin(ak)
+#     cc = ci*ck
+#     cs = ci*sk
+#     sc = si*ck
+#     ss = si*sk
 
-def quaternion_from_euler(ai, aj, ak):
-    ai /= 2.0
-    aj /= 2.0
-    ak /= 2.0
-    ci = math.cos(ai)
-    si = math.sin(ai)
-    cj = math.cos(aj)
-    sj = math.sin(aj)
-    ck = math.cos(ak)
-    sk = math.sin(ak)
-    cc = ci*ck
-    cs = ci*sk
-    sc = si*ck
-    ss = si*sk
+#     q = np.empty((4, ))
+#     q[0] = cj*sc - sj*cs
+#     q[1] = cj*ss + sj*cc
+#     q[2] = cj*cs - sj*sc
+#     q[3] = cj*cc + sj*ss
 
-    q = np.empty((4, ))
-    q[0] = cj*sc - sj*cs
-    q[1] = cj*ss + sj*cc
-    q[2] = cj*cs - sj*sc
-    q[3] = cj*cc + sj*ss
-
-    return q
+#     return q
 
 
-def euler_from_quaternion(quaternion):
-    """
-    Converts quaternion (w in last place) to euler roll, pitch, yaw
-    quaternion = [x, y, z, w]
-    Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
-    """
-    x = quaternion.x
-    y = quaternion.y
-    z = quaternion.z
-    w = quaternion.w
+# def euler_from_quaternion(quaternion):
+#     """
+#     Converts quaternion (w in last place) to euler roll, pitch, yaw
+#     quaternion = [x, y, z, w]
+#     Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+#     """
+#     x = quaternion.x
+#     y = quaternion.y
+#     z = quaternion.z
+#     w = quaternion.w
 
-    sinr_cosp = 2 * (w * x + y * z)
-    cosr_cosp = 1 - 2 * (x * x + y * y)
-    roll = np.arctan2(sinr_cosp, cosr_cosp)
+#     sinr_cosp = 2 * (w * x + y * z)
+#     cosr_cosp = 1 - 2 * (x * x + y * y)
+#     roll = np.arctan2(sinr_cosp, cosr_cosp)
 
-    sinp = 2 * (w * y - z * x)
-    pitch = np.arcsin(sinp)
+#     sinp = 2 * (w * y - z * x)
+#     pitch = np.arcsin(sinp)
 
-    siny_cosp = 2 * (w * z + x * y)
-    cosy_cosp = 1 - 2 * (y * y + z * z)
-    yaw = np.arctan2(siny_cosp, cosy_cosp)
+#     siny_cosp = 2 * (w * z + x * y)
+#     cosy_cosp = 1 - 2 * (y * y + z * z)
+#     yaw = np.arctan2(siny_cosp, cosy_cosp)
 
-    return roll, pitch, yaw
+#     return roll, pitch, yaw
 
 
 # for the pid controllers
@@ -119,7 +127,8 @@ def determine_Wheel_to_compensate_base_on_angle_error(angle_error: float, init_p
         compensate_info = "right"
     return compensate_info, left_servo_pwm, right_servo_pwm
 
-# function specific for PID Base controller
+# function specific for PID Base strategy
 def pidCalculation(kp: int, kd: int, ki: int, error: float, previous_error: float, accumulate_error: float):
     # return self.moving_straight_kp * self.angleOffError + self.moving_straight_kd * (self.angleOffError-self.previousError) + self.moving_straight_ki*self.accumulateError
     return kp * error + kd * (error - previous_error) + ki*accumulate_error
+

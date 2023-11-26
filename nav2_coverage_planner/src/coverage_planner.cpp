@@ -272,9 +272,14 @@ namespace nav2_coverage_planner
     start_pose_x_y[0] = mx;
     start_pose_x_y[1] = my;
 
-    if (movedToOrigin == false)
-    {
 
+    RCLCPP_DEBUG(logger_, " start position %f %f start index %d %d", wx, wy, mx,my);
+    mapXY startPoseGridIndex = this->planner_->getPathXY()[0];
+    if (   (startPoseGridIndex.x != start_pose_x_y[0] || startPoseGridIndex.y!= start_pose_x_y[1])  && (movedToOrigin == false))
+    {
+      //TODO: allow this be configurable? by change the start value in planNewPath()?
+      RCLCPP_ERROR(logger_, "Robot is not at the very origin 0,0 of planner frame, failed to produce plan");
+      global_path.poses.push_back(start); // in map coordinates
       // // 1. use cur_star as the start position
       double planner_origin_x, planner_origin_y;
       geometry_msgs::msg::PoseStamped planner_origin_pose;
@@ -301,22 +306,26 @@ namespace nav2_coverage_planner
                                    curr_start.pose.position.y - planner_origin_pose.pose.position.y);
       distance = std::floor(distance * 100.0) / 100.0;
       RCLCPP_INFO(logger_, "remaining distance %f, tolerance distance %f", distance, xy_goal_tolerance);
-      if (distance <= xy_goal_tolerance)
-      {
-        RCLCPP_INFO(logger_, "setting it to true");
-        movedToOrigin = true; // when the distance is within the tolerance.
-      }
+      // if (distance <= xy_goal_tolerance)
+      // {
+      //   RCLCPP_INFO(logger_, "setting it to true");
+      //   movedToOrigin = true; // when the distance is within the tolerance.
+      // }
+      //TODO: replace constant with parameter in planNewPath()
+      // if(0 == start_pose_x_y[0] && 0== start_pose_x_y[1]){
+      //   movedToOrigin = true;
+      // }
+    }else{
+      movedToOrigin = true;
     }
-    else
-    {
 
       // second stage of planner(after moved to (0,0) grid in coverageMap)
       if (planner_->getPathLen() == 0)
       {
         RCLCPP_FATAL(logger_, "No Coverage path, unexpected error!");
       }
-      else
-      {
+  
+        //TODO: change j to 0?
         // means already have a calculated path. Now add the poses in the path to global_path
         for (int j = 0; j < this->planner_->getPathLen(); j++)
         {
@@ -326,13 +335,14 @@ namespace nav2_coverage_planner
           if (start_pose_x_y[0] == p.x && start_pose_x_y[1] == p.y)
           {
             planner_path_index = j+1;
+            last_planner_path_index = planner_path_index;
             RCLCPP_INFO(logger_, "The index for path is %d", planner_path_index); // debug purpose
           }
         }
 
 
         if(planner_path_index >= this->planner_->getPathLen()){
-          global_path.poses.push_back(start); // in map coordinates
+          //global_path.poses.push_back(start); // in map coordinates
           RCLCPP_INFO(logger_, "End of path planning");
           geometry_msgs::msg::PoseStamped latestPost;
 
@@ -361,7 +371,7 @@ namespace nav2_coverage_planner
           global_path.poses.push_back(map_pose);
 
         }else{
-          //global_path.poses.push_back(start); // in map coordinates
+          //global_path.poses.push_back(start); // in map coordinates TODO: add back in case robot go out of boundary?
           geometry_msgs::msg::PoseStamped latestPost;
           for (int i = planner_path_index; i < this->planner_->getPathLen(); i++)
           {
@@ -397,8 +407,8 @@ namespace nav2_coverage_planner
         // RCLCPP_INFO(
         //     node_->get_logger(), "The last pose of the planner x: %f y: %f", global_path.poses.back().pose.position.x, global_path.poses.back().pose.position.y);
 
-      }
-    }
+
+   
 
     // Optional: at last, do something that move to the goal_pose
 
@@ -415,6 +425,8 @@ namespace nav2_coverage_planner
     movedToOrigin = false; // let robot move back to origin
     planner_start[0] = 0;  // the origin -x of the "planner" frame grid
     planner_start[1] = 0;
+
+    last_planner_path_index = 0;
 
     costmap_last_x_cell = this->costmap_->getSizeInCellsX();
     costmap_last_y_cell = this->costmap_->getSizeInCellsY();
@@ -501,6 +513,38 @@ namespace nav2_coverage_planner
     }
   }
 
+
+  geometry_msgs::msg::PoseStamped CoveragePlanner::convertGridMapPointToWorldPose(const int x, const int y, const nav2_costmap_2d::Costmap2D &gridMap,  const std::string &grid_frame, const std::string &map_frame ){
+    double worldX = 0;
+    double worldY = 0;
+
+    geometry_msgs::msg::PoseStamped planner_pose;
+    geometry_msgs::msg::PoseStamped map_pose;
+
+
+
+    gridMap.mapToWorld(x, y, worldX, worldY);
+
+    planner_pose.pose.position.x = worldX;
+    planner_pose.pose.position.y = worldY;
+    planner_pose.pose.position.z = 0.0;
+    planner_pose.pose.orientation.x = 0.0;
+    planner_pose.pose.orientation.y = 0.0;
+    planner_pose.pose.orientation.z = 0.0;
+    planner_pose.pose.orientation.w = 1.0;
+    planner_pose.header.stamp = node_->now();
+    planner_pose.header.frame_id = (grid_frame);
+
+
+    transformPoseToAnotherFrame(planner_pose, map_pose, map_frame);
+  
+    return map_pose;
+
+
+
+
+
+  }
   // bool
   // CoveragePlanner::worldToMap(double wx, double wy, unsigned int &mx, unsigned int &my, nav2_costmap_2d::Costmap2D *costmap)
   // {
@@ -586,27 +630,38 @@ namespace nav2_coverage_planner
 
 
     planNewPath();
-    // convert the planner_origin
-    double planner_end_x, planner_end_y;
-    geometry_msgs::msg::PoseStamped final_end_pose, map_pose;
+    // // convert the planner_origin
+    // double planner_end_x, planner_end_y;
+    // geometry_msgs::msg::PoseStamped final_end_pose, map_pose;
 
+    // mapXY p = this->planner_->getPathXY()[this->planner_->getPathLen()-1];
+
+    // coverageMap.mapToWorld(p.x, p.y, planner_end_x, planner_end_y);
+
+    // final_end_pose.pose.position.x = planner_end_x;
+    // final_end_pose.pose.position.y = planner_end_y;
+    // final_end_pose.pose.position.z = 0.0;
+    // final_end_pose.pose.orientation.x = 0.0;
+    // final_end_pose.pose.orientation.y = 0.0;
+    // final_end_pose.pose.orientation.z = 0.0;
+    // final_end_pose.pose.orientation.w = 1.0;
+    // final_end_pose.header.stamp = node_->now();
+    // final_end_pose.header.frame_id = planner_frame_;
+
+    // transformPoseToAnotherFrame(final_end_pose, map_pose, global_frame_);
+    RCLCPP_INFO(
+        logger_, "sending back result"
+
+    );
     mapXY p = this->planner_->getPathXY()[this->planner_->getPathLen()-1];
+    auto endPose = convertGridMapPointToWorldPose(p.x, p.y, coverageMap, planner_frame_, global_frame_);
 
-    coverageMap.mapToWorld(p.x, p.y, planner_end_x, planner_end_y);
+    mapXY p2 = this->planner_->getPathXY()[0];
+    auto startPose = convertGridMapPointToWorldPose(p2.x, p2.y, coverageMap, planner_frame_, global_frame_);
 
-    final_end_pose.pose.position.x = planner_end_x;
-    final_end_pose.pose.position.y = planner_end_y;
-    final_end_pose.pose.position.z = 0.0;
-    final_end_pose.pose.orientation.x = 0.0;
-    final_end_pose.pose.orientation.y = 0.0;
-    final_end_pose.pose.orientation.z = 0.0;
-    final_end_pose.pose.orientation.w = 1.0;
-    final_end_pose.header.stamp = node_->now();
-    final_end_pose.header.frame_id = planner_frame_;
 
-    transformPoseToAnotherFrame(final_end_pose, map_pose, global_frame_);
-
-    response->goal_end_pose = map_pose;
+    response->goal_end_pose = endPose;
+    response->goal_start_pose = startPose;
   }
 
 }

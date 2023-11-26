@@ -101,6 +101,9 @@ namespace nav2_coverage_planner
      * 
      */
     void planNewPath();
+
+
+    geometry_msgs::msg::PoseStamped convertGridMapPointToWorldPose(const int x, const int y, const nav2_costmap_2d::Costmap2D &gridMap,  const std::string &grid_frame, const std::string &map_frame );
   private:
     // TF buffer
     std::shared_ptr<tf2_ros::Buffer> tf_;
@@ -122,6 +125,7 @@ namespace nav2_coverage_planner
     double interpolation_resolution_;
     double xy_goal_tolerance;
     int planner_path_index;
+    int last_planner_path_index;
 
     std::unique_ptr<Coverage> planner_;
     bool movedToOrigin;   // flag indicate if the robot moved to the origin of the "planner" costmap

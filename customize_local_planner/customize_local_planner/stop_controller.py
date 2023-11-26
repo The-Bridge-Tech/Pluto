@@ -1,6 +1,7 @@
 from .controller import Controller
 
 from nav_msgs.msg import Odometry, Path
+from geometry_msgs.msg import PoseStamped
 
 
 class Stop(Controller):
@@ -15,5 +16,5 @@ class Stop(Controller):
 
     def right_pwm(self):
         return self.neutral_pwm
-    def execute_movement(self, current_loc: Odometry, global_path: Path):
+    def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
         self.logger.info("Stopping the robot")

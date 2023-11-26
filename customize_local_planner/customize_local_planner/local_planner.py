@@ -10,14 +10,15 @@ from tf2_ros import TransformBroadcaster
 import numpy as np
 import math
 from math import atan2, pi, sin, cos, atan
-from std_msgs.msg import UInt32
-
+from std_msgs.msg import UInt32, Bool
+import tf_transformations
+import tf2_ros
 # TODO: need to change to standard message type later
 from std_msgs.msg import Float32
 
 # http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/Imu.html
 from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Vector3Stamped, Pose
+from geometry_msgs.msg import Vector3Stamped, Pose, PoseStamped, PointStamped
 from nav_msgs.msg import Odometry, OccupancyGrid, Path
 
 from .untilit import *
@@ -25,7 +26,7 @@ from .untilit import *
 
 class LocalPlanner(Node):
     def __init__(self):
-        super().__init__("pid_controller")
+        super().__init__("Autonomous_Controller")
 
         self.declare_parameter("moving_straight_kp", 2.0)
         self.declare_parameter("moving_straight_kd", 0.3)
@@ -43,7 +44,11 @@ class LocalPlanner(Node):
         self.declare_parameter("max_pwm", 1765)
         self.declare_parameter("min_pwm", 992)
         self.declare_parameter("neutral_pwm", 1376)
-        self.declare_parameter("local_planner_frequency", 10)
+        self.declare_parameter("autonomous_controller_frequency", 10)
+        
+        self.declare_parameter("error_distance_tolerance", 0.5)
+
+        self.declare_parameter("local_plan_step_size", 1)
 
         # retrieve data from parameters, especially if loaded by yaml file later
         self.moving_straight_initial_pwm = (
@@ -93,31 +98,32 @@ class LocalPlanner(Node):
         )
         self.max_pwm = self.get_parameter("max_pwm").get_parameter_value().integer_value
         self.min_pwm = self.get_parameter("min_pwm").get_parameter_value().integer_value
-        self.local_planner_frequency = (
-            self.get_parameter("local_planner_frequency")
+        self.autonomous_controller_frequency = (
+            self.get_parameter("autonomous_controller_frequency")
             .get_parameter_value()
             .integer_value
         )
-
+        
+        self.error_distance_tolerance = self.get_parameter("error_distance_tolerance").get_parameter_value().double_value
+        self.local_plan_step_size = (
+            self.get_parameter("local_plan_step_size")
+            .get_parameter_value()
+            .integer_value
+        )
         # some variable
-        self.latestGlobalOdom = None
-        self.latestGlobalPath: Path = None
+        self.latestGlobalOdom: Odometry = None
+        self.is_autonomous_state: Bool = Bool()
+        self.is_autonomous_state.data = False
+        self.coverage_area_end_pose: PoseStamped = None
+        self.is_pure_pursuit_mode: Bool = Bool()
+        self.is_pure_pursuit_mode.data = True  # TODO: subscribe topic to update this
+
+        self.pose_to_navigate: PoseStamped = None
 
         # timer for local planner to do processing
-        self.local_planner_process_timer = self.create_timer(
-            1 / self.local_planner_frequency, self.local_planner_processor
+        self.autonomous_controller_process_timer = self.create_timer(
+            1 / self.autonomous_controller_frequency, self.local_planner_processor
         )
-
-        self.goal_heading_angle_in_enu: float = None
-        self.angleOffError: float = 0
-        self.previousError = 0
-        self.accumulateError = 0
-        self.wheel_to_compensate: str = "none"
-        # True if the robot is within a certain distance of current waypoint
-        self.isWithinGoalDistance = False
-        self.left_servo_pwm = self.moving_straight_initial_pwm
-        self.right_servo_pwm = self.moving_straight_initial_pwm
-        self.compensateValue: float = 0
 
         # first, create a subscriber to odometry/global
         self.odometryGlobalSub = self.create_subscription(
@@ -129,96 +135,100 @@ class LocalPlanner(Node):
         self.right_wheel_pwm_publisher = self.create_publisher(
             UInt32, "/steering_right", 10
         )
-        self.global_path_pose = self.create_subscription(
-            Path, "planner/path", self.global_path_callback, 10
-        )
 
+        self.is_autonomous_state_sub = self.create_subscription(
+            Bool, "is_autonomous_mode", self.is_autonomous_state_callback, 10
+        )
+        self.coverage_area_end_pose_sub = self.create_subscription(
+            PoseStamped,
+            "coverage_area_end_pose",
+            self.coverage_area_end_pose_callback,
+            10,
+        )
+        self.pure_pursuit_goal_pose_sub = self.create_subscription(
+            PointStamped, "/lookahead_point", self.pure_pursuit_goal_pose_callback, 10
+        )
+        self.local_plan = self.create_subscription(
+            Path, "local_plan", self.local_plan_callback, 10
+        )
+        self.is_pure_pursuit_mode_sub = self.create_subscription(
+            Bool, "is_pure_pursuit_controller_mode", self.is_pure_pursuit_mode_callback, 10
+        )
         self.forward_prediction_step_for_strategy_decision = 1
         self.waiting_for_initialization = True
         self.current_local_planner_controller: Controller = None
 
     def local_planner_processor(self):
-        if self.latestGlobalOdom == None or self.latestGlobalPath == None:
-            self.get_logger().info("Waiting for initialization")
-        else:
-            self.waiting_for_initialization = False
-        if self.waiting_for_initialization == True:
-            # means still waiting for initialization
+        if (
+            self.latestGlobalOdom == None
+            or self.is_autonomous_state.data != True
+            or self.pose_to_navigate == None
+        ):
             pass
         else:
             self.determine_local_controller_strategy()
             self.current_local_planner_controller.execute_movement(
-                self.latestGlobalOdom, self.latestGlobalPath
+                self.latestGlobalOdom, self.pose_to_navigate
             )
             self.publish_left_and_right_pwm()
 
     def determine_local_controller_strategy(self):
-        plan_heading = process_from_global_path(
-            self.latestGlobalPath, self.forward_prediction_step_for_strategy_decision
-        )
+        plan_heading = calculateEulerAngleFromPoseStamped(self.pose_to_navigate)
         current_robot_heading = calculateEulerAngleFromOdometry(self.latestGlobalOdom)
         angle_difference: float = abs(current_robot_heading - plan_heading)
-        if len(self.latestGlobalPath.poses) < 2:
-            self.get_logger().info(
-                "Global path planning return with less than 2 way point!"
-            )
-            self.strategy_simple_factory("Stop")
-        else:
-            # check for angle tolerance
-            if angle_difference > self.moving_straight_angle_threshold:
-                self.get_logger().info("PID Turning Due to angle difference")
-                self.strategy_simple_factory("PIDTurn")
-            else:
-                self.get_logger().info("PID moving straight")
-                self.strategy_simple_factory("PIDStraight")
-        
-        # elif angle_difference >= self.moving_straight_angle_threshold:
-        #     # 1. determine current robot heading
 
-        #     self.get_logger().info("PID Turning")
-        #     self.strategy_simple_factory("PIDTurn")
-        # elif False:
-        #     fasdfasdfd
-        # else:
-        #     self.get_logger().info("PID moving straight")
-        #     self.strategy_simple_factory("PIDStraight")
+        
+        distance_difference = math.hypot(  (self.pose_to_navigate.pose.position.x - self.latestGlobalOdom.pose.pose.position.x),
+                                         (self.pose_to_navigate.pose.position.y - self.latestGlobalOdom.pose.pose.position.y))
+    
+        # check for angle tolerance
+        if distance_difference < self.error_distance_tolerance:
+            self.get_logger().info("Stop due to within tolerance error distance")
+            self.strategy_simple_factory("Stop")
+        elif angle_difference > self.moving_straight_angle_threshold:
+            self.get_logger().info("PID Turning Due to angle difference")
+            self.strategy_simple_factory("PIDTurn")
+        else:
+            self.get_logger().info("PID moving straight")
+            self.strategy_simple_factory("PIDStraight")
 
     def strategy_simple_factory(self, strategy: str):
-        if strategy == "PIDStraight" and not isinstance(
-            self.current_local_planner_controller, MovingStraightPIDController
-        ):
-            self.current_local_planner_controller = MovingStraightPIDController(
-                max_pwm=self.max_pwm,
-                min_pwm=self.min_pwm,
-                neutral_pwm=self.neutral_pwm,
-                kp=self.moving_straight_kp,
-                ki=self.moving_straight_ki,
-                kd=self.moving_straight_kd,
-                initial_pwm=self.moving_straight_initial_pwm,
-                forward_prediction=self.moving_straight_forward_prediction_step,
-                logger=self.get_logger(),
-            )
+        if strategy == "PIDStraight":
+            if not isinstance(
+                self.current_local_planner_controller, MovingStraightPIDController
+            ):
+                self.current_local_planner_controller = MovingStraightPIDController(
+                    max_pwm=self.max_pwm,
+                    min_pwm=self.min_pwm,
+                    neutral_pwm=self.neutral_pwm,
+                    kp=self.moving_straight_kp,
+                    ki=self.moving_straight_ki,
+                    kd=self.moving_straight_kd,
+                    initial_pwm=self.moving_straight_initial_pwm,
+                    forward_prediction=self.moving_straight_forward_prediction_step,
+                    logger=self.get_logger(),
+                )
 
-        elif strategy == "PIDTurn" and not isinstance(
-            self.current_local_planner_controller, TurningPIDController
-        ):
-            self.current_local_planner_controller = TurningPIDController(
-                max_pwm=self.max_pwm,
-                min_pwm=self.min_pwm,
-                neutral_pwm=self.neutral_pwm,
-                kp=self.turning_kp,
-                ki=self.turning_ki,
-                kd=self.turning_kd,
-                initial_pwm=self.neutral_pwm,
-                forward_prediction_step=self.turning_prediction_step,
-                logger=self.get_logger(),
-            )
-        elif strategy == "Stop" and not isinstance(
-            self.current_local_planner_controller, Stop
-        ):
-            self.current_local_planner_controller = Stop(
-                neutral_pwm=self.neutral_pwm, logger=self.get_logger()
-            )
+        elif strategy == "PIDTurn":
+            if not isinstance(
+                self.current_local_planner_controller, TurningPIDController
+            ):
+                self.current_local_planner_controller = TurningPIDController(
+                    max_pwm=self.max_pwm,
+                    min_pwm=self.min_pwm,
+                    neutral_pwm=self.neutral_pwm,
+                    kp=self.turning_kp,
+                    ki=self.turning_ki,
+                    kd=self.turning_kd,
+                    initial_pwm=self.neutral_pwm,
+                    forward_prediction_step=self.turning_prediction_step,
+                    logger=self.get_logger(),
+                )
+        elif strategy == "Stop":
+            if not isinstance(self.current_local_planner_controller, Stop):
+                self.current_local_planner_controller = Stop(
+                    neutral_pwm=self.neutral_pwm, logger=self.get_logger()
+                )
         else:
             self.get_logger().warn(
                 "Strategy choice {0} is not provided".format(strategy)
@@ -246,11 +256,61 @@ class LocalPlanner(Node):
             "left pwm {0} right pwm {1}".format(left_pwm_input, right_pwm_input)
         )
 
-    def global_path_callback(self, global_path: Path):
-        self.latestGlobalPath = global_path
-
     def globalOdometryCallback(self, global_odom: Odometry):
-        self.latestGlobalOdom = global_odom
+        self.latestGlobalOdom: Odometry = global_odom
+
+    def is_autonomous_state_callback(self, state: Bool):
+        self.is_autonomous_state = state
+
+    def coverage_area_end_pose_callback(self, pose: PoseStamped):
+        self.coverage_area_end_pose = pose
+    def is_pure_pursuit_mode_callback(self, val: Bool):
+        self.is_pure_pursuit_mode = val
+
+    def pure_pursuit_goal_pose_callback(self, pose: PointStamped):
+        if self.is_pure_pursuit_mode.data == True:
+            self.pose_to_navigate = PoseStamped()
+            goal_x = pose.point.x
+            goal_y = pose.point.y
+
+            euler_angle = calculate_heading_angle_between_two_position(
+                self.latestGlobalOdom.pose.pose.position.x,
+                self.latestGlobalOdom.pose.pose.position.y,
+                goal_x,
+                goal_y,
+            )
+
+            #q = quaternion_from_euler(0, euler_angle, 0)
+            self.pose_to_navigate.pose.position.x = goal_x
+            self.pose_to_navigate.pose.position.y = goal_y
+            q = tf_transformations.quaternion_from_euler(0.0,0.0,euler_angle* (pi/180))
+            self.pose_to_navigate.pose.orientation.x = q[0]
+            self.pose_to_navigate.pose.orientation.y = q[1]
+            self.pose_to_navigate.pose.orientation.z = q[2]
+            self.pose_to_navigate.pose.orientation.w = q[3]
+            
+            self.get_logger().info(
+                "Calcuated angle is {0} the converted angle is {1} ".format(
+                    euler_angle,
+                    calculateEulerAngleFromPoseStamped(self.pose_to_navigate), 
+                )
+            )
+
+    def local_plan_callback(self, loc_path: Path):
+        if self.is_pure_pursuit_mode.data == False:
+            
+            # right now, get the mid point of the path
+            mid_point = int(len(loc_path.poses)/2)
+            self.pose_to_navigate = loc_path.poses[mid_point]
+            self.get_logger().info("local plan path has total {0} pose".format(len(loc_path.poses)))
+            # if len(loc_path.poses) <= self.local_plan_step_size - 1:
+            #     self.get_logger().info(
+            #         "local plan path only have {0} pose, smaller than configure path size. Thus, using the very first pose in path".format(len(loc_path.poses))
+            #     )
+            #     self.pose_to_navigate = loc_path.poses[0]
+            # else:
+            #     self.get_logger().info("local plan path has total {0} pose".format(len(loc_path.poses)))
+            #     self.pose_to_navigate = loc_path.poses[self.local_plan_step_size - 1]
 
 
 def main(args=None):
