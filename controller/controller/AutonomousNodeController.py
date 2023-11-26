@@ -23,53 +23,19 @@ from std_msgs.msg import Bool
 import rclpy
 from rclpy.duration import Duration
 from rclpy.node import Node
-import math 
-
-"""
-Basic navigation demo to go to pose.
-"""
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
 
 
-
-def calc_goal( origin_lat, origin_long, goal_lat, goal_long):
-    # Calculate distance and azimuth between GPS points
-    geod = Geodesic.WGS84  # define the WGS84 ellipsoid
-    g = geod.Inverse(origin_lat, origin_long, goal_lat, goal_long) # Compute several geodesic calculations between two GPS points 
-    hypotenuse = distance = g['s12'] # access distance
-    
-    
-    
-    degree_to_rad = float(math.pi / 180.0)
-
-    d_lat = (goal_lat - origin_lat) * degree_to_rad
-    d_long = (goal_long - origin_long) * degree_to_rad
-
-    a = pow(sin(d_lat / 2), 2) + cos(origin_lat * degree_to_rad) * cos(goal_lat * degree_to_rad) * pow(sin(d_long / 2), 2)
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    km = 6367 * c
-    mi = 3956 * c
-
-    #self.get_logger().info("The distance from the origin to the goal is {:.3f} m.".format(distance))
-    azimuth = 90- g['azi1'] #https://answers.ros.org/question/219182/how-to-determine-yaw-angle-from-gps-bearing/
-    #self.get_logger().info("The azimuth from the origin to the goal is {:.3f} degrees.".format(azimuth))
-
-    # Convert polar (distance and azimuth) to x,y translation in meters (needed for ROS) by finding side lenghs of a right-angle triangle
-    # Convert azimuth to radians
-    print(azimuth)
-    azimuth = math.radians(azimuth)
-    x = adjacent = math.cos(azimuth) * hypotenuse
-    y = opposite = math.sin(azimuth) * hypotenuse
-    #self.get_logger().info("The translation from the origin to the goal is (x,y) {:.3f}, {:.3f} m.".format(x, y))
-
-    return x, y
+from coverage_area_interface.srv import SelectSquare
+from coverage_area_interface.srv import LoadMap
+from geometry_msgs.msg import TransformStamped, PoseStamped
+from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
+import numpy as np
 
 import geopy.distance
 from math import sin, cos, atan, sqrt, atan2
-coords_1 = (34.841398, -82.411860)
-coords_2 = (34.841323, -82.411724)
-
-coord_list = [coords_1, coords_2]
-
+from .AutonomousNodeControllerHelperFunction import *
 
 
 class AutonomousNodeController(Node):
@@ -81,52 +47,43 @@ class AutonomousNodeController(Node):
             Bool, 'is_autonomous_mode', self.is_autonomous_state_listener, 10)
         self.is_autonomous_state_last_time = Bool()
         self.is_autonomous_state_last_time.data = False
-        self.navigator = None
+        
+        #self.request_to_load_map_client = self.create_client(LoadMap, "load_map_service")
 
-        self.gps_coor_subscription = self.create_subscription(
-            NavSatFix, "/fix", self.update_latest_current_gps_coordinate, 10
-        )
-
-        self.latest_gps_coor: NavSatFix = None
+        self.navigator = BasicNavigator()
 
         self.current_map_frame_odom = None
         self.map_frame_subscription = self.create_subscription(
             Odometry, "odometry/global", self.update_latest_map_odom, 10
         )
+        self.initial_navigate_pose:PoseStamped = None
 
-    
-    
-    def calc_goal(self, origin_lat, origin_long, goal_lat, goal_long):
-        # Calculate distance and azimuth between GPS points
-        geod = Geodesic.WGS84  # define the WGS84 ellipsoid
-        g = geod.Inverse(origin_lat, origin_long, goal_lat, goal_long) # Compute several geodesic calculations between two GPS points 
-        hypotenuse = distance = g['s12'] # access distance
+        self.detect_obstacle:Bool = Bool()  #TODO: topic later will update this
+        self.detect_obstacle.data=False
+        # Initialize the transform broadcaster to broadcast between "Map" and "Planner"
+        self.tf_broadcaster = StaticTransformBroadcaster(self)
+        
+        self.final_end_coverage_pose:PoseStamped=None
+        self.final_start_coverage_pose:PoseStamped=None
         
         
+        #TODO better method later
+        self.hasMovedToOrigin = False  
+        self.hasFinishedInitialization = False
+        self.navigateTimer = self.create_timer(1, self.navigate_to_coverage_area_end_pose)
+        self.is_pure_pursuit_mode_pub = self.create_publisher(Bool, "is_pure_pursuit_controller_mode", 10)
+
+    def load_map_request(self):
+        while not self.request_to_load_map_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('service not available, waiting again...')
+        self.req = LoadMap.Request()
+        self.req.map_index = 0
+        self.future = self.request_to_load_map_client.call_async(self.req)
+        rclpy.spin_until_future_complete(self, self.future)
+        self.final_end_coverage_pose = self.future.result().goal_end_pose
+        print(self.final_end_coverage_pose)
+        self.get_logger().info("done {0}".format(str(self.final_end_coverage_pose)))
         
-        degree_to_rad = float(math.pi / 180.0)
-
-        d_lat = (goal_lat - origin_lat) * degree_to_rad
-        d_long = (goal_long - origin_long) * degree_to_rad
-
-        a = pow(sin(d_lat / 2), 2) + cos(origin_lat * degree_to_rad) * cos(goal_lat * degree_to_rad) * pow(sin(d_long / 2), 2)
-        c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        km = 6367 * c
-        mi = 3956 * c
-
-        self.get_logger().info("The distance from the origin to the goal is {:.3f} m.".format(distance))
-        azimuth = 90-g['azi1'] # yaw offset of ned to enu 
-                            # https://answers.ros.org/question/219182/how-to-determine-yaw-angle-from-gps-bearing/
-        self.get_logger().info("The azimuth from the origin to the goal is {:.3f} degrees.".format(azimuth))
-
-        # Convert polar (distance and azimuth) to x,y translation in meters (needed for ROS) by finding side lenghs of a right-angle triangle
-        # Convert azimuth to radians
-        azimuth = math.radians(azimuth)
-        x = adjacent = math.cos(azimuth) * hypotenuse
-        y = opposite = math.sin(azimuth) * hypotenuse
-        self.get_logger().info("The translation from the origin to the goal is (x,y) {:.3f}, {:.3f} m.".format(x, y))
-
-        return x, y
     def update_latest_map_odom(self, message: Odometry):
         self.current_map_frame_odom = message
 
@@ -138,88 +95,33 @@ class AutonomousNodeController(Node):
             if (self.is_autonomous_state_last_time.data == False):
                 # ignoring
                 self.is_autonomous_state_last_time.data = True
-                self.get_logger().info("here1")
-                self.MoveStraight()
+                if self.current_map_frame_odom != None:
+                    self.generate_initial_pose()
+                    self.initialize_all_navigation_lifecycle()
+                    #self.load_map_request()
+                    self.send_coverage_info_to_planner()
+                    # self.final_end_coverage_pose =  self.send_coverage_info_to_planner()
+                    self.hasFinishedInitialization = True
+
         else:
             self.is_autonomous_state_last_time.data = False
-            self.get_logger().info("ignoring")
 
-        # if(mes.data == True):
-        #     if(self.is_autonomous_state_last_time == False):
-        #         self.is_autonomous_state_last_time.data = True
-        #         self.get_logger().info("here1")
-        #         self.navigateToTwoPoint()
-        #         self.is_autonomous_state_last_time.data = False
-        #     else:
-        #         self.get_logger().info("ignoring")
-
-    def navigateToGPSPoint(self):
-        self.navigator = BasicNavigator()
-        # Set our demo's initial pose
-        # TODO: MAKE sure they all initalize first?
-        time.sleep(5)
-        
-        # initial_pose = PoseStamped()
-        # initial_pose.header.frame_id = 'map'
-        # initial_pose.header.stamp = self.navigator.get_clock().now().to_msg()
-        # initial_pose.pose.position.x = 0.0
-        # initial_pose.pose.position.y = 0.0
-        # initial_pose.pose.orientation.w = 1.0
-        # initial_pose.pose.orientation.w = 0.0
-        self.navigator.setInitialPose(self.current_map_frame_odom.pose)
-
-        # Activate navigation, if not autostarted. This should be called after setInitialPose()
-        # or this will initialize at the origin of the map and update the costmap with bogus readings.
-        # If autostart, you should `waitUntilNav2Active()` instead.
-        # navigator.lifecycleStartup()
-
-        # Wait for navigation to fully activate, since autostarting nav2
-        self.navigator.lifecycleStartup()
-        time.sleep(10)
-
-        # If desired, you can change or load the map as well
-        # navigator.changeMap('/path/to/map.yaml')
-
-        # You may use the navigator to clear or obtain costmaps
-        # navigator.clearAllCostmaps()  # also have clearLocalCostmap() and clearGlobalCostmap()
-        # global_costmap = navigator.getGlobalCostmap()
-        # local_costmap = navigator.getLocalCostmap()
-
-        #
-        gps_data = self.latest_gps_coor
-        for point in coord_list:
-            goal_pose = PoseStamped()
-            goal_pose.header.frame_id = 'map'
-            goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
-            #geopy.distance.geodesic(self.latest_gps_coor, point).
-            
-            x,y = self.calc_goal(gps_data.latitude, gps_data.longitude,point[0], point[1])
-            goal_pose.pose.position.x =x
-            goal_pose.pose.position.y = y
-            goal_pose.pose.orientation.w = 1.0
-            
-            
-            self.get_logger().info('Origin: {} {}  goal: {} {}'.format(gps_data.latitude, gps_data.longitude,point[0], point[1]))
-        
-
-            # sanity check a valid path exists
-            # path = navigator.getPath(initial_pose, goal_pose)
-
-            self.navigator.goToPose(goal_pose)
-            self.navigator_result()
-
-    def MoveStraight(self, distance=5.0):
-        "This should be use as a test function"
-        self.navigator = BasicNavigator()
-        # Set our demo's initial pose
+    def generate_initial_pose(self):
         initial_pose = PoseStamped()
         initial_pose.header.frame_id = 'map'
-        initial_pose.header.stamp = self.navigator.get_clock().now().to_msg()
-        initial_pose.pose.position.x = 0.0
-        initial_pose.pose.position.y = 0.0
-        initial_pose.pose.orientation.w = 1.0
-        initial_pose.pose.orientation.w = 0.0
-        self.navigator.setInitialPose(initial_pose)
+        initial_pose.header.stamp = self.get_clock().now().to_msg()
+        initial_pose.pose.position.x = self.current_map_frame_odom.pose.pose.position.x
+        initial_pose.pose.position.y = self.current_map_frame_odom.pose.pose.position.y
+        initial_pose.pose.orientation.z = 0.0
+        initial_pose.pose.orientation = self.current_map_frame_odom.pose.pose.orientation
+        self.initial_navigate_pose = initial_pose
+        
+    def initialize_all_navigation_lifecycle(self):
+
+        
+            # Set our demo's initial pose
+
+        self.navigator.setInitialPose(self.initial_navigate_pose)
 
         # Activate navigation, if not autostarted. This should be called after setInitialPose()
         # or this will initialize at the origin of the map and update the costmap with bogus readings.
@@ -228,7 +130,7 @@ class AutonomousNodeController(Node):
 
         # Wait for navigation to fully activate, since autostarting nav2
         self.navigator.lifecycleStartup()
-        time.sleep(10)
+        time.sleep(10)  # wait for all node to finished
 
         # If desired, you can change or load the map as well
         # navigator.changeMap('/path/to/map.yaml')
@@ -237,24 +139,50 @@ class AutonomousNodeController(Node):
         # navigator.clearAllCostmaps()  # also have clearLocalCostmap() and clearGlobalCostmap()
         # global_costmap = navigator.getGlobalCostmap()
         # local_costmap = navigator.getLocalCostmap()
+    def uninitialized_all_navigation_lifecycle(self):
+        self.navigator.lifecycleShutdown()
+    def navigate_to_coverage_area_end_pose(self):
+              
+        if self.hasFinishedInitialization == False:
+            pass
+        else:
+            if self.hasMovedToOrigin == False:
+                
+                mode =Bool()
+                mode.data =False
+                self.is_pure_pursuit_mode_pub.publish(mode)
+                #1. first navigate to the point
+                self.generate_initial_pose()
+                path1 = self.navigator.getPath(self.initial_navigate_pose, self.final_start_coverage_pose, "Navfn")
+                
 
-        # Go to our demos first goal pose
-        goal_pose = PoseStamped()
-        goal_pose.header.frame_id = 'map'
-        goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
-        # geopy.distance.geodesic(coords_1, coords_2).m
-        goal_pose.pose.position.x = 0.0
-        goal_pose.pose.position.y = -distance
-        goal_pose.pose.position.x = 0.0
-        goal_pose.pose.position.y = 0.0
-        goal_pose.pose.position.z = -0.7071068
-        goal_pose.pose.orientation.w = 0.7071068
+                self.navigator.followPath(path=path1, controller_id="DWAFollower")
+                
 
-        # sanity check a valid path exists
-        # path = navigator.getPath(initial_pose, goal_pose)
-
-        self.navigator.goToPose(goal_pose)
-        self.navigator_result()
+                self.navigator_result()
+                self.hasMovedToOrigin = True #TODO: maybe change to a distance checker before saying is true
+            else:
+        
+        
+                self.generate_initial_pose()
+                path = self.navigator.getPath(self.initial_navigate_pose,self.final_end_coverage_pose,"GridBased") # use default   #TODO: change later
+                # smoothed_path = self.navigator.smoothPath(path=path)
+                
+                #TODO: later on add topic 
+                if self.detect_obstacle.data == False:
+                    mode =Bool()
+                    mode.data =True
+                    self.is_pure_pursuit_mode_pub.publish(mode)
+ 
+                    self.navigator.followPath(path=path,controller_id="FollowPath")
+                                   
+                else:
+                    mode =Bool()
+                    mode.data =False
+                    self.is_pure_pursuit_mode_pub.publish(mode)
+                    self.navigator.followPath(path=path, controller_id="DWAFollower")
+                    
+                #self.navigator_result()
 
     def navigator_result(self):
         i = 0
@@ -265,23 +193,7 @@ class AutonomousNodeController(Node):
             #
             ################################################
 
-            # Do something with the feedback
-            i = i + 1
-            feedback = self.navigator.getFeedback()
-            if feedback and i % 5 == 0:
-                print('Estimated time of arrival: ' + '{0:.0f}'.format(
-                    Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9)
-                    + ' seconds.')
-
-                # # Some navigation timeout to demo cancellation
-                # if Duration.from_msg(feedback.navigation_time) > Duration(seconds=600.0):
-                #     self.navigator.cancelTask()
-
-                # # Some navigation request change to demo preemption
-                # if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
-                #     goal_pose.pose.position.x = -3.0
-                #     navigator.goToPose(goal_pose)
-
+            pass
         # Do something depending on the return code
         result = self.navigator.getResult()
         if result == TaskResult.SUCCEEDED:
@@ -295,10 +207,121 @@ class AutonomousNodeController(Node):
             self.get_logger().info(result)
             self.get_logger().info('Goal has an invalid return status!')
 
+
+    
+    
+    def send_coverage_info_to_planner(self):
+        # TODO: load the data from a yaml file later
+        # TODO: convert from gps to map_frame
+        # TODO: then somehow make sure / normalize the area to be a square/rectangle.
+        map_points = [(-1.0, 0.0), (2.0, 0.0),
+                      (-1.0, 2.0), (2.0, 2.0)]
+        # map_points = [(-1.5, 0.0), (2.0, 0.0),
+        #               (-1.5, -2.0), (2.0, -2.0)]
+        # map_points = [(0.0, 0.0), (1.0, -1.0),
+        #                         (-1.0, -1.0), (0.0, -2.0)]
+        
+        
+        #TODO: in the future, configure them to be parameter
+        self.origin_data = (34.84135964592696, -82.41177886103307)
+
+
+        self.lower_left_gps = (34.84133285149428, -82.41192955644298)
+        self.upper_left_gps = (34.84147918512389, -82.41181254325562)
+        # calculate those into map_frame x, y meters
+        
+        x_y_coord = ENU_NED_CONVERSION (convert_gps_point_to_map_frame(self.origin_data, [self.lower_left_gps, self.upper_left_gps])) # convert from ENU to NED on the result
+        #map_points = ENU_NED_CONVERSION(generate_rectangle_area(x_y_coord[0], x_y_coord[1], 15)) # convert back from NED to ENU
+        print(map_points)
+                # result order is 
+                # lower_left, upper_left, lower_right, upper_right
+        self.select_area_client = self.create_client(SelectSquare, "/SelectSquare")
+
+
+        # 1. calculate the yaw offset base on one side
+        self.yaw_offset = calculate_yaw_offset(
+            map_points[0][0], map_points[0][1], map_points[1][0], map_points[1][1])
+        # self.yaw_offset= 0
+        self.get_logger().info("The angle offset is" + str(self.yaw_offset))
+
+        # calculate the center x, and y
+        self.x_offset = (map_points[0][0] + map_points[1]
+                         [0] + map_points[2][0] + map_points[3][0]) / 4
+        self.y_offset = (map_points[0][1] + map_points[1]
+                         [1] + map_points[2][1] + map_points[3][1]) / 4
+
+        self.publish_map_to_planner_transform()  # publish once
+
+        # debug for transform
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+
+        while not self.select_area_client.wait_for_service(timeout_sec=5.0):
+            self.get_logger().warn("SelectArea service is not available, trying again!")
+        self.req = SelectSquare.Request()
+        
+        # put the info 
+        self.req.lower_left_x = map_points[0][0]
+        self.req.lower_left_y = map_points[0][1]
+        self.req.upper_left_x = map_points[1][0]
+        self.req.upper_left_y = map_points[1][1]
+        self.req.lower_right_x = map_points[2][0]
+        self.req.lower_right_y = map_points[2][1]
+        self.req.upper_right_x = map_points[3][0]
+        self.req.upper_right_y = map_points[3][1]
+        self.req.frame = "map"
+        # self.future = self.select_area_client.call_async(self.req)
+        # rclpy.spin_until_future_complete(self, self.future)
+        # response_form_coverage= self.future.result()
+        # print(response_form_coverage.goal_end_pose)
+        # self.final_end_pose = response_form_coverage.goal_end_pose
+        
+        self.future = cli.call_async(self.req)
+        rclpy.spin_until_future_complete(node2, self.future)
+        
+        #TODO: load map base on request
+        res:PoseStamped = self.future.result().goal_end_pose
+        print(res)
+        self.final_end_coverage_pose = res
+        self.final_start_coverage_pose = self.future.result().goal_start_pose
+
+        
+    def publish_map_to_planner_transform(self):
+        t = TransformStamped()
+
+        # Read message content and assign it to
+        # corresponding tf variables
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = 'map'
+        t.child_frame_id = "planner"
+
+        # Turtle only exists in 2D, thus we get x and y translation
+        # coordinates from the message and set the z coordinate to 0
+        t.transform.translation.x = self.x_offset
+        t.transform.translation.y = self.y_offset
+        t.transform.translation.z = 0.0
+
+        # For the same reason, turtle can only rotate around one axis
+        # and this why we set rotation in x and y to 0 and obtain
+        # rotation in z axis from the message
+        q = quaternion_from_euler(0, 0, self.yaw_offset)
+        t.transform.rotation.x = q[0]
+        t.transform.rotation.y = q[1]
+        t.transform.rotation.z = q[2]
+        t.transform.rotation.w = q[3]
+
+        # Send the transformation
+        self.tf_broadcaster.sendTransform(t)
+node2 = None
+cli= None
 def main():
     rclpy.init()
-
+    global cli, node2
     autonomous_node_controller = AutonomousNodeController()
+    node2 = rclpy.create_node('add_two_ints_client')
+
+    cli = node2.create_client(SelectSquare, "/SelectSquare")
     rclpy.spin(autonomous_node_controller)
     # navigator = BasicNavigator()
 
@@ -310,6 +333,5 @@ def main():
 
 
 if __name__ == '__main__':
-    x,y = calc_goal(coords_1[0], coords_1[1], coords_2[0], coords_2[1])
-    print(x, y)
+
     main()
