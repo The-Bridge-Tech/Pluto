@@ -8,4 +8,5 @@ float64 lower_right_y
 float64 upper_right_x
 float64 upper_right_y
 ---
+geometry_msgs/PoseStamped goal_start_pose
 geometry_msgs/PoseStamped goal_end_pose

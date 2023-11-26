@@ -1,0 +1,5 @@
+int64 map_index
+---
+std_msgs/String message
+geometry_msgs/PoseStamped goal_start_pose
+geometry_msgs/PoseStamped goal_end_pose
