@@ -51,9 +51,9 @@ class ControllerNode(Node):
         #self.differential_raw_twist_publisher = self.create_publisher(TwistStamped, 'differential_raw_twist', 10)
         
         timer_period = 1/self.PUBLISH_RATE  # publish speed
-        self.right_timer = self.create_timer(timer_period, self.right_servero_timer_callback)
-        self.left_timer = self.create_timer(timer_period, self.left_servero_time_callback)
-        self.differential_raw_twist_timer = self.create_timer(timer_period, self.differential_raw_twist_callback)
+        # self.right_timer = self.create_timer(timer_period, self.right_servero_timer_callback)
+        # self.left_timer = self.create_timer(timer_period, self.left_servero_time_callback)
+        #self.differential_raw_twist_timer = self.create_timer(timer_period, self.differential_raw_twist_callback)
         self.i = 0
     
     
@@ -158,6 +158,8 @@ class ControllerNode(Node):
             else:
                 pass
             
+            # self.new_left_pwm.data = new_calculated_left_pwm
+            # self.new_right_pwm.data = new_calculated_right_pwm
             if new_calculated_left_pwm != self.new_left_pwm.data or new_calculated_right_pwm != self.new_right_pwm.data:
                 self.new_left_pwm.data = new_calculated_left_pwm
                 self.new_right_pwm.data = new_calculated_right_pwm
@@ -197,19 +199,19 @@ class ControllerNode(Node):
     #     # 2. publish this odometry
     #     self.differential_raw_twist_publisher.publish(self.differential_twist)
         
-    # def right_servero_timer_callback(self):
-    #     """
-    #     Publish pwm value to '/steering_right'
-    #     """
-    #     self.right_server_publisher.publish(self.new_right_pwm)
-    #     #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
+    def right_servero_timer_callback(self):
+        """
+        Publish pwm value to '/steering_right'
+        """
+        self.right_server_publisher.publish(self.new_right_pwm)
+        #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
     
-    # def left_servero_time_callback(self):
-    #     """
-    #     Publish pwm value to '/steering_left'
-    #     """
-    #     self.left_server_publisher.publish(self.new_left_pwm)
-    #     #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
+    def left_servero_time_callback(self):
+        """
+        Publish pwm value to '/steering_left'
+        """
+        self.left_server_publisher.publish(self.new_left_pwm)
+        #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
 
 
 def main(args=None):
