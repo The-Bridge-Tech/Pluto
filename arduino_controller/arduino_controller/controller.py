@@ -20,7 +20,8 @@ class ArduinoController(Node):
         
         self.serial_controller =serial.Serial('/dev/ttyACM0', 9600)  # Change 'COM1' to your specific serial port and set the baud rate accordingly
 
-    
+        self.last_left_int = 120
+        self.last_right_int = 120
         self.steer_right_listerner = self.create_subscription(
             UInt32, 'steering_right', self.listen_right, 1
         )
@@ -29,6 +30,11 @@ class ArduinoController(Node):
         )
       
         self.get_logger().info('I heard: "%s"' % "Connect to maestro controller")
+    def send_pwm_message(self):
+        message = "{0} {1}".format(self.last_left_int, self.last_right_int)
+        self.get_logger().info('message:' + message)
+        self.serial_controller.write(message.encode('utf-8'))
+
 
     # def initial_setup(self):
         
@@ -40,18 +46,22 @@ class ArduinoController(Node):
 
     def listen_left(self, left_pwm: UInt32):
         # listen for left motor's pwm
-        message = "L{0}\n".format(left_pwm.data)  # Add a newline character to signal the end of the message
+        self.last_left_int = left_pwm.data
+        self.send_pwm_message()
+        # message = "L{0}\n".format(left_pwm.data)  # Add a newline character to signal the end of the message
         
-        # Send the message to the Arduino
-        self.serial_controller.write(message.encode('utf-8'))
+        # # Send the message to the Arduino
+        # self.serial_controller.write(message.encode('utf-8'))
 
 
     def listen_right(self, right_pwm: UInt32):
         # listen for left motor's pwm
-        message = "R{0}\n".format(right_pwm.data)  # Add a newline character to signal the end of the message
+        self.last_right_int = right_pwm.data
+        self.send_pwm_message()
+        # message = "R{0}\n".format(right_pwm.data)  # Add a newline character to signal the end of the message
 
-        # Send the message to the Arduino
-        self.serial_controller.write(message.encode('utf-8'))
+        # # Send the message to the Arduino
+        # self.serial_controller.write(message.encode('utf-8'))
 
     # def convert_twist_to_wheel_velocity(self, goal_speed:Twist) -> Tuple[float, float]:
     #     vel_l = ((goal_speed.linear.x - (goal_speed.angular.z * self.wheel_bias / 2.0)) / self.wheel_radius) * 60/(2*3.14159)
