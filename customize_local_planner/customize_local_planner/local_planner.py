@@ -110,6 +110,9 @@ class LocalPlanner(Node):
             .get_parameter_value()
             .integer_value
         )
+        
+        #TODO:
+        self.turning_pid_filter_counter = 0
         # some variable
         self.latestGlobalOdom: Odometry = None
         self.is_autonomous_state: Bool = Bool()
@@ -167,9 +170,19 @@ class LocalPlanner(Node):
             pass
         else:
             self.determine_local_controller_strategy()
-            self.current_local_planner_controller.execute_movement(
-                self.latestGlobalOdom, self.pose_to_navigate
-            )
+            if isinstance(self.current_local_planner_controller, TurningPIDController):
+                if self.turning_pid_filter_counter < 10:
+                    self.turning_pid_filter_counter+=1
+                else:
+                    self.turning_pid_filter_counter = 0
+                    self.current_local_planner_controller.execute_movement(
+                        self.latestGlobalOdom, self.pose_to_navigate
+                    )
+            else:
+                
+                self.current_local_planner_controller.execute_movement(
+                    self.latestGlobalOdom, self.pose_to_navigate
+                )
             self.publish_left_and_right_pwm()
 
     def determine_local_controller_strategy(self):
