@@ -195,10 +195,10 @@ class LocalPlanner(Node):
                                          (self.pose_to_navigate.pose.position.y - self.latestGlobalOdom.pose.pose.position.y))
     
         # check for angle tolerance
-        if distance_difference < self.error_distance_tolerance:
-            self.get_logger().info("Stop due to within tolerance error distance")
-            self.strategy_simple_factory("Stop")
-        elif angle_difference > self.moving_straight_angle_threshold:
+        # if distance_difference < self.error_distance_tolerance:
+        #     self.get_logger().info("Stop due to within tolerance error distance")
+        #     self.strategy_simple_factory("Stop")
+        if angle_difference > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
         else:
