@@ -112,7 +112,7 @@ class LocalPlanner(Node):
         )
         
         #TODO:
-        self.turning_pid_filter_counter = 0
+        self.turning_pid_filter_counter = 0  #TODO NEED documentation later
         # some variable
         self.latestGlobalOdom: Odometry = None
         self.is_autonomous_state: Bool = Bool()
@@ -171,7 +171,7 @@ class LocalPlanner(Node):
         else:
             self.determine_local_controller_strategy()
             if isinstance(self.current_local_planner_controller, TurningPIDController):
-                if self.turning_pid_filter_counter < 10:
+                if self.turning_pid_filter_counter < 3:  #TODO need to parameterize later
                     self.turning_pid_filter_counter+=1
                 else:
                     self.turning_pid_filter_counter = 0
