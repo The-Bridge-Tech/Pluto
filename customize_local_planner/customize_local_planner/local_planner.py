@@ -198,7 +198,7 @@ class LocalPlanner(Node):
         # if distance_difference < self.error_distance_tolerance:
         #     self.get_logger().info("Stop due to within tolerance error distance")
         #     self.strategy_simple_factory("Stop")
-        self.get_logger().debug("The angle turning error is {0} the tolerance angle is {1}".format(angle_difference, self.moving_straight_angle_threshold))
+        self.get_logger().info("The angle turning error is {0} the tolerance angle is {1}".format(angle_difference, self.moving_straight_angle_threshold))
         if angle_difference > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
@@ -229,7 +229,7 @@ class LocalPlanner(Node):
             ):
                 tuned_min_pwm = int(self.min_pwm*0.2)
                 tuned_max_pwm = int(self.max_pwm*0.2)
-                self.get_logger().debug("The tuned max {0} and min {1}".format(tuned_max_pwm, tuned_min_pwm))
+                self.get_logger().info("The tuned max {0} and min {1}".format(tuned_max_pwm, tuned_min_pwm))
                 self.current_local_planner_controller = TurningPIDController(
                     max_pwm=tuned_max_pwm,
                     min_pwm=tuned_min_pwm,
