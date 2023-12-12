@@ -198,6 +198,7 @@ class LocalPlanner(Node):
         # if distance_difference < self.error_distance_tolerance:
         #     self.get_logger().info("Stop due to within tolerance error distance")
         #     self.strategy_simple_factory("Stop")
+        self.get_logger().debug("The angle turning error is {0} the tolerance angle is {1}".format(angle_difference, self.moving_straight_angle_threshold))
         if angle_difference > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
