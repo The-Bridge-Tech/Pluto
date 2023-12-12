@@ -219,7 +219,7 @@ class LocalPlanner(Node):
                     ki=self.moving_straight_ki,
                     kd=self.moving_straight_kd,
                     initial_pwm=self.moving_straight_initial_pwm,
-                    forward_prediction=self.moving_straight_forward_prediction_step,
+                    forward_prediction_step=self.moving_straight_forward_prediction_step,
                     logger=self.get_logger(),
                 )
 
