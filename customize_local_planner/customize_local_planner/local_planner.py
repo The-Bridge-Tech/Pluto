@@ -33,7 +33,7 @@ class LocalPlanner(Node):
         self.declare_parameter("moving_straight_ki", 0.0)
         self.declare_parameter("moving_straight_initial_pwm", 1420)
         # self.declare_parameter("moving_straight_distance_tolerance", 0.3)
-        self.declare_parameter("moving_straight_angle_threshold", 35)
+        self.declare_parameter("moving_straight_angle_threshold", 65)
         self.declare_parameter("moving_straight_forward_prediction_step", 1)
 
         self.declare_parameter("turning_kp", 2.0)
@@ -227,8 +227,8 @@ class LocalPlanner(Node):
                 self.current_local_planner_controller, TurningPIDController
             ):
                 self.current_local_planner_controller = TurningPIDController(
-                    max_pwm=self.max_pwm*0.5,
-                    min_pwm=self.min_pwm*0.5,
+                    max_pwm=int(self.max_pwm*0.2),
+                    min_pwm=int(self.min_pwm*0.2),
                     neutral_pwm=self.neutral_pwm,
                     kp=self.turning_kp,
                     ki=self.turning_ki,
