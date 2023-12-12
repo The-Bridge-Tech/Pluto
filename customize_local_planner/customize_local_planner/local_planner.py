@@ -227,8 +227,8 @@ class LocalPlanner(Node):
                 self.current_local_planner_controller, TurningPIDController
             ):
                 self.current_local_planner_controller = TurningPIDController(
-                    max_pwm=self.max_pwm,
-                    min_pwm=self.min_pwm,
+                    max_pwm=self.max_pwm*0.5,
+                    min_pwm=self.min_pwm*0.5,
                     neutral_pwm=self.neutral_pwm,
                     kp=self.turning_kp,
                     ki=self.turning_ki,
