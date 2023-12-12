@@ -61,6 +61,6 @@ class TurningPIDController(Controller):
         if direction == "none":
             pass
         elif direction == "right":
-            self.right_value += compensate_value
-        else:
             self.right_value -= compensate_value
+        else:
+            self.right_value += compensate_value
