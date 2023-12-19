@@ -32,6 +32,8 @@ def generate_launch_description():
             name='image_yolo_filter',
        parameters=[
             {"cacheSize": 20},
+            {"debug" : True}
+            
         ],
             ),
 
