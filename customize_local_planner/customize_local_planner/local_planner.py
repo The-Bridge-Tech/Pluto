@@ -171,13 +171,9 @@ class LocalPlanner(Node):
         else:
             self.determine_local_controller_strategy()
             if isinstance(self.current_local_planner_controller, TurningPIDController):
-                if self.turning_pid_filter_counter < 3:  #TODO need to parameterize later
-                    self.turning_pid_filter_counter+=1
-                else:
-                    self.turning_pid_filter_counter = 0
-                    self.current_local_planner_controller.execute_movement(
-                        self.latestGlobalOdom, self.pose_to_navigate
-                    )
+                self.current_local_planner_controller.execute_movement(
+                    self.latestGlobalOdom, self.pose_to_navigate
+                )
             else:
                 
                 self.current_local_planner_controller.execute_movement(
@@ -227,8 +223,8 @@ class LocalPlanner(Node):
             if not isinstance(
                 self.current_local_planner_controller, TurningPIDController
             ):
-                tuned_min_pwm = int(self.min_pwm*0.2)
-                tuned_max_pwm = int(self.max_pwm*0.2)
+                tuned_min_pwm = self.neutral_pwm -  int(  (self.neutral_pwm -  self.min_pwm)*0.2)
+                tuned_max_pwm = self.neutral_pwm +  int(    (self.max_pwm - self.neutral_pwm )*0.2)
                 self.get_logger().info("The tuned max {0} and min {1}".format(tuned_max_pwm, tuned_min_pwm))
                 self.current_local_planner_controller = TurningPIDController(
                     max_pwm=tuned_max_pwm,
@@ -257,14 +253,16 @@ class LocalPlanner(Node):
         right_pwm_input = self.current_local_planner_controller.right_pwm()
 
         left_pwm = UInt32()
+        left_pwm.data = left_pwm_input
         right_pwm = UInt32()
+        right_pwm.data = right_pwm_input
 
-        left_pwm.data = roundPwmValue(
-            max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=left_pwm_input
-        )
-        right_pwm.data = roundPwmValue(
-            max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=right_pwm_input
-        )
+        # left_pwm.data = roundPwmValue(
+        #     max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=left_pwm_input
+        # )
+        # right_pwm.data = roundPwmValue(
+        #     max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=right_pwm_input
+        # )
 
         self.left_wheel_pwm_publisher.publish(left_pwm)
         self.right_wheel_pwm_publisher.publish(right_pwm)
