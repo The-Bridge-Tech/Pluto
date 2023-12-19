@@ -118,12 +118,12 @@ def determine_Wheel_to_compensate_base_on_angle_error(angle_error: float, init_p
         
         compensate_info = "none"
     if angle_error < 0.0:
-        left_servo_pwm += abs(compensate_pwm)  # only care the absolute value
+        right_servo_pwm += abs(compensate_pwm)  # only care the absolute value
      
         # since is moving to left, need to compensate left to move faster, to correct it back
         compensate_info = "left"
     else:
-        right_servo_pwm += abs(compensate_pwm)
+        left_servo_pwm += abs(compensate_pwm)
         compensate_info = "right"
     return compensate_info, left_servo_pwm, right_servo_pwm
 
