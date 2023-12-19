@@ -12,7 +12,7 @@ def roundPwmValue(max_pwm, min_pwm,  pwm_value) -> float:
     elif pwm_value < min_pwm:
         return min_pwm
     else:
-        return round(pwm_value)
+        return int(pwm_value)
 
 
 def calculateEulerAngleFromOdometry(odom: Odometry):
