@@ -55,3 +55,6 @@ class MovingStraightPIDController(Controller):
             angle_error=self.angle_off_error, init_pwm=self.initial_pwm, compensate_pwm=compensate_value)
         self.left_value = left
         self.right_value = right
+                # now, round off those value
+        self.left_value = int(roundPwmValue(max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=self.left_value))
+        self.right_value = int(roundPwmValue(max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=self.right_value))

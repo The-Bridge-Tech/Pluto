@@ -64,3 +64,6 @@ class TurningPIDController(Controller):
             self.right_value -= compensate_value
         else:
             self.right_value += compensate_value
+        # now, round off those value
+        self.left_value = self.initial_pwm
+        self.right_value = int(roundPwmValue(max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=self.right_value))
