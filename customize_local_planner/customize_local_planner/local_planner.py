@@ -223,8 +223,8 @@ class LocalPlanner(Node):
             if not isinstance(
                 self.current_local_planner_controller, TurningPIDController
             ):
-                tuned_min_pwm = self.neutral_pwm -  int(  (self.neutral_pwm -  self.min_pwm)*0.2)
-                tuned_max_pwm = self.neutral_pwm +  int(    (self.max_pwm - self.neutral_pwm )*0.2)
+                tuned_min_pwm = self.neutral_pwm -  int(  (self.neutral_pwm -  self.min_pwm)*0.3)
+                tuned_max_pwm = self.neutral_pwm +  int(    (self.max_pwm - self.neutral_pwm )*0.3)
                 self.get_logger().info("The tuned max {0} and min {1}".format(tuned_max_pwm, tuned_min_pwm))
                 self.current_local_planner_controller = TurningPIDController(
                     max_pwm=tuned_max_pwm,
