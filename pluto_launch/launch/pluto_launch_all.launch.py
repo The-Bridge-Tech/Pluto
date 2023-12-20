@@ -182,7 +182,7 @@ def generate_launch_description():
         # #DeclareLaunchArgument('use_sim_time',default_value="True", description="All node use simulate clock"),
         #start_gazebo_cmd,
 
-        controller_launch,
+        #controller_launch,
         # #ekf_filter,
         # #launch_ros.actions.SetParameter(name='use_sim_time', value=True),
         # # #controller_launch,
