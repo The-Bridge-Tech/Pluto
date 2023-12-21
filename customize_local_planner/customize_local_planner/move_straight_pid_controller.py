@@ -54,6 +54,9 @@ class MovingStraightPIDController(Controller):
         direction, _, _ = determine_Wheel_to_compensate_base_on_angle_error(
             angle_error=self.angle_off_error, init_pwm=self.initial_pwm, compensate_pwm=compensate_value)
         
+        # only want the absolute compensation value
+        compensate_value = abs(compensate_value)
+        
         self.left_value = self.initial_pwm
         self.right_value = self.initial_pwm
         if direction == "none":
