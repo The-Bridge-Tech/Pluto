@@ -194,7 +194,7 @@ class LocalPlanner(Node):
         # if distance_difference < self.error_distance_tolerance:
         #     self.get_logger().info("Stop due to within tolerance error distance")
         #     self.strategy_simple_factory("Stop")
-        self.get_logger().info("The angle turning error is {0} the tolerance angle is {1}".format(angle_difference, self.moving_straight_angle_threshold))
+        self.get_logger().info("current angle is {0} heading angle is {1}  The angle turning error is {2} the tolerance angle is {3}".format( current_robot_heading, plan_heading, angle_difference, self.moving_straight_angle_threshold))
         if angle_difference > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
@@ -267,6 +267,7 @@ class LocalPlanner(Node):
         self.left_wheel_pwm_publisher.publish(left_pwm)
         self.right_wheel_pwm_publisher.publish(right_pwm)
 
+        self.get_logger().info("local planner info: {0}".format(repr(self.current_local_planner_controller)))
         self.get_logger().info(
             "left pwm {0} right pwm {1}".format(left_pwm_input, right_pwm_input)
         )
@@ -304,20 +305,22 @@ class LocalPlanner(Node):
             self.pose_to_navigate.pose.orientation.z = q[2]
             self.pose_to_navigate.pose.orientation.w = q[3]
             
-            self.get_logger().info(
-                "Calcuated angle is {0} the converted angle is {1} ".format(
-                    euler_angle,
-                    calculateEulerAngleFromPoseStamped(self.pose_to_navigate), 
-                )
-            )
+            # self.get_logger().info(
+            #     "Calcuated angle is {0} the converted angle is {1} ".format(
+            #         euler_angle,
+            #         calculateEulerAngleFromPoseStamped(self.pose_to_navigate), 
+            #     )
+            # )
 
     def local_plan_callback(self, loc_path: Path):
         if self.is_pure_pursuit_mode.data == False:
-            
-            # right now, get the mid point of the path
-            mid_point = int(len(loc_path.poses)/2)
-            self.pose_to_navigate = loc_path.poses[mid_point]
-            self.get_logger().info("local plan path has total {0} pose".format(len(loc_path.poses)))
+            if len(loc_path.poses)  == 0:
+                self.get_logger().warn("no local path plan has created")
+            else:
+                # right now, get the mid point of the path
+                mid_point = int(len(loc_path.poses)/2)
+                self.pose_to_navigate = loc_path.poses[mid_point]
+                self.get_logger().info("local plan path has total {0} pose".format(len(loc_path.poses)))
             # if len(loc_path.poses) <= self.local_plan_step_size - 1:
             #     self.get_logger().info(
             #         "local plan path only have {0} pose, smaller than configure path size. Thus, using the very first pose in path".format(len(loc_path.poses))

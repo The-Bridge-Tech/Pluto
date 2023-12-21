@@ -29,6 +29,11 @@ class MovingStraightPIDController(Controller):
         self.left_value = 0
         self.right_value= 0
 
+    def __repr__(self):
+        return "MovingStraightPID controller max_pwm: {0} min_pwm:{1} neutral_pwm:{2} left_pwm:{3} right_pwm:{4} kp:{5} kd:{6} ki:{7} angler_off_error:{8} previous_error:{9}  accumulate_error{10}".format(
+            self.max_pwm, self.min_pwm, self.neutral_pwm, self.left_value, self.right_value, self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error
+        )
+
     def determine_error_(self, current_angle, goal_angle) -> float:
         error = goal_angle-current_angle
         return error
@@ -50,7 +55,7 @@ class MovingStraightPIDController(Controller):
         self.accumulate_error += error
 
         compensate_value = pidCalculation(
-            self.kp, self.kd, self.ki, error, self.previous_error, self.accumulate_error)
+            self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error)
         direction, _, _ = determine_Wheel_to_compensate_base_on_angle_error(
             angle_error=self.angle_off_error, init_pwm=self.initial_pwm, compensate_pwm=compensate_value)
         

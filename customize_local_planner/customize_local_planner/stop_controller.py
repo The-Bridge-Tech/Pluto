@@ -18,3 +18,8 @@ class Stop(Controller):
         return self.neutral_pwm
     def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
         self.logger.info("Stopping the robot")
+
+
+
+    def __repr__(self):
+        return "Stop movement"  
