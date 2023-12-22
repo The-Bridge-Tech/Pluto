@@ -45,7 +45,7 @@ class TurningPIDController(Controller):
         current_angle = convert_to_0_360_degree(calculateEulerAngleFromOdometry(current_loc))
         
         direction, error = determine_direction_enu(goal_angle=goal_angle, current_angle=current_angle)
-        self.logger.info("Moving straight pid: direction {0}) error{1} ", direction, error)
+        self.logger().info("Moving straight pid: direction {0}) error{1} ", direction, error)
         self.previous_error = self.angle_off_error
         self.angle_off_error = error
         #TODO: determine accumulate error laterself.accumulate_error += error
