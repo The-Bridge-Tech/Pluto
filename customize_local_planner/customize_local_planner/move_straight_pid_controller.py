@@ -26,12 +26,15 @@ class MovingStraightPIDController(Controller):
         self.accumulate_error = 0
         self.angle_off_error = 0
 
+        self.direction = ""
+        self.error = 0  # for debug purpose
+
         self.left_value = 0
         self.right_value= 0
 
     def __repr__(self):
-        return "MovingStraightPID controller max_pwm: {0} min_pwm:{1} neutral_pwm:{2} left_pwm:{3} right_pwm:{4} kp:{5} kd:{6} ki:{7} angler_off_error:{8} previous_error:{9}  accumulate_error{10}".format(
-            self.max_pwm, self.min_pwm, self.neutral_pwm, self.left_value, self.right_value, self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error
+        return "MovingStraight controller max_pwm: {0} min_pwm:{1} neutral_pwm:{2} left_pwm:{3} right_pwm:{4} kp:{5} kd:{6} ki:{7} angler_off_error:{8} previous_error:{9}  accumulate_error{10} direction{11} error{12}".format(
+            self.max_pwm, self.min_pwm, self.neutral_pwm, self.left_value, self.right_value, self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error, self.direction, self.error
         )
 
     def left_pwm(self) -> int:
@@ -47,6 +50,10 @@ class MovingStraightPIDController(Controller):
         tuple_result = determine_direction_enu(goal_angle=goal_angle, current_angle=current_angle)
         direction = tuple_result[0]
         error = tuple_result[1]
+        
+        self.direction = direction
+        self.error = error 
+        
         self.previous_error = self.angle_off_error
         self.angle_off_error = error
         #TODO: self.accumulate_error += error
