@@ -44,8 +44,9 @@ class MovingStraightPIDController(Controller):
         goal_angle = convert_to_0_360_degree( calculateEulerAngleFromPoseStamped(pose_to_navigate))
         current_angle = convert_to_0_360_degree( calculateEulerAngleFromOdometry(current_loc))
 
-        direction, error = determine_direction_enu(goal_angle=goal_angle, current_angle=current_angle)
-        self.logger().info("Moving straight pid: direction {0}) error{1} ", direction, error)
+        tuple_result = determine_direction_enu(goal_angle=goal_angle, current_angle=current_angle)
+        direction = tuple_result[0]
+        error = tuple_result[1]
         self.previous_error = self.angle_off_error
         self.angle_off_error = error
         #TODO: self.accumulate_error += error
