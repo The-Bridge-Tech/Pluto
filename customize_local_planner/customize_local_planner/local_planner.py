@@ -183,7 +183,7 @@ class LocalPlanner(Node):
         
         # turn the angles to 360 degree
         plan_heading = convert_to_0_360_degree(plan_heading)
-        current_robot_heading = convert_to_0_360_degree(plan_heading)
+        current_robot_heading = convert_to_0_360_degree(current_robot_heading)
         
 
         
