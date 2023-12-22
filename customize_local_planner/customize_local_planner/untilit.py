@@ -109,26 +109,63 @@ def calculate_heading_angle_between_two_position(start_position_x, start_positio
     return math.atan2(dy, dx) * (180/pi)
 
 
-def determine_Wheel_to_compensate_base_on_angle_error(angle_error: float, init_pwm:int, compensate_pwm:int)->Tuple[str, int, int]:
+# def determine_Wheel_to_compensate_base_on_angle_error(angle_error: float, init_pwm:int, compensate_pwm:int)->Tuple[str, int, int]:
 
-    left_servo_pwm = init_pwm
-    right_servo_pwm =init_pwm
-    compensate_info = ""
-    if angle_error == 0:
+#     left_servo_pwm = init_pwm
+#     right_servo_pwm =init_pwm
+#     compensate_info = ""
+#     if angle_error == 0:
         
-        compensate_info = "none"
-    if angle_error < 0.0:
-        right_servo_pwm += abs(compensate_pwm)  # only care the absolute value
+#         compensate_info = "none"
+#     if angle_error < 0.0:
+#         right_servo_pwm += abs(compensate_pwm)  # only care the absolute value
      
-        # since is moving to left, need to compensate left to move faster, to correct it back
-        compensate_info = "left"
-    else:
-        left_servo_pwm += abs(compensate_pwm)
-        compensate_info = "right"
-    return compensate_info, left_servo_pwm, right_servo_pwm
+#         # since is moving to left, need to compensate left to move faster, to correct it back
+#         compensate_info = "left"
+#     else:
+#         left_servo_pwm += abs(compensate_pwm)
+#         compensate_info = "right"
+#     return compensate_info, left_servo_pwm, right_servo_pwm
 
 # function specific for PID Base strategy
 def pidCalculation(kp: int, kd: int, ki: int, error: float, previous_error: float, accumulate_error: float):
     # return self.moving_straight_kp * self.angleOffError + self.moving_straight_kd * (self.angleOffError-self.previousError) + self.moving_straight_ki*self.accumulateError
     return kp * error + kd * (error - previous_error) + ki*accumulate_error
+
+def convert_to_0_360_degree(degree: float):
+   return (degree + 360) % 360
+
+def determine_direction_enu(goal_angle, current_angle):
+    """
+    Determine if the current angle is to the left or right of the goal angle in ENU coordinates.
+    
+    Args:
+    - goal_angle (float): Goal angle in [0, 360] degrees.
+    - current_angle (float): Current angle in [0, 360] degrees.
+    
+    Returns:
+    - str: "left", "right", or "at_goal" based on the relative position.
+    """
+    # Calculate the angular difference between goal and current angles
+    angular_difference = goal_angle - current_angle
+    
+    # Ensure the difference is within the range [-180, 180] degrees
+    if angular_difference > 180:
+        angular_difference -= 360
+    elif angular_difference < -180:
+        angular_difference += 360
+    
+    # Determine the direction based on the angular difference in ENU coordinates
+    if angular_difference == 0:
+        return ("none", angular_difference)
+    elif angular_difference > 0:
+        # robot is at the right of the goal
+        # so compensate left
+        return ("right", angular_difference)
+        return "clockwise (right)"
+    else:
+        # means at the left of the goal
+        # so compensate right
+        return ("left", angular_difference)
+        return "counter-clockwise (left)"
 

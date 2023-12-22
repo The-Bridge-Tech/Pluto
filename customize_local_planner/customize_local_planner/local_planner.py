@@ -170,13 +170,9 @@ class LocalPlanner(Node):
             pass
         else:
             self.determine_local_controller_strategy()
-            if isinstance(self.current_local_planner_controller, TurningPIDController):
-                self.current_local_planner_controller.execute_movement(
-                    self.latestGlobalOdom, self.pose_to_navigate
-                )
-            else:
+
                 
-                self.current_local_planner_controller.execute_movement(
+            self.current_local_planner_controller.execute_movement(
                     self.latestGlobalOdom, self.pose_to_navigate
                 )
             self.publish_left_and_right_pwm()
@@ -184,18 +180,22 @@ class LocalPlanner(Node):
     def determine_local_controller_strategy(self):
         plan_heading = calculateEulerAngleFromPoseStamped(self.pose_to_navigate)
         current_robot_heading = calculateEulerAngleFromOdometry(self.latestGlobalOdom)
-        angle_difference: float = abs(current_robot_heading - plan_heading)
+        
+        # turn the angles to 360 degree
+        plan_heading = convert_to_0_360_degree(plan_heading)
+        current_robot_heading = convert_to_0_360_degree(plan_heading)
+        
 
         
         distance_difference = math.hypot(  (self.pose_to_navigate.pose.position.x - self.latestGlobalOdom.pose.pose.position.x),
                                          (self.pose_to_navigate.pose.position.y - self.latestGlobalOdom.pose.pose.position.y))
-    
+        direction, angle_error = determine_direction_enu(goal_angle=convert_to_0_360_degree(plan_heading), current_angle=convert_to_0_360_degree(current_robot_heading) )
         # check for angle tolerance
         # if distance_difference < self.error_distance_tolerance:
         #     self.get_logger().info("Stop due to within tolerance error distance")
         #     self.strategy_simple_factory("Stop")
-        self.get_logger().info("current angle is {0} heading angle is {1}  The angle turning error is {2} the tolerance angle is {3}".format( current_robot_heading, plan_heading, angle_difference, self.moving_straight_angle_threshold))
-        if angle_difference > self.moving_straight_angle_threshold:
+        self.get_logger().info("current angle is {0} heading angle is {1}  The angle turning error is {2} the tolerance angle is {3} the robot is at {4} of the goal".format( current_robot_heading, plan_heading, angle_error, self.moving_straight_angle_threshold, direction))
+        if abs(angle_error) > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
         else:

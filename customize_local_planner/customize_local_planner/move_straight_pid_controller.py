@@ -34,10 +34,6 @@ class MovingStraightPIDController(Controller):
             self.max_pwm, self.min_pwm, self.neutral_pwm, self.left_value, self.right_value, self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error
         )
 
-    def determine_error_(self, current_angle, goal_angle) -> float:
-        error = goal_angle-current_angle
-        return error
-
     def left_pwm(self) -> int:
         return self.left_value
 
@@ -45,20 +41,18 @@ class MovingStraightPIDController(Controller):
         return self.right_value
 
     def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
-        goal_angle = calculateEulerAngleFromPoseStamped(pose_to_navigate)
-        current_angle = calculateEulerAngleFromOdometry(current_loc)
-        error = self.determine_error_(
-            current_angle=current_angle, goal_angle=goal_angle)
+        goal_angle = convert_to_0_360_degree( calculateEulerAngleFromPoseStamped(pose_to_navigate))
+        current_angle = convert_to_0_360_degree( calculateEulerAngleFromOdometry(current_loc))
 
+        direction, error = determine_direction_enu(goal_angle=goal_angle, current_angle=current_angle)
+        
         self.previous_error = self.angle_off_error
         self.angle_off_error = error
-        self.accumulate_error += error
+        #TODO: self.accumulate_error += error
 
         compensate_value = pidCalculation(
             self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error)
-        direction, _, _ = determine_Wheel_to_compensate_base_on_angle_error(
-            angle_error=self.angle_off_error, init_pwm=self.initial_pwm, compensate_pwm=compensate_value)
-        
+
         # only want the absolute compensation value
         compensate_value = abs(compensate_value)
         
@@ -67,9 +61,9 @@ class MovingStraightPIDController(Controller):
         if direction == "none":
             pass
         elif direction == "right":
-            self.left_value += compensate_value
+            self.right_value += compensate_value # at the right of the goal, so turn left
         else:
-            self.right_value += compensate_value
+            self.left_value += compensate_value  # at the left of the goal, so turn right
 
                 # now, round off those value
         self.left_value = int(roundPwmValue(max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=self.left_value))
