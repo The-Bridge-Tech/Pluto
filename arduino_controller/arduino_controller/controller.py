@@ -31,7 +31,7 @@ class ArduinoController(Node):
       
         self.get_logger().info('I heard: "%s"' % "Connect to maestro controller")
     def send_pwm_message(self):
-        message = "{0} {1}".format(self.last_left_int, self.last_right_int)
+        message = "{0} {1}\n".format(self.last_left_int, self.last_right_int)
         self.get_logger().info('message:' + message)
         self.serial_controller.write(message.encode('utf-8'))
         self.serial_controller.flushOutput()
