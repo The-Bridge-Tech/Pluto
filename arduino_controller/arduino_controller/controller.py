@@ -34,6 +34,7 @@ class ArduinoController(Node):
         message = "{0} {1}".format(self.last_left_int, self.last_right_int)
         self.get_logger().info('message:' + message)
         self.serial_controller.write(message.encode('utf-8'))
+        self.serial_controller.flushOutput()
 
 
     # def initial_setup(self):
