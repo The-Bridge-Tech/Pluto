@@ -18,7 +18,7 @@ class ArduinoController(Node):
     def __init__(self):
         super().__init__('maestro_controller')
         
-        self.serial_controller =serial.Serial('/dev/ttyACM0', 9600)  # Change 'COM1' to your specific serial port and set the baud rate accordingly
+        self.serial_controller =serial.Serial('/dev/ttyACM0', 921600)  # Change 'COM1' to your specific serial port and set the baud rate accordingly
 
         self.last_left_int = 120
         self.last_right_int = 120
