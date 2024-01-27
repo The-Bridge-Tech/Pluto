@@ -52,21 +52,21 @@ class MinimalSubscriber(Node):
             
         )
         
-        self.odometry_global_subscription = self.create_subscription(
-            Odometry,
-            "/odometry/global",
+        # self.odometry_global_subscription = self.create_subscription(
+        #     Odometry,
+        #     "/odometry/global",
             
-        )
+        # )
         ## odometry/global
         ## odometry local
     
         
-    def odometry_global_callback(self, msg:Odometry):
-        events = {
-            "index":  "plutotest",
-            "event":{"/odometry/global": msg}
-        }
-        self.sendDataToSplunk(events)      
+    # def odometry_global_callback(self, msg:Odometry):
+    #     events = {
+    #         "index":  "plutotest",
+    #         "event":{"/odometry/global": msg}
+    #     }
+    #     self.sendDataToSplunk(events)      
     def joy_callback(self, msg:Joy):
         events = {
             "index":  "plutotest",
