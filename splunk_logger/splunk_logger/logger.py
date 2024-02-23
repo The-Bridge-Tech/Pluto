@@ -7,7 +7,7 @@ import requests
 
 from std_msgs.msg import String
 from rcl_interfaces.msg import Log
-from sensor_msgs.msg import NavSatFix, Imu, Joy
+from sensor_msgs.msg import NavSatFix, Imu, Joy, Odometry
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
 
@@ -16,20 +16,24 @@ class MinimalSubscriber(Node):
 
     def __init__(self):
         super().__init__('minimal_subscriber')
-        # self.log_subscription = self.create_subscription(
-        #     Log,
-        #     'rosout',
-        #     self.ros2_logger_callback,
-        #     10)
-        # self.log_subscription  # prevent unused variable warning
         
-        # self.velocity_gpsNonholonomic = self.create_subscription(
-        #     TwistWithCovarianceStamped,
-        #     "/velocity/gps_nonholonomic",
-        #     self.velocity_gps_nonholonomic_callback,
-        #     10
-        # )
+        # Declare parameters for topic names with default values
+        self.declare_parameter('imu_data_topic', '/imu/data')
+        self.declare_parameter('fix_filtered_topic', '/fix/filtered')
+        self.declare_parameter('joy_topic', '/joy')
+        self.declare_parameter('odom_topic', '/global')
         
+        # Initialize subscriptions using the parameter-defined topics
+        self.initialize_subscriptions()
+
+    def initialize_subscriptions(self):
+        # Retrieve parameter values for topic names
+        imu_data_topic = self.get_parameter('imu_data_topic').get_parameter_value().string_value
+        fix_filtered_topic = self.get_parameter('fix_filtered_topic').get_parameter_value().string_value
+        joy_topic = self.get_parameter('joy_topic').get_parameter_value().string_value
+        Odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
+        
+        #subscriptions
         self.imu_data_subscription=self.create_subscription(
             Imu,
             "/imu/data",
@@ -52,21 +56,23 @@ class MinimalSubscriber(Node):
             
         )
         
-        # self.odometry_global_subscription = self.create_subscription(
-        #     Odometry,
-        #     "/odometry/global",
+        self.odometry_global_subscription = self.create_subscription(
+           Odometry,
+             "/odometry/global",
+             self.odometry_global_callback
+             10
             
-        # )
-        ## odometry/global
-        ## odometry local
+        )
+         #odometry/global
+         #odometry local
     
         
-    # def odometry_global_callback(self, msg:Odometry):
-    #     events = {
-    #         "index":  "plutotest",
-    #         "event":{"/odometry/global": msg}
-    #     }
-    #     self.sendDataToSplunk(events)      
+    def odometry_global_callback(self, msg:Odometry):
+         events = {
+             "index":  "plutotest",
+             "event":{"/odometry/global": msg}
+         }
+         self.sendDataToSplunk(events)      
     def joy_callback(self, msg:Joy):
         events = {
             "index":  "plutotest",
@@ -112,14 +118,6 @@ class MinimalSubscriber(Node):
             }
         }
 
-        self.sendDataToSplunk(events)
-        # response = requests.post(
-        # "http://splunk.thebridgetech.org:8088/services/collector/event",
-        # headers={"Authorization": "Splunk 0380a1f0-c1a8-4ac8-8ab7-3e17bf71e147"},
-        # data=json.dumps(events, ensure_ascii=False, default=str).encode("utf-8"),
-        # )
-        # print(f"Event is sent, status code: {response.status_code}")
-
 
     def sendDataToSplunk(self, eventMessage):
         response = requests.post(
@@ -127,10 +125,17 @@ class MinimalSubscriber(Node):
         headers={"Authorization": "Splunk 0380a1f0-c1a8-4ac8-8ab7-3e17bf71e147"},
         data=json.dumps(eventMessage, ensure_ascii=False, default=str).encode("utf-8"),
         )
-        print(f"Event is sent, status code: {response.status_code}")
 
 
-    
+        params = self.get_parameter_names()
+        for param in params:
+            param_value = self.get_parameter(param)
+        if 'topic' in param_value.value.data:
+            topic_name = param_value.value.data['topic']
+
+            print(f"Found topic: {topic_name}")
+
+
 def main(args=None):
     rclpy.init(args=args)
 
