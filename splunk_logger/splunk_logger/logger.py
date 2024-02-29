@@ -7,7 +7,7 @@ import requests
 
 from std_msgs.msg import String
 from rcl_interfaces.msg import Log
-from sensor_msgs.msg import NavSatFix, Imu, Joy, Odometry
+from sensor_msgs.msg import NavSatFix, Imu, Joy
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
 
@@ -21,7 +21,7 @@ class MinimalSubscriber(Node):
         self.declare_parameter('imu_data_topic', '/imu/data')
         self.declare_parameter('fix_filtered_topic', '/fix/filtered')
         self.declare_parameter('joy_topic', '/joy')
-        self.declare_parameter('odom_topic', '/global')
+        self.declare_parameter('odom_topic', 'odom/global')
         
         # Initialize subscriptions using the parameter-defined topics
         self.initialize_subscriptions()
@@ -31,7 +31,13 @@ class MinimalSubscriber(Node):
         imu_data_topic = self.get_parameter('imu_data_topic').get_parameter_value().string_value
         fix_filtered_topic = self.get_parameter('fix_filtered_topic').get_parameter_value().string_value
         joy_topic = self.get_parameter('joy_topic').get_parameter_value().string_value
-        Odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
+        odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
+
+        self.imu_publisher = self.create_publisher(Imu, 'imu', 10)
+        self.filtered_publisher = self.create_publisher(Filtered,'filtered', 10)
+        self.joy_publisher = self.create_publisher(Joy, 'imu', 10)
+        self.odometry_publisher = self.create_publisher(TwistStamped, 'odometry', 10)
+        
         
         #subscriptions
         self.imu_data_subscription=self.create_subscription(
@@ -133,7 +139,14 @@ class MinimalSubscriber(Node):
         if 'topic' in param_value.value.data:
             topic_name = param_value.value.data['topic']
 
-            print(f"Found topic: {topic_name}")
+    def readYAML(self):
+        with open('topics.yml', 'r') as file:
+            data_node = yaml.safe_load(file)
+        print(data_node['imudata'])
+        print(data_node['fixfiltered'])
+        print(data_node['joy'])
+        print(data_node['odometry'])
+     
 
 
 def main(args=None):
