@@ -58,16 +58,14 @@ class MinimalSubscriber(Node):
             Joy,
             "/joy",
             self.joy_callback,
-            10
-            
+            10    
         )
         
         self.odometry_global_subscription = self.create_subscription(
-           Odometry,
+            Odometry,
              "/odometry/global",
-             self.odometry_global_callback
-             10
-            
+             self.odometry_global_callback,
+             10   
         )
          #odometry/global
          #odometry local
