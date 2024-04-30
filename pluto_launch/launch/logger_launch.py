@@ -15,13 +15,14 @@ def generate_launch_description():
     logger_launch_description = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             package_path, 'launch', 'logger_launch.py')])
-        launch_arguments={
+    )
+    launch_arguments={
             'imu_data_topic': 'default_value',
             'fix_filtered_topic': 'default_value',
             'joy_topic': 'default_value',
             'odom_topic': 'default_value',
         }.topics()
-    )
+    
 
     # Create the launch description
     return LaunchDescription([
