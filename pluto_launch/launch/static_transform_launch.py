@@ -13,7 +13,7 @@ def generate_launch_description():
     gps_to_base_link =Node(
             package="tf2_ros", executable="static_transform_publisher",
             #arguments=['0','0','1','0', '0','0','base_link', 'gps_link'],
-            arguments=['0','0','1','1.5707963', '0','3.1415926','base_link', 'gps_link'],  # transform NED to ENU frame
+            arguments=['0','0','1','0', '0','0','base_link', 'gps_link'],  
             # parameters=[{"use_sim_time":use_sim_time}]
     )
     camera_to_baselink = Node(
