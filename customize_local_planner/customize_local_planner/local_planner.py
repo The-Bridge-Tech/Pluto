@@ -178,23 +178,27 @@ class LocalPlanner(Node):
             self.publish_left_and_right_pwm()
 
     def determine_local_controller_strategy(self):
-        plan_heading = calculateEulerAngleFromPoseStamped(self.pose_to_navigate)
+    
         current_robot_heading = calculateEulerAngleFromOdometry(self.latestGlobalOdom)
         
-        # turn the angles to 360 degree
-        plan_heading = convert_to_0_360_degree(plan_heading)
-        current_robot_heading = convert_to_0_360_degree(current_robot_heading)
-        
+        start_pose_x = self.latestGlobalOdom.pose.pose.position.x
+        start_pose_y = self.latestGlobalOdom.pose.pose.position.y
+        goal_pose_x = self.pose_to_navigate.pose.position.x
+        goal_pose_y = self.pose_to_navigate.pose.position.y
 
-        
-        distance_difference = math.hypot(  (self.pose_to_navigate.pose.position.x - self.latestGlobalOdom.pose.pose.position.x),
-                                         (self.pose_to_navigate.pose.position.y - self.latestGlobalOdom.pose.pose.position.y))
-        direction, angle_error = determine_direction_enu(goal_angle=convert_to_0_360_degree(plan_heading), current_angle=convert_to_0_360_degree(current_robot_heading) )
+
+        angle_error = relative_angle_between_two_position(start_position_x=start_pose_x,
+                        start_position_y=start_pose_y,
+                        start_position_angle=current_robot_heading,
+                        goal_pose_x = goal_pose_x,
+                        goal_pose_y = goal_pose_y)
         # check for angle tolerance
         # if distance_difference < self.error_distance_tolerance:
         #     self.get_logger().info("Stop due to within tolerance error distance")
         #     self.strategy_simple_factory("Stop")
-        self.get_logger().info("current angle is {0} heading angle is {1}  The angle turning error is {2} the tolerance angle is {3} the robot is at {4} of the goal".format( current_robot_heading, plan_heading, angle_error, self.moving_straight_angle_threshold, direction))
+        self.get_logger().info("Angle difference is {0} for start position x:{1} y{2} end position x:{3} y{4} \n".format( 
+            angle_error, start_pose_x, start_pose_y, goal_pose_x, goal_pose_y
+        ))
         if abs(angle_error) > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
@@ -215,7 +219,6 @@ class LocalPlanner(Node):
                     ki=self.moving_straight_ki,
                     kd=self.moving_straight_kd,
                     initial_pwm=self.moving_straight_initial_pwm,
-                    forward_prediction_step=self.moving_straight_forward_prediction_step,
                     logger=self.get_logger(),
                 )
 
@@ -234,7 +237,6 @@ class LocalPlanner(Node):
                     ki=self.turning_ki,
                     kd=self.turning_kd,
                     initial_pwm=self.neutral_pwm,
-                    forward_prediction_step=self.turning_prediction_step,
                     logger=self.get_logger(),
                 )
         elif strategy == "Stop":
@@ -289,11 +291,13 @@ class LocalPlanner(Node):
             goal_x = pose.point.x
             goal_y = pose.point.y
 
-            euler_angle = calculate_heading_angle_between_two_position(
-                self.latestGlobalOdom.pose.pose.position.x,
-                self.latestGlobalOdom.pose.pose.position.y,
-                goal_x,
-                goal_y,
+            #TODO: possibly don't need to calculate the angle
+            euler_angle = relative_angle_between_two_position(
+                start_position_x=self.latestGlobalOdom.pose.pose.position.x,
+                start_position_y=self.latestGlobalOdom.pose.pose.position.y,
+                start_position_angle= calculateEulerAngleFromOdometry(self.latestGlobalOdom),
+                goal_position_x=goal_x,
+                goal_position_y=goal_y,
             )
 
             #q = quaternion_from_euler(0, euler_angle, 0)

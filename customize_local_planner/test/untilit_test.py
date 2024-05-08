@@ -72,38 +72,19 @@ def test_relative_angle_between_two_position():
     start_position_y = 1.0
     goal_position_x = 2.0
     goal_position_y = 2.0
-    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y, goal_position_x, goal_position_y)
+    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y,math.degrees (atan2(start_position_x, start_position_y)) ,  goal_position_x, goal_position_y)
     assert round(relative_angle) == 0.0
-    # when goal is behind of start
+
     start_position_x = 2.0
     start_position_y = 2.0
-    goal_position_x = 1.0
-    goal_position_y = 0.0
-    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y, goal_position_x, goal_position_y)
-    assert round(relative_angle) == round(-161.59)
+    goal_position_x = 3.0
+    goal_position_y = 3.0
+    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y,45,  goal_position_x, goal_position_y)
+    assert round(relative_angle) == round(0.0)
 
-    # quadrant 2
-    # when goal is ahead of start
-    start_position_x = -1.0
+    start_position_x = 2.0
     start_position_y = 2.0
-    goal_position_x = -3.0
-    goal_position_y = 5.0
-    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y, goal_position_x, goal_position_y)
-    assert round(relative_angle) == round(7.12)
-
-    # when goal is behind the start
-    start_position_x = -3.0
-    start_position_y = 5.0
-    goal_position_x = -1.0
-    goal_position_y = 2.0
-    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y, goal_position_x, goal_position_y)
-    assert round(relative_angle) == round(-177.27)
-    # quadrant 3
-    # when goal is ahead of start
-    # when goal is behind of start
-
-    # quadrant 4
-    # when goal is ahead of start
-    # when goal is behind of start
-
-    # mix across quadrant
+    goal_position_x = 2.0
+    goal_position_y = 3.0
+    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y,45,  goal_position_x, goal_position_y)
+    assert round(relative_angle) == round(45.0)

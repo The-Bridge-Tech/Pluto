@@ -20,18 +20,20 @@ def calculateEulerAngleFromOdometry(odom: Odometry):
     
     q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
     rpy = tf_transformations.euler_from_quaternion(q)
-    angle = rpy[2]*(180/pi)
+    # angle = rpy[2]*(180/pi)
     # if(angle < 0):
     #     angle +=360
+    return math.degrees(rpy[2])
     return angle
 
 def calculateEulerAngleFromPoseStamped(pose: PoseStamped):
     q = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
     rpy = tf_transformations.euler_from_quaternion(q)
-    angle = rpy[2]*(180/pi)
-    # if(angle < 0):
-    #     angle +=360
-    return angle
+
+    return math.degrees(rpy[2]) # only want the pitch 
+    # # if(angle < 0):
+    # #     angle +=360
+    # return angle
 # def quaternion_from_euler(ai, aj, ak):
 #     ai /= 2.0
 #     aj /= 2.0
@@ -96,17 +98,31 @@ def process_from_global_path(global_path: Pose, forward_prediction_step: int):
         # purpose skip waypoint at index 0, because it is the current position of the robot
         future_way_point = global_path.poses[forward_prediction_step]
 
-    new_heading_angle = calculate_heading_angle_between_two_position(current_way_point.pose.position.x, current_way_point.pose.position.y,
-                                                                     future_way_point.pose.position.x, future_way_point.pose.position.y)
+    new_heading_angle = relative_angle_between_two_position(start_position_x=current_way_point.pose.position.x, 
+                                                            start_position_y=current_way_point.pose.position.y,
+                                                            start_position_angle=calculateEulerAngleFromPoseStamped(current_way_point),
+                                                            goal_position_x=future_way_point.pose.position.x, 
+                                                            goal_position_y=future_way_point.pose.position.y)
     return new_heading_angle
 
 
-def calculate_heading_angle_between_two_position(start_position_x, start_position_y, goal_position_x, goal_position_y):
+def relative_angle_between_two_position(start_position_x, start_position_y, start_position_angle ,goal_position_x, goal_position_y):
+    # https://stackoverflow.com/questions/21483999/using-atan2-to-find-angle-between-two-vectors
+    # dx = goal_position_x - start_position_x
+    # dy = goal_position_y - start_position_y
 
-    dx = goal_position_x - start_position_x
-    dy = goal_position_y - start_position_y
+    # return math.degrees( math.atan2(dy, dx))
 
-    return math.atan2(dy, dx) * (180/pi)
+    #https://wumbo.net/formulas/angle-between-two-vectors-2d/
+
+    # vector 1, represent the current heading from 0,0
+    # vector 2, build from the goal to start
+    vector1 = (  cos( math.radians(start_position_angle)) ,  sin(  math.radians( start_position_angle) ) )
+    vector2 = (goal_position_x - start_position_x, goal_position_y - start_position_y)
+    # print(vector1)
+    # print(vector2)
+    return math.degrees( atan2(vector2[1]*vector1[0] - vector2[0]*vector1[1],
+                               vector1[0]*vector2[0] + vector1[1]*vector2[1]  ))
 
 
 # def determine_Wheel_to_compensate_base_on_angle_error(angle_error: float, init_pwm:int, compensate_pwm:int)->Tuple[str, int, int]:
@@ -132,40 +148,40 @@ def pidCalculation(kp: int, kd: int, ki: int, error: float, previous_error: floa
     # return self.moving_straight_kp * self.angleOffError + self.moving_straight_kd * (self.angleOffError-self.previousError) + self.moving_straight_ki*self.accumulateError
     return kp * error + kd * (error - previous_error) + ki*accumulate_error
 
-def convert_to_0_360_degree(degree: float):
-   return (degree + 360) % 360
+# def convert_to_0_360_degree(degree: float):
+#    return (degree + 360) % 360
 
-def determine_direction_enu(goal_angle, current_angle):
-    """
-    Determine if the current angle is to the left or right of the goal angle in ENU coordinates.
+# def determine_direction_enu(goal_angle, current_angle):
+#     """
+#     Determine if the current angle is to the left or right of the goal angle in ENU coordinates.
     
-    Args:
-    - goal_angle (float): Goal angle in [0, 360] degrees.
-    - current_angle (float): Current angle in [0, 360] degrees.
+#     Args:
+#     - goal_angle (float): Goal angle in [0, 360] degrees.
+#     - current_angle (float): Current angle in [0, 360] degrees.
     
-    Returns:
-    - str: "left", "right", or "at_goal" based on the relative position.
-    """
-    # Calculate the angular difference between goal and current angles
-    angular_difference = goal_angle - current_angle
+#     Returns:
+#     - str: "left", "right", or "at_goal" based on the relative position.
+#     """
+#     # Calculate the angular difference between goal and current angles
+#     angular_difference = goal_angle - current_angle
     
-    # Ensure the difference is within the range [-180, 180] degrees
-    if angular_difference > 180:
-        angular_difference -= 360
-    elif angular_difference < -180:
-        angular_difference += 360
+#     # Ensure the difference is within the range [-180, 180] degrees
+#     if angular_difference > 180:
+#         angular_difference -= 360
+#     elif angular_difference < -180:
+#         angular_difference += 360
     
-    # Determine the direction based on the angular difference in ENU coordinates
-    if angular_difference == 0:
-        return ("none", angular_difference)
-    elif angular_difference > 0:
-        # robot is at the right of the goal
-        # so compensate left
-        return ("right", angular_difference)
-        return "clockwise (right)"
-    else:
-        # means at the left of the goal
-        # so compensate right
-        return ("left", angular_difference)
-        return "counter-clockwise (left)"
+#     # Determine the direction based on the angular difference in ENU coordinates
+#     if angular_difference == 0:
+#         return ("none", angular_difference)
+#     elif angular_difference > 0:
+#         # robot is at the right of the goal
+#         # so compensate left
+#         return ("right", angular_difference)
+#         return "clockwise (right)"
+#     else:
+#         # means at the left of the goal
+#         # so compensate right
+#         return ("left", angular_difference)
+#         return "counter-clockwise (left)"
 

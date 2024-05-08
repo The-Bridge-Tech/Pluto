@@ -10,7 +10,7 @@ class TurningPIDController(Controller):
     def __init__(self, max_pwm: int, min_pwm:
                  int, neutral_pwm: int, kp: int, ki: int,
                  kd: int, initial_pwm: int,
-                 forward_prediction_step: int, logger):
+                 logger):
         super(TurningPIDController, self).__init__(logger)
    
         self.max_pwm = max_pwm
@@ -20,17 +20,6 @@ class TurningPIDController(Controller):
         self.ki = ki
         self.kd = kd
         self.initial_pwm = initial_pwm
-
-        self.forward_prediction_step: int = forward_prediction_step
-        self.previous_error = 0
-        self.accumulate_error = 0
-        self.angle_off_error = 0
-        
-        self.direction = ""
-        self.error = 0  # for debug purpose
-
-        self.left_value = 0
-        self.right_value = 0
 
 
     def __repr__(self):
@@ -44,34 +33,22 @@ class TurningPIDController(Controller):
     def right_pwm(self):
         return self.right_value
     def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
-        goal_angle = convert_to_0_360_degree( calculateEulerAngleFromPoseStamped(pose_to_navigate))
-        current_angle = convert_to_0_360_degree(calculateEulerAngleFromOdometry(current_loc))
-        
-        tuple_result = determine_direction_enu(goal_angle=goal_angle, current_angle=current_angle)
-        direction = tuple_result[0]
-        error = tuple_result[1]
-        
-        self.direction = direction
-        self.error = error 
-        
-        self.previous_error = self.angle_off_error
-        self.angle_off_error = error
-        #TODO: determine accumulate error laterself.accumulate_error += error
+       
 
+        self.angle_error_calculation(current_loc=current_loc, pose_to_navigate=pose_to_navigate)
+        
         compensate_value = pidCalculation(
             self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error)
-        
-        # only want the absolute compensation value
-        compensate_value = abs(compensate_value)
+
+
         
         self.left_value = self.initial_pwm
         self.right_value = self.initial_pwm
-        if direction == "none":
+
+        if(self.angle_off_error == 0):
             pass
-        elif direction == "right":
-            self.right_value += compensate_value  # at the right of the goal, so turn left
         else:
-            self.right_value -= compensate_value  # at the left of the goal, so turn right
-        # now, round off those value
-        self.left_value = self.initial_pwm
+            # tune the right side
+            self.right_value += compensate_value
+
         self.right_value = int(roundPwmValue(max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=self.right_value))
