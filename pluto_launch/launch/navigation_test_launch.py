@@ -39,7 +39,11 @@ gazebo_launch_dir = os.path.join(
 def generate_launch_description():
 
     # TODO: need have tf read
-
+    fishbot_nav2_launch =  IncludeLaunchDescription(
+    PythonLaunchDescriptionSource([os.path.join(
+        get_package_share_directory('fishbot_navigation2'), 'launch'),
+        '/fishbot_navigation_humble.launch.py'])
+    )
     coverage_client = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('select_area'), 'launch'),
@@ -51,9 +55,9 @@ def generate_launch_description():
             '/navigate_by_gps_demo_launch.py'])
         )
     return LaunchDescription([
-    gps_navigate_demo,
+    fishbot_nav2_launch,
     coverage_client,
-
+    gps_navigate_demo,
 
 
 
