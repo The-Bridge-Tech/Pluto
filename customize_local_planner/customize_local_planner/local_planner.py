@@ -190,8 +190,8 @@ class LocalPlanner(Node):
         angle_error = relative_angle_between_two_position(start_position_x=start_pose_x,
                         start_position_y=start_pose_y,
                         start_position_angle=current_robot_heading,
-                        goal_pose_x = goal_pose_x,
-                        goal_pose_y = goal_pose_y)
+                        goal_position_x=  goal_pose_x,
+                        goal_position_y= goal_pose_y)
         # check for angle tolerance
         # if distance_difference < self.error_distance_tolerance:
         #     self.get_logger().info("Stop due to within tolerance error distance")
