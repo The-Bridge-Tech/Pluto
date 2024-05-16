@@ -193,10 +193,7 @@ def generate_launch_description():
         joystick_interpreter,
         imu_launch,
         imu_filter_launch,
-        # camera_launch,
-        # differential_launch,
-
-
+        controller_launch,
         gps_launch,
         static_transform_launch,
         maestro_launch,
