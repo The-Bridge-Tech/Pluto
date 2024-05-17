@@ -10,16 +10,10 @@ class Stop(Controller):
         super(Stop, self).__init__(logger)
         self.neutral_pwm = neutral_pwm
 
-        
-    def left_pwm(self):
-        return self.neutral_pwm
-
-    def right_pwm(self):
-        return self.neutral_pwm
     def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
+        self.left_value = self.neutral_pwm
+        self.right_value = self.neutral_pwm
         self.logger.info("Stopping the robot")
-
-
 
     def __repr__(self):
         return "Stop movement"  

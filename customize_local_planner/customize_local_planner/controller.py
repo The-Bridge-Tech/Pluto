@@ -30,13 +30,23 @@ class Controller:
         self.angle_off_error = angle_error_from_goal
         self.accumulate_error += self.angle_off_error
 
-
-    # def pid_compensating(self):
-    #     compensate_value = pidCalculation(
-    #         self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error)
+    def pid_movement_algorithm(self, current_loc:Odometry, pose_to_navigate:PoseStamped,
+                               kp:int,  kd:int,ki:int, initial_pwm:int, max_pwm:int, min_pwm:int):
+        self.angle_error_calculation(current_loc=current_loc, pose_to_navigate=pose_to_navigate)
         
+        compensate_value = pidCalculation(kp=kp,kd=kd, ki=ki, error=self.angle_off_error , previous_error=self.previous_error, accumulate_error=self.accumulate_error )
 
+        self.left_value = initial_pwm
+        self.right_value = initial_pwm
+        if(self.angle_off_error == 0):
+            pass
+        else:
+            self.right_value +=compensate_value
+            
+        self.left_value = int(roundPwmValue(max_pwm=max_pwm, min_pwm=min_pwm, pwm_value=self.left_value))
+        self.right_value = int(roundPwmValue(max_pwm=max_pwm, min_pwm=min_pwm, pwm_value=self.right_value))
 
+        
 
             
             
@@ -45,7 +55,7 @@ class Controller:
         pass
 
     def left_pwm(self):
-        return 0
+        return self.left_value
 
     def right_pwm(self):
-        return 0
+        return self.right_value

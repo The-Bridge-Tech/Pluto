@@ -24,7 +24,7 @@ from nav_msgs.msg import Odometry, OccupancyGrid, Path
 from .untilit import *
 
 
-tuningStraight=False
+tuningStraight=True
 class PidTuningPublisher(Node):
 
     def __init__(self):
