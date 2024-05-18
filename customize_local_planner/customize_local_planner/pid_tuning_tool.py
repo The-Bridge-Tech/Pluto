@@ -85,8 +85,8 @@ class PidTuningPublisher(Node):
             tempPose.orientation.w = 0.7071068
 
         goalPosePoseStamp.pose = tempPose
-        publishPath.poses =  [currentPosePoseStamp,currentPosePoseStamp,
-                                    goalPosePoseStamp,goalPosePoseStamp]
+        publishPath.poses =  [currentPosePoseStamp,
+                                    goalPosePoseStamp,goalPosePoseStamp,goalPosePoseStamp]
 
         self.tuning_local_plan_publisher.publish(publishPath)
 
