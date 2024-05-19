@@ -83,46 +83,69 @@ def calculateEulerAngleFromPoseStamped(pose: PoseStamped):
 #     return roll, pitch, yaw
 
 
-# for the pid controllers
-# assume forward_prediction_step is greater than 0
-def process_from_global_path(global_path: Pose, forward_prediction_step: int):
+# # for the pid controllers
+# # assume forward_prediction_step is greater than 0
+# def process_from_global_path(global_path: Pose, forward_prediction_step: int):
 
-    # look forward by certain pose index?
+#     # look forward by certain pose index?
 
-    future_way_point:PoseStamped  = None
-    current_way_point: PoseStamped = global_path.poses[0]
-    if len(global_path.poses) < forward_prediction_step:
+#     future_way_point:PoseStamped  = None
+#     current_way_point: PoseStamped = global_path.poses[0]
+#     if len(global_path.poses) < forward_prediction_step:
 
-        future_way_point = global_path.poses[len(global_path.poses)-1]
-    else:
-        # purpose skip waypoint at index 0, because it is the current position of the robot
-        future_way_point = global_path.poses[forward_prediction_step]
+#         future_way_point = global_path.poses[len(global_path.poses)-1]
+#     else:
+#         # purpose skip waypoint at index 0, because it is the current position of the robot
+#         future_way_point = global_path.poses[forward_prediction_step]
 
-    new_heading_angle = relative_angle_between_two_position(start_position_x=current_way_point.pose.position.x, 
-                                                            start_position_y=current_way_point.pose.position.y,
-                                                            start_position_angle=calculateEulerAngleFromPoseStamped(current_way_point),
-                                                            goal_position_x=future_way_point.pose.position.x, 
-                                                            goal_position_y=future_way_point.pose.position.y)
-    return new_heading_angle
+#     new_heading_angle = relative_angle_between_two_position(start_position_x=current_way_point.pose.position.x, 
+#                                                             start_position_y=current_way_point.pose.position.y,
+#                                                             start_position_angle=calculateEulerAngleFromPoseStamped(current_way_point),
+#                                                             goal_position_x=future_way_point.pose.position.x, 
+#                                                             goal_position_y=future_way_point.pose.position.y)
+#     return new_heading_angle
 
+def crossProductMag(vector1, vector2):
+    vector1_x = vector1[0]
+    vector1_y = vector1[1]
+    vector2_x = vector2[0]
+    vector2_y = vector2[1]
+    return vector1_x*vector2_y - vector1_y*vector2_x
+def dotProductMag(vector1, vector2):
+    vector1_x = vector1[0]
+    vector1_y = vector1[1]
+    vector2_x = vector2[0]
+    vector2_y = vector2[1]
+    return vector1_x*vector2_x + vector1_y*vector2_y
 
-def relative_angle_between_two_position(start_position_x, start_position_y, start_position_angle ,goal_position_x, goal_position_y):
-    # https://stackoverflow.com/questions/21483999/using-atan2-to-find-angle-between-two-vectors
-    # dx = goal_position_x - start_position_x
-    # dy = goal_position_y - start_position_y
+def angle_difference_in_degree(current_angle_in_degree, goal_position_x, goal_position_y):
+    angle_to_goal = math.degrees(atan2(goal_position_y, goal_position_x))
 
-    # return math.degrees( math.atan2(dy, dx))
+    return angle_to_goal- current_angle_in_degree
 
-    #https://wumbo.net/formulas/angle-between-two-vectors-2d/
+# def relative_angle_between_two_position(start_position_x, start_position_y, start_position_angle ,goal_position_x, goal_position_y):
+#     # https://stackoverflow.com/questions/21483999/using-atan2-to-find-angle-between-two-vectors
+#     # dx = goal_position_x - start_position_x
+#     # dy = goal_position_y - start_position_y
 
-    # vector 1, represent the current heading from 0,0
-    # vector 2, build from the goal to start
-    vector1 = (  cos( math.radians(start_position_angle)) ,  sin(  math.radians( start_position_angle) ) )
-    vector2 = (goal_position_x - start_position_x, goal_position_y - start_position_y)
-    # print(vector1)
-    # print(vector2)
-    return math.degrees( atan2(vector2[1]*vector1[0] - vector2[0]*vector1[1],
-                               vector1[0]*vector2[0] + vector1[1]*vector2[1]  ))
+#     # return math.degrees( math.atan2(dy, dx))
+
+#     #https://wumbo.net/formulas/angle-between-two-vectors-2d/
+
+#     # vector 1, represent the current heading from 0,0
+#     # vector 2, build from the goal to start
+#     print(math.radians(start_position_angle))
+#     vector1 = (  cos( math.radians(start_position_angle)) ,  sin(  math.radians( start_position_angle) ) )
+#     vector2 = (goal_position_x - start_position_x, goal_position_y - start_position_y)
+#     print(vector1)
+#     print(vector2)
+
+#     #https://stackoverflow.com/questions/21483999/using-atan2-to-find-angle-between-two-vectors
+    
+#     return math.degrees(atan2(crossProductMag(vector1=vector1, vector2=vector2),
+#                               dotProductMag(vector1=vector1, vector2=vector2)))
+#     return math.degrees( atan2(vector2[1]*vector1[0] - vector2[0]*vector1[1],
+#                                vector1[0]*vector2[0] + vector1[1]*vector2[1]  ))
 
 
 # def determine_Wheel_to_compensate_base_on_angle_error(angle_error: float, init_pwm:int, compensate_pwm:int)->Tuple[str, int, int]:

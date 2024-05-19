@@ -12,27 +12,17 @@ class Controller:
         self.left_value:int = 0
         self.right_value:int = 0
     
-    def angle_error_calculation(self, current_loc:Odometry, pose_to_navigate:PoseStamped):
-        # note: Odometry's angle is a absolute angle
+    def angle_error_calculation(self, angle_difference_in_degree:float):      
+        angle_error_from_goal = angle_difference_in_degree
 
-        current_absolute_heading_angle = calculateEulerAngleFromOdometry(current_loc)
         
-        angle_error_from_goal = relative_angle_between_two_position(
-            start_position_x= current_loc.pose.pose.position.x,
-            start_position_y=current_loc.pose.pose.position.y,
-            start_position_angle= current_absolute_heading_angle,
-            goal_position_x= pose_to_navigate.pose.position.x,
-            goal_position_y=pose_to_navigate.pose.position.y
-        )
-
-
         self.previous_error = self.angle_off_error
         self.angle_off_error = angle_error_from_goal
         self.accumulate_error += self.angle_off_error
 
-    def pid_movement_algorithm(self, current_loc:Odometry, pose_to_navigate:PoseStamped,
+    def pid_movement_algorithm(self, angle_difference_in_degree:float,
                                kp:int,  kd:int,ki:int, initial_pwm:int, max_pwm:int, min_pwm:int):
-        self.angle_error_calculation(current_loc=current_loc, pose_to_navigate=pose_to_navigate)
+        self.angle_error_calculation(angle_difference_in_degree)
         
         compensate_value = pidCalculation(kp=kp,kd=kd, ki=ki, error=self.angle_off_error , previous_error=self.previous_error, accumulate_error=self.accumulate_error )
 
@@ -51,7 +41,7 @@ class Controller:
             
             
 
-    def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
+    def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped, angle_difference_in_degree:float):
         pass
 
     def left_pwm(self):

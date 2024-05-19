@@ -27,11 +27,10 @@ class MovingStraightPIDController(Controller):
             self.max_pwm, self.min_pwm, self.neutral_pwm, self.left_value, self.right_value, self.kp, self.kd, self.ki, self.angle_off_error, self.previous_error, self.accumulate_error, self.direction
         )
 
-    def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped):
+    def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped, angle_difference_in_degree:float):
 
 
-        self.pid_movement_algorithm(current_loc=current_loc,
-                                    pose_to_navigate=pose_to_navigate,
+        self.pid_movement_algorithm(angle_difference_in_degree=angle_difference_in_degree,
                                     kp=self.kp,
                                     kd=self.kd,
                                     ki=self.ki,

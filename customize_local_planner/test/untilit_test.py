@@ -62,29 +62,11 @@ def test_calculateEulerAngleFromPoseStamped():
     angle = calculateEulerAngleFromPoseStamped(q)
     assert round(angle) == 90.0
 
+def test_angle_difference_in_degree():
 
-def test_relative_angle_between_two_position():
-    
+    assert round(angle_difference_in_degree(0, 1,1)) == 45
+    assert round(angle_difference_in_degree(45,1,1)) == 0
 
-    # quadrant 1
-    # when goal is ahead of start
-    start_position_x = 1.0
-    start_position_y = 1.0
-    goal_position_x = 2.0
-    goal_position_y = 2.0
-    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y,math.degrees (atan2(start_position_x, start_position_y)) ,  goal_position_x, goal_position_y)
-    assert round(relative_angle) == 0.0
-
-    start_position_x = 2.0
-    start_position_y = 2.0
-    goal_position_x = 3.0
-    goal_position_y = 3.0
-    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y,45,  goal_position_x, goal_position_y)
-    assert round(relative_angle) == round(0.0)
-
-    start_position_x = 2.0
-    start_position_y = 2.0
-    goal_position_x = 2.0
-    goal_position_y = 3.0
-    relative_angle = relative_angle_between_two_position(start_position_x, start_position_y,45,  goal_position_x, goal_position_y)
-    assert round(relative_angle) == round(45.0)
+    assert round(angle_difference_in_degree(45,1,0)) == -45
+    assert round(angle_difference_in_degree(45, 0, -10)) == -(90+45)
+   

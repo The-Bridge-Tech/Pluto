@@ -33,7 +33,7 @@ class LocalPlanner(Node):
         self.declare_parameter("moving_straight_ki", 0.0)
         self.declare_parameter("moving_straight_initial_pwm", 1500)
         # self.declare_parameter("moving_straight_distance_tolerance", 0.3)
-        self.declare_parameter("moving_straight_angle_threshold", 35.0)
+        self.declare_parameter("moving_straight_angle_threshold", 15.0)
         self.declare_parameter("moving_straight_forward_prediction_step", 1)
 
         self.declare_parameter("turning_kp", 3.0)
@@ -169,16 +169,15 @@ class LocalPlanner(Node):
         ):
             pass
         else:
-            self.determine_local_controller_strategy()
-
-                
+            angle_difference_in_degree = self.determine_local_controller_strategy()
             self.current_local_planner_controller.execute_movement(
-                    self.latestGlobalOdom, self.pose_to_navigate
+                   current_loc=self.latestGlobalOdom, pose_to_navigate=self.pose_to_navigate, angle_difference_in_degree=angle_difference_in_degree
                 )
             self.publish_left_and_right_pwm()
 
     def determine_local_controller_strategy(self):
-    
+        
+        # get robot's current heading
         current_robot_heading = calculateEulerAngleFromOdometry(self.latestGlobalOdom)
         
         start_pose_x = self.latestGlobalOdom.pose.pose.position.x
@@ -187,24 +186,24 @@ class LocalPlanner(Node):
         goal_pose_y = self.pose_to_navigate.pose.position.y
 
 
-        angle_error = relative_angle_between_two_position(start_position_x=start_pose_x,
-                        start_position_y=start_pose_y,
-                        start_position_angle=current_robot_heading,
-                        goal_position_x=  goal_pose_x,
-                        goal_position_y= goal_pose_y)
-        # check for angle tolerance
-        # if distance_difference < self.error_distance_tolerance:
-        #     self.get_logger().info("Stop due to within tolerance error distance")
-        #     self.strategy_simple_factory("Stop")
-        self.get_logger().info("Angle difference is {0} for start position x:{1} y{2} end position x:{3} y{4} \n".format( 
-            angle_error, start_pose_x, start_pose_y, goal_pose_x, goal_pose_y
+        angle_diff = angle_difference_in_degree(current_angle_in_degree=current_robot_heading,
+                                                goal_position_x=goal_pose_x, goal_pose_y=goal_pose_y)
+        distance_diff  = math.dist( [start_pose_x, start_pose_y], [goal_pose_x, goal_pose_y])
+
+        self.get_logger().info("Angle difference is {0} for start position x:{1} y{2} end position x:{3} y{4}  robotHEading {5} \n".format( 
+            angle_diff, start_pose_x, start_pose_y, goal_pose_x, goal_pose_y,current_robot_heading
         ))
-        if abs(angle_error) > self.moving_straight_angle_threshold:
+
+        if  distance_diff < self.error_distance_tolerance:
+            self.get_logger().info("Stop due to within tolerance error distance")
+            self.strategy_simple_factory("Stop")
+        elif abs(angle_diff) > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
         else:
             self.get_logger().info("PID moving straight")
             self.strategy_simple_factory("PIDStraight")
+        return angle_diff
 
     def strategy_simple_factory(self, strategy: str):
         if strategy == "PIDStraight":
@@ -219,7 +218,7 @@ class LocalPlanner(Node):
                     ki=self.moving_straight_ki,
                     kd=self.moving_straight_kd,
                     initial_pwm=self.moving_straight_initial_pwm,
-                    logger=self.get_logger(),
+                    logger=self.get_logger()
                 )
 
         elif strategy == "PIDTurn":
@@ -259,13 +258,6 @@ class LocalPlanner(Node):
         right_pwm = UInt32()
         right_pwm.data = right_pwm_input
 
-        # left_pwm.data = roundPwmValue(
-        #     max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=left_pwm_input
-        # )
-        # right_pwm.data = roundPwmValue(
-        #     max_pwm=self.max_pwm, min_pwm=self.min_pwm, pwm_value=right_pwm_input
-        # )
-
         self.left_wheel_pwm_publisher.publish(left_pwm)
         self.right_wheel_pwm_publisher.publish(right_pwm)
 
@@ -292,29 +284,17 @@ class LocalPlanner(Node):
             goal_y = pose.point.y
 
             #TODO: possibly don't need to calculate the angle
-            euler_angle = relative_angle_between_two_position(
-                start_position_x=self.latestGlobalOdom.pose.pose.position.x,
-                start_position_y=self.latestGlobalOdom.pose.pose.position.y,
-                start_position_angle= calculateEulerAngleFromOdometry(self.latestGlobalOdom),
-                goal_position_x=goal_x,
-                goal_position_y=goal_y,
-            )
+            euler_angle = atan2(goal_y, goal_x)
 
             #q = quaternion_from_euler(0, euler_angle, 0)
             self.pose_to_navigate.pose.position.x = goal_x
             self.pose_to_navigate.pose.position.y = goal_y
-            q = tf_transformations.quaternion_from_euler(0.0,0.0,euler_angle* (pi/180))
+            q = tf_transformations.quaternion_from_euler(0.0,0.0,math.radians(euler_angle))
             self.pose_to_navigate.pose.orientation.x = q[0]
             self.pose_to_navigate.pose.orientation.y = q[1]
             self.pose_to_navigate.pose.orientation.z = q[2]
             self.pose_to_navigate.pose.orientation.w = q[3]
-            
-            # self.get_logger().info(
-            #     "Calcuated angle is {0} the converted angle is {1} ".format(
-            #         euler_angle,
-            #         calculateEulerAngleFromPoseStamped(self.pose_to_navigate), 
-            #     )
-            # )
+
 
     def local_plan_callback(self, loc_path: Path):
         if self.is_pure_pursuit_mode.data == False:
