@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'localMovingPlanner = customize_local_planner.local_planner:main',
-            'pidTuning = customize_local_planner.pid_tuning_tool:main'
+            'pidTuning = customize_local_planner.pid_tuning_tool:main',
+            'phaseOne = customize_local_planner.phase_one_demo:main'
         ],
     },
 )

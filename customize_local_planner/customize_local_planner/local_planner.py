@@ -185,9 +185,11 @@ class LocalPlanner(Node):
         goal_pose_x = self.pose_to_navigate.pose.position.x
         goal_pose_y = self.pose_to_navigate.pose.position.y
 
-
+        temp = math.degrees(math.atan2(round(goal_pose_y,2), round(goal_pose_x,2)))
+    
         angle_diff = angle_difference_in_degree(current_angle_in_degree=current_robot_heading,
-                                                goal_position_x=goal_pose_x, goal_pose_y=goal_pose_y)
+                                                goal_position_x=goal_pose_x, goal_position_y=goal_pose_y)
+        
         distance_diff  = math.dist( [start_pose_x, start_pose_y], [goal_pose_x, goal_pose_y])
 
         self.get_logger().info("Angle difference is {0} for start position x:{1} y{2} end position x:{3} y{4}  robotHEading {5} \n".format( 
