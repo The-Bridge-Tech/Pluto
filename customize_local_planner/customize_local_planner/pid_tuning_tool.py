@@ -50,9 +50,12 @@ class PidTuningPublisher(Node):
         timer_period = 0.3  # seconds
         self.timer = self.create_timer(timer_period, self.tuning_plan_publisher)
 
-        self.latest_odom = Odometry()
+        self.latest_odom = None
     def tuning_plan_publisher(self):
         
+
+        if self.latest_odom == None:
+            return
         global tuningStraight
         publishPath = Path()
         trueBool = Bool()
@@ -97,7 +100,9 @@ class PidTuningPublisher(Node):
         self.tuning_local_plan_publisher.publish(publishPath)
 
     def globalOdometryCallback(self, odom:Odometry):
-        self.latest_odom = odom
+        if self.latest_odom == None:
+            self.latest_odom = odom
+    
 
 def main(args=None):
     rclpy.init(args=args)
