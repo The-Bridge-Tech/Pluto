@@ -78,7 +78,7 @@ class PhaseOneDemo(Node):
                           goal_long=gps_tuple[1]
                           )
 
-                self.get_logger().info(f"Distance to navigate to from origin{self.initial_gps.latitude, self.initial_gps.longitude} to 
+                self.get_logger().info(f"Distance to navigate to from origin{self.initial_gps.latitude}, {self.initial_gps.longitude} to 
                                        goal{gps_tuple} with distance {goa_x},{goal_y}")
                 self.pose_to_navigate.append((goa_x,goal_y))
                 
