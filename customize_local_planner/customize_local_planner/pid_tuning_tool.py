@@ -24,7 +24,7 @@ from nav_msgs.msg import Odometry, OccupancyGrid, Path
 from .untilit import *
 
 
-tuningStraight=True
+tuningStraight=False
 class PidTuningPublisher(Node):
 
     def __init__(self):
@@ -74,15 +74,21 @@ class PidTuningPublisher(Node):
 
 
             
-            tempPose.position.x = 5.0
+            tempPose.position.x = 5.0 + currentPosePoseStamp.pose.position.x
 
         else:
-            # means turning pid
-            # move 90 degree to north
-            tempPose.orientation.x = 0.0
-            tempPose.orientation.y = 0.0
-            tempPose.orientation.z = 0.7071068
-            tempPose.orientation.w = 0.7071068
+            # get a position 90 degree from the current position with positionx +=1
+
+            current_heading = calculateEulerAngleFromOdometry(self.latest_odom)
+
+            
+            current_heading +=90 # move 90 degree turn
+
+            self.get_logger().info(f"The heading after +90 is {current_heading}")
+            tempPose.position.x = currentPosePoseStamp.pose.position.x+ math.cos(math.radians( current_heading))*1
+
+            tempPose.position.y =  currentPosePoseStamp.pose.position.y+ math.sin( math.radians(current_heading))*1
+            
 
         goalPosePoseStamp.pose = tempPose
         publishPath.poses =  [currentPosePoseStamp,
