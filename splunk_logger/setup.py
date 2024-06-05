@@ -13,14 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='shouyu',
-    maintainer_email='joeldushouyu@gmail.com',
-    description='TODO: Package description',
+    maintainer='Matthew Lauriault',
+    maintainer_email='mlauriault03@gmail.com',
+    description='Send data to splunk server',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'splunkLogger = splunk_logger.logger:main',
+            'splunk_logger = splunk_logger.logger:main',
         ],
     },
 )
