@@ -77,10 +77,10 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "sensor": "gps",
-                "type": levels[str(msg.level)], 
+                "sensor": "log", # I know that this is not a sensor
                 "devicename": gethostname(),
                 "timestamp": str(msg.stamp),
+                "level": levels[str(msg.level)], 
                 "name": msg.name,
                 "msg": msg.msg,
                 "file": msg.file,
@@ -97,7 +97,6 @@ class SplunkLogger(Node):
             "index": "pluto",
             "event": {
                 "sensor": "gps",
-                "type": "info", 
                 "devicename": gethostname(),
                 "lat": msg.latitude, 
                 "log": msg.longitude, 
@@ -116,7 +115,6 @@ class SplunkLogger(Node):
             "index": "pluto",
             "event": {
                 "sensor": "imu",
-                "type": "info", 
                 "devicename": gethostname(),
                 "orientation": [o.x, o.y, o.z, o.w],
                 "angular_velocity": [v.x, v.y, v.z],
@@ -132,7 +130,6 @@ class SplunkLogger(Node):
             "index": "pluto",
             "event": {
                 "sensor": "joy",
-                "type": "info", 
                 "devicename": gethostname(),
                 "axes": msg.axes,
                 "buttons": msg.buttons
@@ -147,7 +144,6 @@ class SplunkLogger(Node):
             "index": "pluto",
             "event": {
                 "sensor": "odometry", # I know that this is not a sensor
-                "type": "info", 
                 "devicename": gethostname(),
                 "pose": str(msg.pose.pose),
                 "twist": str(msg.twist.twist)
