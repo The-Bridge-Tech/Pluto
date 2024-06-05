@@ -7,6 +7,8 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, Imu, Joy
+from rcl_interfaces.msg import Log
+from nav_msgs.msg import Odometry
 # SENDING DATA
 import json
 import requests
@@ -18,6 +20,13 @@ class SplunkLogger(Node):
     
     def __init__(self):
         super().__init__('splunk_logger')
+        # Logger
+        self.log_subscriber = self.create_subscription(
+            Log,
+            "rosout",
+            self.log_callback,
+            10
+        )
         # GPS
         self.fix_subscriber = self.create_subscription(
             NavSatFix,
@@ -34,9 +43,16 @@ class SplunkLogger(Node):
         )
         # Joystick
         self.joy_subscriber = self.create_subscription(
-            Imu,
+            Joy,
             "/joy",
             self.joy_callback,
+            10
+        )
+        # Odometry
+        self.odometry_subscriber = self.create_subscription(
+            Odometry,
+            "/odometry/global",
+            self.odometry_callback,
             10
         )
 
@@ -49,6 +65,32 @@ class SplunkLogger(Node):
         )
         return response.status_code
     
+    def log_callback(self, msg: Log) -> None:
+        """Callback for log_subscriber"""
+        levels = {
+            "10": "debug",
+            "20": "info",
+            "30": "warn",
+            "40": "error",
+            "50": "fatal"
+        }
+        event = {
+            "index": "pluto",
+            "event": {
+                "sensor": "gps",
+                "type": levels[str(msg.level)], 
+                "devicename": gethostname(),
+                "timestamp": str(msg.stamp),
+                "name": msg.name,
+                "msg": msg.msg,
+                "file": msg.file,
+                "function": msg.function,
+                "line": msg.line
+            },
+        }
+        status_code = self.sendToSplunk(event)
+        self.get_logger().info(f"Log sent. Status code {status_code}")
+
     def fix_callback(self, msg: NavSatFix) -> None:
         """Callback for fix_subscriber"""
         event = {
@@ -98,6 +140,21 @@ class SplunkLogger(Node):
         }
         status_code = self.sendToSplunk(event)
         self.get_logger().info(f"Joy data sent. Status code {status_code}")
+
+    def odometry_callback(self, msg: Odometry) -> None:
+        """Callback for odometry_subscriber"""
+        event = {
+            "index": "pluto",
+            "event": {
+                "sensor": "odometry", # I know that this is not a sensor
+                "type": "info", 
+                "devicename": gethostname(),
+                "pose": str(msg.pose.pose),
+                "twist": str(msg.twist.twist)
+            },
+        }
+        status_code = self.sendToSplunk(event)
+        self.get_logger().info(f"Odometry data sent. Status code {status_code}")
 
 
 # MAIN
