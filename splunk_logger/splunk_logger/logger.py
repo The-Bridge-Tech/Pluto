@@ -79,7 +79,7 @@ class SplunkLogger(Node):
             "event": {
                 "sensor": "log", # I know that this is not a sensor
                 "devicename": gethostname(),
-                "timestamp": str(msg.stamp),
+                "timestamp": msg.stamp.sec + msg.stamp.nanosec*(10**-9),
                 "level": levels[str(msg.level)], 
                 "name": msg.name,
                 "msg": msg.msg,
@@ -116,9 +116,22 @@ class SplunkLogger(Node):
             "event": {
                 "sensor": "imu",
                 "devicename": gethostname(),
-                "orientation": [o.x, o.y, o.z, o.w],
-                "angular_velocity": [v.x, v.y, v.z],
-                "linear_acceleration": [a.x, a.y, a.z]
+                "orientation": {
+                    "x": o.x, 
+                    "y": o.y, 
+                    "z": o.z, 
+                    "w": o.w
+                },
+                "angular_velocity": {
+                    "x": v.x, 
+                    "y": v.y, 
+                    "z": v.z
+                },
+                "linear_acceleration": {
+                    "x": a.x, 
+                    "y": a.y, 
+                    "z": a.z
+                }
             },
         }
         status_code = self.sendToSplunk(event)
@@ -140,13 +153,36 @@ class SplunkLogger(Node):
 
     def odometry_callback(self, msg: Odometry) -> None:
         """Callback for odometry_subscriber"""
+        p = msg.pose.pose.position
+        o = msg.pose.pose.orientation
+        l = msg.twist.twist.linear
+        a = msg.twist.twist.angular
         event = {
             "index": "pluto",
             "event": {
                 "sensor": "odometry", # I know that this is not a sensor
                 "devicename": gethostname(),
-                "pose": str(msg.pose.pose),
-                "twist": str(msg.twist.twist)
+                "position": {
+                    "x": p.x,
+                    "y": p.y,
+                    "z": p.z
+                },
+                "orientation": {
+                    "x": o.x,
+                    "y": o.y,
+                    "z": o.z,
+                    "w": o.w
+                },
+                "linear_twist": {
+                    "x": l.x,
+                    "y": l.y,
+                    "z": l.z
+                },
+                "angular_twist": {
+                    "x": a.x,
+                    "y": a.y,
+                    "z": a.z
+                }
             },
         }
         status_code = self.sendToSplunk(event)
