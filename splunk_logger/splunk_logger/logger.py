@@ -30,7 +30,7 @@ class SplunkLogger(Node):
         # GPS
         self.fix_subscriber = self.create_subscription(
             NavSatFix,
-            "/fix",
+            "/fix/filtered",
             self.fix_callback,
             10
         )
@@ -89,7 +89,7 @@ class SplunkLogger(Node):
             },
         }
         status_code = self.sendToSplunk(event)
-        self.get_logger().info(f"Log sent. Status code {status_code}")
+        print(f"{status_code}\tLog sent.")
 
     def fix_callback(self, msg: NavSatFix) -> None:
         """Callback for fix_subscriber"""
@@ -104,7 +104,7 @@ class SplunkLogger(Node):
             },
         }
         status_code = self.sendToSplunk(event)
-        self.get_logger().info(f"GPS data sent. Status code {status_code}")
+        print(f"{status_code}\tGPS data sent.")
 
     def imu_callback(self, msg: Imu) -> None:
         """Callback for imu_subscriber"""
@@ -122,7 +122,7 @@ class SplunkLogger(Node):
             },
         }
         status_code = self.sendToSplunk(event)
-        self.get_logger().info(f"Imu data sent. Status code {status_code}")
+        print(f"{status_code}\tImu data sent.")
         
     def joy_callback(self, msg: Joy) -> None:
         """Callback for joy_subscriber"""
@@ -136,7 +136,7 @@ class SplunkLogger(Node):
             },
         }
         status_code = self.sendToSplunk(event)
-        self.get_logger().info(f"Joy data sent. Status code {status_code}")
+        print(f"{status_code}\tJoy data sent.")
 
     def odometry_callback(self, msg: Odometry) -> None:
         """Callback for odometry_subscriber"""
@@ -150,7 +150,7 @@ class SplunkLogger(Node):
             },
         }
         status_code = self.sendToSplunk(event)
-        self.get_logger().info(f"Odometry data sent. Status code {status_code}")
+        print(f"{status_code}\tOdometry data sent.")
 
 
 # MAIN
