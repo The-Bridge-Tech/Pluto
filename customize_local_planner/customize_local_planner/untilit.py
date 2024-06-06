@@ -6,7 +6,7 @@ from nav_msgs.msg import Odometry, Path
 from geometry_msgs.msg import Pose, PoseStamped
 import tf_transformations
 from geographiclib.geodesic import Geodesic
-
+from geodesy.utm import *
 def roundPwmValue(max_pwm, min_pwm,  pwm_value) -> float:
     if pwm_value > max_pwm:
         return max_pwm
@@ -212,19 +212,29 @@ def pidCalculation(kp: int, kd: int, ki: int, error: float, previous_error: floa
 
 # modify base on https://github.com/danielsnider/gps_goal
 def calc_goal(origin_lat, origin_long, goal_lat, goal_long):
-  # Calculate distance and azimuth between GPS points
-  geod = Geodesic.WGS84  # define the WGS84 ellipsoid
-  g = geod.Inverse(origin_lat, origin_long, goal_lat, goal_long) # Compute several geodesic calculations between two GPS points 
-  hypotenuse = distance = g['s12'] # access distance
 
-  azimuth = g['azi1']
+    origin_utm =  fromLatLong(longitude=origin_long, latitude=origin_lat)
+    new_utm = fromLatLong(longitude=goal_long, latitude=goal_lat)
 
+    diff_x = new_utm.easting - origin_utm.easting
+    diff_y = new_utm.northing - origin_utm.northing
 
-  # Convert polar (distance and azimuth) to x,y translation in meters (needed for ROS) by finding side lenghs of a right-angle triangle
-  # Convert azimuth to radians
-  azimuth = math.radians(azimuth)
-  x = adjacent = math.cos(azimuth) * hypotenuse
-  y = opposite = math.sin(azimuth) * hypotenuse
+    return diff_x, diff_y
+#   # Calculate distance and azimuth between GPS points
 
 
-  return x, y
+#   geod = Geodesic.WGS84  # define the WGS84 ellipsoid
+#   g = geod.Inverse(origin_lat, origin_long, goal_lat, goal_long) # Compute several geodesic calculations between two GPS points 
+#   hypotenuse = distance = g['s12'] # access distance
+
+#   azimuth = g['azi1']
+
+
+#   # Convert polar (distance and azimuth) to x,y translation in meters (needed for ROS) by finding side lenghs of a right-angle triangle
+#   # Convert azimuth to radians
+#   azimuth = math.radians(azimuth)
+#   x = adjacent = math.cos(azimuth) * hypotenuse
+#   y = opposite = math.sin(azimuth) * hypotenuse
+
+
+#   return x, y
