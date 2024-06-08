@@ -199,7 +199,8 @@ def generate_launch_description():
         maestro_launch,
         gps_filter_launch,
         gps_velocity_launch,
-        ekf_filter
+        ekf_filter, 
+        camera_launch
 
 
 

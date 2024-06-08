@@ -26,7 +26,7 @@ from nav_msgs.msg import Odometry, OccupancyGrid, Path
 
 
 
-GPS_POINTs = [(34.84141587337165, -82.4118005610815), (34.84134134875486, -82.41174684449011)]
+GPS_POINTs = [(34.841295, -82.411699), (34.841354, -82.411692), (34.841399, -82.411757),(34.841355, -82.411820)]
 class PhaseOneDemo(Node):
 
     def __init__(self):
@@ -66,19 +66,19 @@ class PhaseOneDemo(Node):
         
         if self.latest_odom == None or self.initial_gps == None:
             self.get_logger().info("Waiting for odom and gps data to be initalized.")
-            return 
-        
+            return
+
         # when have data
         if len(self.pose_to_navigate) == 0:
             for gps_tuple in GPS_POINTs:
-                (goa_x, goal_y) = calc_goal(origin_lat=self.initial_gps.latitude,
+                goa_x, goal_y = calc_goal(origin_lat=self.initial_gps.latitude,
                           origin_long=self.initial_gps.longitude,
                           goal_lat=gps_tuple[0],
                           goal_long=gps_tuple[1]
                           )
 
-                # self.get_logger().info(f"Distance to navigate to from origin{self.initial_gps.latitude}, {self.initial_gps.longitude} to 
-                #                        goal{gps_tuple} with distance {goa_x},{goal_y}")
+
+                self.get_logger().info(f"""Distance to navigate to from origin{self.initial_gps.latitude}, {self.initial_gps.longitude} to goal{gps_tuple} with distance {goa_x},{goal_y}""")
                 self.get_logger().info(f"Current gps is {self.initial_gps.latitude}, {self.initial_gps.longitude}, distance is {goa_x}. {goal_y}")
                 self.pose_to_navigate.append((goa_x,goal_y))
                 
@@ -125,7 +125,7 @@ class PhaseOneDemo(Node):
         #     tempPose.orientation.y = 0.0
         #     tempPose.orientation.z = 0.7071068
         #     tempPose.orientation.w = 0.7071068
-        if(distance_remainig_from_goal < 0.3):
+        if(distance_remainig_from_goal < 0.5):
             if(self.current_pose_to_navigate_index +1 < len(self.pose_to_navigate)):
                 self.current_pose_to_navigate_index +=1
                 next_pose = self.pose_to_navigate[self.current_pose_to_navigate_index]
