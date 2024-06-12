@@ -20,13 +20,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='shouyu',
-    maintainer_email='joeldushouyu@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Matthew Lauriault',
+    maintainer_email='mlauriault03@gmail.com',
+    description='Package for Intel RealSense Depth Camera 435',
+    license='Apache License Version 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            
         ],
     },
 )

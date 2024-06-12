@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>pluto_launch</name>
+  <name>realsense_camera</name>
   <version>0.0.0</version>
   <description>Package for Intel RealSense Depth Camera 435</description>
   <maintainer email="mlauriault03@gmail.com">Matthew Lauriault</maintainer>
-  <license>Apache License Version 2.0</license>
+  <license>Apache-2.0</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
