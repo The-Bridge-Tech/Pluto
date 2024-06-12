@@ -5,7 +5,7 @@
 
 # IMPORTS
 import os
-import tensorflow as tf
+import tensorflow as tf # TODO add to Dockerfile: pip3 install tensorflow
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
