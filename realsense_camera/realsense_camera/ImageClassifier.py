@@ -20,6 +20,7 @@ else:
 
 
 # NOTE for each dataset, fill the "test" set with actual images of grass from the camera
+# NOTE the camera should be pointed slightly down on the mower for the best classification accuracy
 
 
 class ImageClassifier:
