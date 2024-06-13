@@ -6,11 +6,15 @@
 # ROS2 MODULES
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
-# Image Classifier AI Model
-from ImageClassifier import classify
+from sensor_msgs.msg import Image # https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Image.html
+# Data Preprocessing
+from cv_bridge import CvBridge
+import cv2
+import numpy as np
+# AI Model
+import ImageClassifier
 
-# NODE
+
 class CameraNode(Node):
     
     def __init__(self):
@@ -22,15 +26,40 @@ class CameraNode(Node):
             self.image_callback,
             10
         )
+        # Load AI image classifier model
+        self.model = ImageClassifier.load("model1") # TODO make the model name a parameter
+        # NOTE process images synchronously such that only the most recent image sent by the camera is classified each time,
+        # this way, asynchronous requests don't pile up and processing remains in realtime
+        self.processing = False
     
     def image_callback(self, msg: Image):
-        # https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Image.html
-        image = msg.data
-        # TODO change the message data into a format that the AI model can recognize
-        cut = classify(image)
-        # Log the classification
-        self.get_logger().info(f"The grass is {'cut' if cut else 'NOT cut'}")
-            
+        # ignore the current image if there is already one being processed
+        if not self.processing:
+            self.processing = True
+            try:
+                # Preprocess the image
+                image = self.preprocess_image(msg)
+                # Use AI model to classify the image
+                cut = self.model.classify(image)
+                # Log the classification
+                self.get_logger().info("cut" if cut else "UNCUT")
+            except Exception as e:
+                self.get_logger().error(f"Error processing image: {e}")
+            self.processing = False
+
+    def preprocess_image(self, msg: Image):
+        """Convert ROS Image msg to numpy array."""
+        # Convert the Image msg to a cv2 image
+        cv_image = CvBridge().imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        # Resize the image to 224x224 pixels
+        resized_image = cv2.resize(cv_image, (224, 224))
+        # Convert the image to a numpy array
+        img_array = np.array(resized_image, dtype=np.float32)
+        # Normalize the image
+        img_array /= 255.0
+        # Add batch dimension
+        img_array = np.expand_dims(img_array, axis=0)
+        return img_array
 
 
 # MAIN
