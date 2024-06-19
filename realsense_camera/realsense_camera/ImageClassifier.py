@@ -5,6 +5,7 @@
 
 # IMPORTS
 import os
+from numpy import ndarray
 import keras._tf_keras.keras as keras
 from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
 from keras._tf_keras.keras.models import Model, load_model
@@ -30,7 +31,7 @@ class ImageClassifier:
     def __init__(self, model: Model):
         self.model = model
 
-    def classify(self, image) -> bool:
+    def classify(self, image: ndarray) -> bool:
         """Return if grass is cut."""
         prediction = self.model.predict(image)
         # Use a threshold of 0.5 to determine the class

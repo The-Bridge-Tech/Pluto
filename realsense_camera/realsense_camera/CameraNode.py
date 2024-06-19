@@ -58,8 +58,8 @@ class CameraNode(Node):
                 self.get_logger().error(f"Error processing image: {e}")
             self.processing = False
 
-    def preprocess_image(self, msg: Image):
-        """Convert ROS Image msg to numpy image array."""
+    def preprocess_image(self, msg: Image) -> np.ndarray:
+        """Convert ROS Image msg to numpy array."""
         # Convert the Image msg to a cv2 image
         cv_image = CvBridge().imgmsg_to_cv2(msg, desired_encoding='bgr8')
         # Resize the image to 224x224 pixels

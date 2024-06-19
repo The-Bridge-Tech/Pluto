@@ -10,7 +10,7 @@ import numpy as np
 
 class Line:
         """Struct to hold line attributes."""
-        def __init__(self, x1:int, y1:int, x2:int, y2:int, theta:float):
+        def __init__(self, x1: int, y1: int, x2: int, y2: int, theta: float):
                 self.x1 = x1,
                 self.y1 = y1
                 self.x2 = x2
@@ -51,7 +51,6 @@ class Line:
                 return self.__str__()
 
         
-
 def detectLine(image: np.ndarray) -> Line:
         """Detect line from numpy image array. Returns None on failure."""
         # Convert image to grayscale
@@ -72,3 +71,9 @@ def detectLine(image: np.ndarray) -> Line:
                         y2 = int(y0 - 1000 * a)
                         return Line(x1, y1, x2, y2, theta)
         return None
+
+
+# TESTS
+
+def testDetectLine():
+        
