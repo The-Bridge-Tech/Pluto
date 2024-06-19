@@ -5,9 +5,9 @@
 
 # IMPORTS
 import os
-import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.models import Model
+import keras._tf_keras.keras as keras
+from keras._tf_keras.keras.preprocessing.image import ImageDataGenerator
+from keras._tf_keras.keras.models import Model, load_model
 
 
 # CONSTANTS
@@ -38,7 +38,7 @@ class ImageClassifier:
     
     def save(self, filename: str):
         """Save the model to the specified filename."""
-        model_dir = os.path.join(self.MODEL_DIR, filename)
+        model_dir = os.path.join(MODEL_DIR, filename)
         self.model.save(model_dir)
 
 
@@ -47,9 +47,9 @@ class ImageClassifier:
 def load(filename: str) -> ImageClassifier:
     """Load ImageClassifer model from the specified filename."""
     model_dir = os.path.join(MODEL_DIR, filename)
-    return ImageClassifier(tf.keras.models.load_model(filename))
+    return ImageClassifier(load_model(filename))
 
-def train(dataset_filename: str, epochs: int = 10) -> ImageClassifier:
+def train(dataset_filename: str, epochs: int = 10, batch_size: int = 32) -> ImageClassifier:
     """
     Train and evaluate new image classification model on the specified dataset
     for the specified number of epochs.
@@ -87,36 +87,36 @@ def train(dataset_filename: str, epochs: int = 10) -> ImageClassifier:
     train_generator = train_datagen.flow_from_directory(
         train_dir,
         target_size=(224, 224),     # Resize images to 224x224 pixels
-        batch_size=32,              # Number of samples used at each iteration
+        batch_size=batch_size,      # Number of samples used at each iteration
         class_mode='binary'         # Binary classification (1=cut, 0=uncut)
     )
     validation_generator = validation_datagen.flow_from_directory(
         validation_dir,
         target_size=(224, 224),
-        batch_size=32,
+        batch_size=batch_size,
         class_mode='binary'
     )
     test_generator = test_datagen.flow_from_directory(
         test_dir,
         target_size=(224, 224),
-        batch_size=32,
+        batch_size=batch_size,
         class_mode='binary'
     )
 
     # Build the model using a pre-trained ResNet50 architecture
-    base_model = tf.keras.applications.ResNet50(
+    base_model = keras.applications.ResNet50(
         weights='imagenet', 
         include_top=False, 
         input_shape=(224, 224, 3)
     )
     # Build the model's predictions (outputs)
     x = base_model.output
-    x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    x = tf.keras.layers.Dense(1024, activation='relu')(x)
-    predictions = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+    x = keras.layers.GlobalAveragePooling2D()(x)
+    x = keras.layers.Dense(1024, activation='relu')(x)
+    predictions = keras.layers.Dense(1, activation='sigmoid')(x)
 
     # initialize the model
-    model = tf.keras.models.Model(inputs=base_model.input, outputs=predictions)
+    model = Model(inputs=base_model.input, outputs=predictions)
 
     # Freeze the base model's layers to only train the added layers
     for layer in base_model.layers:
@@ -150,7 +150,7 @@ def testDirs():
     print(os.listdir(MODEL_DIR))
 
 def testTrain():
-    model = train("set1")
+    model = train("set1", 2)
     model.save("model1")
 
 

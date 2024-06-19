@@ -4,6 +4,7 @@
 
 
 # ROS2 MODULES
+from torch import typename
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image # https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Image.html
@@ -11,8 +12,10 @@ from sensor_msgs.msg import Image # https://docs.ros.org/en/noetic/api/sensor_ms
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
-# AI Model
+
+# HELPER MODULES
 import ImageClassifier
+import LineDetector
 
 
 class CameraNode(Node):
@@ -37,18 +40,26 @@ class CameraNode(Node):
         if not self.processing:
             self.processing = True
             try:
-                # Preprocess the image
+                # Get image array from message
                 image = self.preprocess_image(msg)
-                # Use AI model to classify the image
-                cut = self.model.classify(image)
-                # Log the classification
-                self.get_logger().info("cut" if cut else "UNCUT")
+                # Detect line from image
+                line = LineDetector.detectLine(image)
+                # Log the line
+                self.get_logger().info(str(line))
+                # Divide image into left and right regions based on the line
+                left_region, right_region = line.divideImage(image)
+                # Classify each region as cut or uncut
+                left_cut = self.model.classify(left_region)
+                right_cut = self.model.classify(right_region)
+                # Log each classification
+                self.get_logger().info("Left side is " + "cut" if left_cut else "UNCUT")
+                self.get_logger().info("Right side is " + "cut" if right_cut else "UNCUT")
             except Exception as e:
                 self.get_logger().error(f"Error processing image: {e}")
             self.processing = False
 
     def preprocess_image(self, msg: Image):
-        """Convert ROS Image msg to numpy array."""
+        """Convert ROS Image msg to numpy image array."""
         # Convert the Image msg to a cv2 image
         cv_image = CvBridge().imgmsg_to_cv2(msg, desired_encoding='bgr8')
         # Resize the image to 224x224 pixels
