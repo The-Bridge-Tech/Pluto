@@ -3,8 +3,16 @@
 # 6/12/24
 
 
+"""
+ISSUES:
+* Need to find data to train image classifier model
+* Line detector is only accurate for images with diagonal cut lines
+    - The first line is being picked out of the list of detected lines, so logic should be added to figure out 
+      which is the correct line
+"""
+
+
 # ROS2 MODULES
-from torch import typename
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image # https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Image.html
