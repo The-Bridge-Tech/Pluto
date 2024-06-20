@@ -38,7 +38,7 @@ class CameraNode(Node):
             10
         )
         # Load AI image classifier model
-        self.model = ImageClassifier.load("model1") # TODO make the model name a parameter
+        # self.model = ImageClassifier.load("model1") # TODO make the model name a parameter
         # NOTE process images synchronously such that only the most recent image sent by the camera is classified each time,
         # this way, asynchronous requests don't pile up and processing remains in realtime
         self.processing = False
@@ -57,11 +57,11 @@ class CameraNode(Node):
                 # Divide image into left and right regions based on the line
                 left_region, right_region = line.divideImage(image)
                 # Classify each region as cut or uncut
-                left_cut = self.model.classify(left_region)
-                right_cut = self.model.classify(right_region)
+                # left_cut = self.model.classify(left_region)
+                # right_cut = self.model.classify(right_region)
                 # Log each classification
-                self.get_logger().info("Left side is " + "cut" if left_cut else "UNCUT")
-                self.get_logger().info("Right side is " + "cut" if right_cut else "UNCUT")
+                # self.get_logger().info("Left side is " + "cut" if left_cut else "UNCUT")
+                # self.get_logger().info("Right side is " + "cut" if right_cut else "UNCUT")
             except Exception as e:
                 self.get_logger().error(f"Error processing image: {e}")
             self.processing = False
