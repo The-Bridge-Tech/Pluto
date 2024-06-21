@@ -15,8 +15,8 @@ import cv2
 import numpy as np
 
 # HELPER MODULES
-import ImageClassifier
-import LineDetector
+# from .ImageClassifier import load
+from .LineDetector import detectLine, RECORDING_DIR
 
 
 class CameraNode(Node):
@@ -26,13 +26,13 @@ class CameraNode(Node):
         # Subscribe to raw image topic from realsense_camera
         self.image_subscriber = self.create_subscription(
             Image,
-            "/camera/color/image_raw",
+            "/camera/camera/color/image_raw",
             self.image_callback,
             10
         )
         self.processing = False
         # Load AI image classifier model
-        # self.model = ImageClassifier.load("model1")
+        # self.model = load("model1")
     
     def image_callback(self, msg: Image):
         """Processes image messages synchronously such that the most recent message is processed each time this method finishes.
@@ -44,7 +44,7 @@ class CameraNode(Node):
                 # Get image array from message
                 image = self.msg_to_image_array(msg)
                 # Detect line from image
-                line = LineDetector.detectLine(image)
+                line = detectLine(image)
                 # Log the line
                 self.get_logger().info(f"Detected {line}")
                 # Record the image with detected line drawn on top
@@ -67,17 +67,17 @@ class CameraNode(Node):
             self.processing = False
 
     def msg_to_image_array(self, msg: Image) -> np.ndarray:
-        """Converts ROS Image msg to a numpy array containing the image data."""
+        """Converts ROS Image message to OpenCV image array."""
         # Convert the Image msg to a cv2 image
-        cv_image = CvBridge().imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        image_array = CvBridge().imgmsg_to_cv2(msg, desired_encoding='bgr8')
         # Resize the image to 224x224 pixels
-        resized_image = cv2.resize(cv_image, (224, 224))
+        # resized_image = cv2.resize(image_array, (224, 224))
         # Convert the image to a numpy array
-        image_array = np.array(resized_image, dtype=np.float32)
+        # image_array = np.array(image_array, dtype=np.float32)
         # Normalize the image
-        image_array /= 255.0
+        # image_array /= 255.0
         # Add batch dimension
-        image_array = np.expand_dims(image_array, axis=0)
+        # image_array = np.expand_dims(image_array, axis=0)
         return image_array
 
 

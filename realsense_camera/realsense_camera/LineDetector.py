@@ -14,7 +14,7 @@ import numpy as np
 
 # CONSTANTS
 PARENT_DIR = os.path.join("src", "Pluto", "realsense_camera", "realsense_camera")
-RECORDING_DIR = os.path.join("recordings", "line_detection")
+RECORDING_DIR = os.path.join(PARENT_DIR, "recordings", "line_detection")
 
 
 class Line:
@@ -74,7 +74,8 @@ class Line:
                 cv2.line(image, self.getPoint1(), self.getPoint2(), (0, 0, 255), 2)
                 # Save image to recordings folder
                 filename = str(datetime.datetime.now()).replace(" ", "_") + ".jpg"
-                cv2.imwrite(os.path.join(dir, filename), image)
+                saved = cv2.imwrite(os.path.join(dir, filename), image)
+                print("Record sucessful." if saved else "Error recording image.")
 
         def __str__(self) -> str:
                 return f"Line: {self.getPoint1()}, {self.getPoint2()}, {self.getDegrees()}°"

@@ -14,12 +14,8 @@ from keras._tf_keras.keras.models import Model, load_model
 
 
 # CONSTANTS
-if __name__ == '__main__':
-    DATASET_DIR = "src/Pluto/realsense_camera/realsense_camera/datasets"
-    MODEL_DIR = "src/Pluto/realsense_camera/realsense_camera/models"
-else:
-    DATASET_DIR = "datasets"
-    MODEL_DIR = "models"
+DATASET_DIR = "src/Pluto/realsense_camera/realsense_camera/datasets"
+MODEL_DIR = "src/Pluto/realsense_camera/realsense_camera/models"
 
 
 # NOTE for each dataset, fill the "test" set with actual images of grass from the camera
