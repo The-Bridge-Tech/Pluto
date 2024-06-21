@@ -1,6 +1,8 @@
-# Matthew Lauriault
-# [Description]
-# 6/12/24
+"""
+[Description]
+Author: Matthew Lauriault
+Created: 6/12/24
+"""
 
 
 # ROS2 MODULES
@@ -44,9 +46,12 @@ class CameraNode(Node):
                 # Detect line from image
                 line = LineDetector.detectLine(image)
                 # Log the line
-                self.get_logger().info(str(line))
-                
+                self.get_logger().info(f"Detected {line}")
+                # Record the image with detected line drawn on top
+                line.record(image)
+
                 # TODO STEERING CALCULATIONS
+                # * use line attributes
 
                 # *********** CUT / UNCUT CLASSIFICATION ***********
                 # Divide image into left and right regions based on the line

@@ -1,6 +1,8 @@
-# Matthew Lauriault
-# AI Model that classifies a grass image as cut/uncut
-# 6/12/24
+"""
+AI Model that classifies a grass image as cut/uncut
+Author: Matthew Lauriault
+Created: 6/12/24
+"""
 
 
 # IMPORTS
