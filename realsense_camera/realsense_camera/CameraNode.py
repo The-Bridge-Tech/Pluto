@@ -16,7 +16,7 @@ import numpy as np
 
 # HELPER MODULES
 # from .ImageClassifier import load
-from .LineDetector import detectLine, RECORDING_DIR
+from .LineDetector import detectLine
 
 
 class CameraNode(Node):
