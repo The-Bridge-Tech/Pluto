@@ -10,7 +10,7 @@ import numpy as np
 
 
 class Line:
-        """Struct to hold line attributes."""
+        """Data structure for line attributes."""
         def __init__(self, rho: float, theta: float):
                 a = np.cos(theta)
                 b = np.sin(theta)
@@ -22,13 +22,16 @@ class Line:
                 self.y2 = int(y0 - 1000 * (a))
                 self.theta = theta
         def getDegrees(self):
+                """Returns angle of line in degrees"""
                 return np.degrees(self.theta)
         def getPoint1(self) -> tuple[int, int]:
+                """Returns left endpoint of line."""
                 return (self.x1, self.y1)
         def getPoint2(self) -> tuple[int, int]:
+                """Returns right endpoint of line."""
                 return (self.x2, self.y2)
         def divideImage(self, image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-                """Divide image into regions based on line. Return the divided image regions."""
+                """Divides image into regions based on line. Returns the divided image regions."""
                 # Create left and right masks to divide the image
                 height, width = image.shape[:2]
                 left_mask = np.zeros((height, width), dtype=np.uint8)
@@ -57,7 +60,7 @@ class Line:
 
         
 def detectLines(image: np.ndarray, threshold: int):
-        """Detect lines from numpy image array using the given threshold. Returns matrix with the detected lines."""
+        """Detects lines from numpy image array using the given threshold. Returns matrix with the detected lines."""
         # Convert image to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # Apply a Gaussian Blur
@@ -73,7 +76,7 @@ def detectLines(image: np.ndarray, threshold: int):
 
 
 def detectLine(image: np.ndarray) -> Line:
-        """Detect line from numpy image array. Returns the detected line."""
+        """Detects the most prominent line from numpy image array. Returns the detected line as a Line object."""
         # Perform a binary search on the threshold
         min_threshold = 0
         max_threshold = 1000

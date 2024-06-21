@@ -46,16 +46,16 @@ class ImageClassifier:
 # FACTORY METHODS
         
 def load(filename: str) -> ImageClassifier:
-    """Load ImageClassifer model from the specified filename."""
+    """Loads ImageClassifer model from the specified filename."""
     model_dir = os.path.join(MODEL_DIR, filename)
     return ImageClassifier(load_model(filename))
 
 def train(dataset_filename: str, epochs: int = 10, batch_size: int = 32) -> ImageClassifier:
     """
-    Train and evaluate new image classification model on the specified dataset
+    Trains and evaluates new image classification model on the specified dataset
     for the specified number of epochs.
     
-    Return a new ImageClassification object with the trained model.
+    Returns a new ImageClassification object with the trained model.
 
     NOTES:
     * adjust the number of epochs based on dataset size and performance
