@@ -23,9 +23,9 @@ class Line:
                 self.theta = theta
         def getDegrees(self):
                 return np.degrees(self.theta)
-        def getCoord1(self) -> tuple[int, int]:
+        def getPoint1(self) -> tuple[int, int]:
                 return (self.x1, self.y1)
-        def getCoord2(self) -> tuple[int, int]:
+        def getPoint2(self) -> tuple[int, int]:
                 return (self.x2, self.y2)
         def divideImage(self, image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
                 """Divide image into regions based on line. Return the divided image regions."""
@@ -36,14 +36,14 @@ class Line:
                 # Black out the respective side of the line using the respective mask
                 cv2.fillPoly(left_mask, [np.array([
                     (0, 0),
-                    self.getCoord1(),
-                    self.getCoord2(),
+                    self.getPoint1(),
+                    self.getPoint2(),
                     (0, height)
                 ])], 255)
                 cv2.fillPoly(right_mask, [np.array([
                     (width, 0),
-                    self.getCoord1(),
-                    self.getCoord2(),
+                    self.getPoint1(),
+                    self.getPoint2(),
                     (width, height)
                 ])], 255)
                 # Get the left and right regions using the respective masks on the image
@@ -51,13 +51,13 @@ class Line:
                 right_region = cv2.bitwise_and(image, image, mask=right_mask)
                 return left_region, right_region
         def __str__(self) -> str:
-                return f"Line: {self.getCoord1()}, {self.getCoord2()}, {self.getDegrees()}°"
+                return f"Line: {self.getPoint1()}, {self.getPoint2()}, {self.getDegrees()}°"
         def __repr__(self) -> str:
                 return self.__str__()
 
         
 def detectLines(image: np.ndarray, threshold: int):
-        """Detect lines from numpy image array using the given threshold. Return the lines detected."""
+        """Detect lines from numpy image array using the given threshold. Returns matrix with the detected lines."""
         # Convert image to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # Apply a Gaussian Blur
@@ -73,13 +73,13 @@ def detectLines(image: np.ndarray, threshold: int):
 
 
 def detectLine(image: np.ndarray) -> Line:
-        """Detect line from numpy image array. Returns None on failure."""
+        """Detect line from numpy image array. Returns the detected line."""
         # Perform a binary search on the threshold
-        min_threshold = 100
-        max_threshold = 900
+        min_threshold = 0
+        max_threshold = 1000
         lines = None
-        max_i = 1000
         i = 0
+        max_i = 1000
         while min_threshold <= max_threshold and i < max_i:
                 mid_threshold = (min_threshold + max_threshold) // 2
                 print(f"Trying threshold = {mid_threshold}")
@@ -91,15 +91,14 @@ def detectLine(image: np.ndarray) -> Line:
                         break
                 # if multiple lines were detected
                 elif num_lines > 1:
-                        # increase min threshold
+                        # increase
                         min_threshold = mid_threshold + 1
                 # if no lines were detected
                 else:
-                        # decrease max threshold
+                        # decrease
                         max_threshold = mid_threshold - 1
                 i += 1
-
-        # Return the first line
+        # Construct Line object from the matrix
         rho, theta = lines[0][0]
         return Line(rho, theta)
 
