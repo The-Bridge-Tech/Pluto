@@ -3,9 +3,9 @@
 <package format="3">
   <name>pluto_launch</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="joeldushouyu@gmail.com">shouyu</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Package for Intel RealSense Depth Camera 435</description>
+  <maintainer email="mlauriault03@gmail.com">Matthew Lauriault</maintainer>
+  <license>Apache License Version 2.0</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

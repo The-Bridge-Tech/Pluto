@@ -1,6 +1,8 @@
-# Matthew Lauriault
-# Send GPS data to splunk server
-# 6/5/24
+"""
+Send logs and sensor data to splunk server.
+Author: Matthew Lauriault
+Created: 6/5/24
+"""
 
 
 # ROS2 MODULES
@@ -57,7 +59,7 @@ class SplunkLogger(Node):
         )
 
     def sendToSplunk(self, event: dict) -> int:
-        """Make HTTP POST request to splunk server. Return status code."""
+        """Makes HTTP POST request to splunk server. Returns status code."""
         response = requests.post(
             "http://23.126.4.97:8013/services/collector/event",
             headers={"Authorization": "Splunk 87ba4168-a30a-48f6-b809-2859b7052a46"},
