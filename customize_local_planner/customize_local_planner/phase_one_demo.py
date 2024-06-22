@@ -26,7 +26,7 @@ from nav_msgs.msg import Odometry, OccupancyGrid, Path
 
 
 
-GPS_POINTs = [(34.841295, -82.411699), (34.841354, -82.411692), (34.841399, -82.411757),(34.841355, -82.411820)]
+GPS_POINTs = [(34.841433, -82.411767), (34.841367,-82.411833), (34.841283,  -82.411717),(34.84135, -82.4117)]
 class PhaseOneDemo(Node):
 
     def __init__(self):
