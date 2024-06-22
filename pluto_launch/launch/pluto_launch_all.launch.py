@@ -175,6 +175,12 @@ def generate_launch_description():
         #     "use_sim_time": use_sim_time
         # }.items(),
     )
+    splunk_logger_launch = IncludeLaunchDescription(
+
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('pluto_launch')),
+            '/splunk_logger_launch.py']),
+    )
 
     return LaunchDescription([
         # #imu_launch,
@@ -200,15 +206,6 @@ def generate_launch_description():
         gps_filter_launch,
         gps_velocity_launch,
         ekf_filter, 
-        camera_launch
-
-
-
-
-
-
-
-
-
-
+        camera_launch,
+        splunk_logger_launch,
     ])
