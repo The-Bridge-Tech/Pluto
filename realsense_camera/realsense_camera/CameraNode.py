@@ -17,6 +17,7 @@ import numpy as np
 # HELPER MODULES
 # from .ImageClassifier import load
 from .LineDetector import detectLine
+from custom_msgs.msg import LineMsg
 
 
 class CameraNode(Node):
@@ -30,6 +31,11 @@ class CameraNode(Node):
             self.image_callback,
             10
         )
+        # self.line_publisher = self.create_publisher(
+        #     LineMsg,
+        #     "/line",
+        #     10
+        # )
         self.processing = False
         # Load AI image classifier model
         # self.model = load("model1")

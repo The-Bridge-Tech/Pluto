@@ -1,0 +1,11 @@
+{
+  "package_name": "custom_msgs",
+  "output_dir": "/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_generator_type_description/custom_msgs",
+  "idl_tuples": [
+    "/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_adapter/custom_msgs:msg/LineMsg.idl"
+  ],
+  "include_paths": [
+    "geometry_msgs:/opt/ros/iron/share/geometry_msgs",
+    "std_msgs:/opt/ros/iron/share/std_msgs"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "package_name": "custom_msgs",
+  "non_idl_tuples": [
+    "/home/docker/ros2_ws/src/Pluto/custom_msgs:msg/LineMsg.msg"
+  ]
+}

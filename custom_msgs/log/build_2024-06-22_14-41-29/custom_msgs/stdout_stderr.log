@@ -1,0 +1,237 @@
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 2.0.5 (/opt/ros/iron/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.10 (found version "3.10.12") found components: Interpreter 
+-- Found geometry_msgs: 5.0.1 (/opt/ros/iron/share/geometry_msgs/cmake)
+-- Found rosidl_generator_c: 4.0.1 (/opt/ros/iron/share/rosidl_generator_c/cmake)
+-- Found rosidl_generator_cpp: 4.0.1 (/opt/ros/iron/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rosidl_default_generators: 1.5.0 (/opt/ros/iron/share/rosidl_default_generators/cmake)
+-- Found rosidl_adapter: 4.0.1 (/opt/ros/iron/share/rosidl_adapter/cmake)
+-- Found ament_cmake_ros: 0.11.2 (/opt/ros/iron/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+-- Found python_cmake_module: 0.10.2 (/opt/ros/iron/share/python_cmake_module/cmake)
+-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+-- Found PythonExtra: .so  
+-- Found ament_lint_auto: 0.14.3 (/opt/ros/iron/share/ament_lint_auto/cmake)
+-- Added test 'cppcheck' to perform static code analysis on C / C++ code
+-- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_generator_c>;$<BUILD_INTERFACE:/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_typesupport_fastrtps_c>;$<BUILD_INTERFACE:/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_generator_cpp>;$<BUILD_INTERFACE:/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_typesupport_fastrtps_cpp>;$<BUILD_INTERFACE:/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_typesupport_introspection_c>;$<BUILD_INTERFACE:/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_typesupport_introspection_cpp>;/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_generator_c;/home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs/rosidl_generator_py
+-- Configured cppcheck exclude dirs and/or files: 
+-- Added test 'flake8' to check Python code syntax and style conventions
+-- Configured 'flake8' exclude dirs and/or files: 
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+-- Added test 'uncrustify' to check C / C++ code style
+-- Configured uncrustify additional arguments: 
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/docker/ros2_ws/src/Pluto/custom_msgs/build/custom_msgs
+[  2%] [34m[1mGenerating type hashes for ROS interfaces[0m
+[  2%] Built target ament_cmake_python_copy_custom_msgs
+[  2%] Built target custom_msgs__rosidl_generator_type_description
+[  5%] [34m[1mGenerating C code for ROS interfaces[0m
+[  8%] [34m[1mGenerating C++ code for ROS interfaces[0m
+running egg_info
+creating custom_msgs.egg-info
+writing custom_msgs.egg-info/PKG-INFO
+writing dependency_links to custom_msgs.egg-info/dependency_links.txt
+writing top-level names to custom_msgs.egg-info/top_level.txt
+writing manifest file 'custom_msgs.egg-info/SOURCES.txt'
+reading manifest file 'custom_msgs.egg-info/SOURCES.txt'
+writing manifest file 'custom_msgs.egg-info/SOURCES.txt'
+[  8%] Built target ament_cmake_python_build_custom_msgs_egg
+[  8%] Built target custom_msgs__cpp
+[ 17%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_generator_c.dir/rosidl_generator_c/custom_msgs/msg/detail/line_msg__type_support.c.o[0m
+[ 17%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_generator_c.dir/rosidl_generator_c/custom_msgs/msg/detail/line_msg__functions.c.o[0m
+[ 17%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_generator_c.dir/rosidl_generator_c/custom_msgs/msg/detail/line_msg__description.c.o[0m
+[ 20%] [32m[1mLinking C shared library libcustom_msgs__rosidl_generator_c.so[0m
+[ 20%] Built target custom_msgs__rosidl_generator_c
+[ 26%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[ 26%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[ 29%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[ 35%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[ 35%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[ 38%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[ 41%] [32mBuilding CXX object CMakeFiles/custom_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/custom_msgs/msg/detail/line_msg__type_support.cpp.o[0m
+[ 44%] [32mBuilding CXX object CMakeFiles/custom_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/custom_msgs/msg/line_msg__type_support.cpp.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/custom_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/custom_msgs/msg/detail/dds_fastrtps/line_msg__type_support.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/custom_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/custom_msgs/msg/line_msg__type_support.cpp.o[0m
+[ 52%] [32m[1mLinking CXX shared library libcustom_msgs__rosidl_typesupport_c.so[0m
+[ 55%] [32mBuilding CXX object CMakeFiles/custom_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/custom_msgs/msg/detail/line_msg__type_support_c.cpp.o[0m
+[ 58%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/custom_msgs/msg/detail/line_msg__type_support.c.o[0m
+[ 58%] Built target custom_msgs__rosidl_typesupport_c
+[ 61%] [32m[1mLinking C shared library libcustom_msgs__rosidl_typesupport_introspection_c.so[0m
+[ 61%] Built target custom_msgs__rosidl_typesupport_introspection_c
+[ 64%] [32m[1mLinking CXX shared library libcustom_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[ 67%] [32m[1mLinking CXX shared library libcustom_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[ 70%] [32m[1mLinking CXX shared library libcustom_msgs__rosidl_typesupport_cpp.so[0m
+[ 70%] Built target custom_msgs__rosidl_typesupport_introspection_cpp
+[ 70%] Built target custom_msgs__rosidl_typesupport_cpp
+[ 70%] Built target custom_msgs__rosidl_typesupport_fastrtps_c
+[ 73%] [32m[1mLinking CXX shared library libcustom_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[ 73%] Built target custom_msgs__rosidl_typesupport_fastrtps_cpp
+[ 73%] Built target custom_msgs
+[ 76%] [34m[1mGenerating Python code for ROS interfaces[0m
+[ 76%] Built target custom_msgs__py
+[ 79%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_generator_py.dir/rosidl_generator_py/custom_msgs/msg/_line_msg_s.c.o[0m
+[ 82%] [32m[1mLinking C shared library rosidl_generator_py/custom_msgs/libcustom_msgs__rosidl_generator_py.so[0m
+[ 82%] Built target custom_msgs__rosidl_generator_py
+[ 88%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/custom_msgs/_custom_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[ 91%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/custom_msgs/_custom_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[ 91%] [32mBuilding C object CMakeFiles/custom_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/custom_msgs/_custom_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[100%] [32m[1mLinking C shared library rosidl_generator_py/custom_msgs/custom_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so[0m
+[100%] [32m[1mLinking C shared library rosidl_generator_py/custom_msgs/custom_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so[0m
+[100%] [32m[1mLinking C shared library rosidl_generator_py/custom_msgs/custom_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so[0m
+[100%] Built target custom_msgs__rosidl_typesupport_fastrtps_c__pyext
+[100%] Built target custom_msgs__rosidl_typesupport_c__pyext
+[100%] Built target custom_msgs__rosidl_typesupport_introspection_c__pyext
+-- Install configuration: ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/ament_index/resource_index/rosidl_interfaces/custom_msgs
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/msg/LineMsg.json
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/rosidl_generator_c__visibility_control.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__description.c
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__struct.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__type_support.c
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__functions.c
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__functions.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__type_support.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/line_msg.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/library_path.sh
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/library_path.dsv
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_generator_c.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_generator_c.so" to ""
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__rosidl_typesupport_fastrtps_c.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_fastrtps_c.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_fastrtps_c.so" to ""
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/line_msg.hpp
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__builder.hpp
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__struct.hpp
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__traits.hpp
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/dds_fastrtps
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_fastrtps_cpp.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__type_support.c
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__rosidl_typesupport_introspection_c.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_introspection_c.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_c.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_c.so" to ""
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg
+-- Up-to-date: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__type_support.cpp
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/include/custom_msgs/custom_msgs/msg/detail/line_msg__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_introspection_cpp.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_cpp.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_typesupport_cpp.so" to ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/pythonpath.sh
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/pythonpath.dsv
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs-0.0.0-py3.10.egg-info
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs-0.0.0-py3.10.egg-info/SOURCES.txt
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs-0.0.0-py3.10.egg-info/dependency_links.txt
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs-0.0.0-py3.10.egg-info/PKG-INFO
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs-0.0.0-py3.10.egg-info/top_level.txt
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/libcustom_msgs__rosidl_generator_py.so
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/_custom_msgs_s.ep.rosidl_typesupport_fastrtps_c.c
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/_custom_msgs_s.ep.rosidl_typesupport_c.c
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/__init__.py
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/_custom_msgs_s.ep.rosidl_typesupport_introspection_c.c
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/msg
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/msg/_line_msg.py
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/msg/__init__.py
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/msg/_line_msg_s.c
+Listing '/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs'...
+Compiling '/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/__init__.py'...
+Listing '/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/msg'...
+Compiling '/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/msg/__init__.py'...
+Compiling '/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/msg/_line_msg.py'...
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so" to ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so" to ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/python3.10/site-packages/custom_msgs/custom_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so" to ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_generator_py.so
+-- Set runtime path of "/home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/lib/libcustom_msgs__rosidl_generator_py.so" to ""
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/msg/LineMsg.idl
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/msg/LineMsg.msg
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/ament_index/resource_index/package_run_dependencies/custom_msgs
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/ament_index/resource_index/parent_prefix_path/custom_msgs
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/ament_prefix_path.sh
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/ament_prefix_path.dsv
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/path.sh
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/environment/path.dsv
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/local_setup.bash
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/local_setup.sh
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/local_setup.zsh
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/local_setup.dsv
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/package.dsv
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/ament_index/resource_index/packages/custom_msgs
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_generator_cExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_generator_cExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_typesupport_fastrtps_cExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_generator_cppExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_typesupport_fastrtps_cppExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_introspection_cExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_cExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_cExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_introspection_cppExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_cppExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_generator_pyExport.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/export_custom_msgs__rosidl_generator_pyExport-noconfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/rosidl_cmake-extras.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgsConfig.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/cmake/custom_msgsConfig-version.cmake
+-- Installing: /home/docker/ros2_ws/src/Pluto/custom_msgs/install/custom_msgs/share/custom_msgs/package.xml

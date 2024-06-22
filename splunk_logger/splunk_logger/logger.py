@@ -11,6 +11,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, Imu, Joy
 from rcl_interfaces.msg import Log
 from nav_msgs.msg import Odometry
+from custom_msgs.msg import LineMsg
 # SENDING DATA
 import json
 import requests
@@ -55,6 +56,13 @@ class SplunkLogger(Node):
             Odometry,
             "/odometry/global",
             self.odometry_callback,
+            10
+        )
+        # Line Detection
+        self.line_subscriber = self.create_subscription(
+            LineMsg,
+            "/line",
+            self.line_callback,
             10
         )
 
@@ -189,6 +197,29 @@ class SplunkLogger(Node):
         }
         status_code = self.sendToSplunk(event)
         print(f"{status_code}\tOdometry data sent.")
+
+    def line_callback(self, msg: LineMsg) -> None:
+        """Callback for line_subscriber"""
+        event = {
+            "index": "pluto",
+            "event": {
+                "sensor": "line_detection", # I know that this is not a sensor
+                "devicename": gethostname(),
+                "point1": {
+                    "x": msg.point1.x,
+                    "y": msg.point1.y,
+                    "z": msg.point1.z
+                },
+                "point2": {
+                    "x": msg.point2.x,
+                    "y": msg.point2.y,
+                    "z": msg.point2.z
+                },
+                "angle": msg.angle
+            },
+        }
+        status_code = self.sendToSplunk(event)
+        print(f"{status_code}\Line Detection data sent.")
 
 
 # MAIN

@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from custom_msgs/msg/LineMsg.msg
+// generated code does not contain a copyright notice
+
+#include "geometry_msgs/msg/Point.idl"
+
+module custom_msgs {
+  module msg {
+    struct LineMsg {
+      geometry_msgs::msg::Point point1;
+
+      geometry_msgs::msg::Point point2;
+
+      double angle;
+    };
+  };
+};
