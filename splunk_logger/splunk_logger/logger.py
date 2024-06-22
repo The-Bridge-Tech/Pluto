@@ -154,8 +154,8 @@ class SplunkLogger(Node):
             "event": {
                 "sensor": "joy",
                 "devicename": gethostname(),
-                "axes": msg.axes,
-                "buttons": msg.buttons
+                "axes": str(msg.axes),
+                "buttons": str(msg.buttons)
             },
         }
         status_code = self.sendToSplunk(event)
