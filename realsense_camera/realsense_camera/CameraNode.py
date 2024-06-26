@@ -9,6 +9,8 @@ Created: 6/12/24
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image # https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Image.html
+from geometry_msgs.msg import Point
+from std_msgs.msg import Float64
 # Data Preprocessing
 from cv_bridge import CvBridge
 import cv2
@@ -16,7 +18,7 @@ import numpy as np
 
 # HELPER MODULES
 # from .ImageClassifier import load
-from .LineDetector import detectLine
+from .LineDetector import detectLine, Line
 from custom_msgs.msg import LineMsg
 
 
@@ -31,11 +33,14 @@ class CameraNode(Node):
             self.image_callback,
             10
         )
-        # self.line_publisher = self.create_publisher(
-        #     LineMsg,
-        #     "/line",
-        #     10
-        # )
+        # Publish detected line (point1, point2, angle)
+        self.line_publisher = self.create_publisher(
+            LineMsg,
+            "/line",
+            10
+        )
+        # Control if node should save images from the camera with the detected line drawn on top
+        self.declare_parameter("record_line_detection", False)
         self.processing = False
         # Load AI image classifier model
         # self.model = load("model1")
@@ -43,18 +48,22 @@ class CameraNode(Node):
     def image_callback(self, msg: Image):
         """Processes image messages synchronously such that the most recent message is processed each time this method finishes.
         This way, asynchronous requests don't pile up and processing remains closer to realtime."""
-        # ignore the current image if there is already one being processed
+        # ignore the current image if there is already one being processed or if msg is None
         if not self.processing:
             self.processing = True
-            try:
-                # Get image array from message
-                image = self.msg_to_image_array(msg)
-                # Detect line from image
-                line = detectLine(image)
+            # Get image array from message
+            image = self.msg_to_image_array(msg)
+            # Detect line from image
+            line = detectLine(image)
+            # If a line was detected
+            if line:
                 # Log the line
-                self.get_logger().info(f"Detected {line}")
+                self.get_logger().info(f"Detected line: {line}")
                 # Record the image with detected line drawn on top
-                line.record(image)
+                if self.get_parameter("record_line_detection").value:
+                    line.record(image)
+                # Publish line message
+                self.publish_line(line)
 
                 # TODO STEERING CALCULATIONS
                 # * use line attributes
@@ -67,9 +76,7 @@ class CameraNode(Node):
                 # right_cut = self.model.classify(right)
                 # self.get_logger().info("Left side is " + "cut" if left_cut else "UNCUT")
                 # self.get_logger().info("Right side is " + "cut" if right_cut else "UNCUT")
-                # ***************************************************
-            except Exception as e:
-                self.get_logger().error(f"Error processing image: {e}")
+            # ***************************************************
             self.processing = False
 
     def msg_to_image_array(self, msg: Image) -> np.ndarray:
@@ -85,6 +92,27 @@ class CameraNode(Node):
         # Add batch dimension
         # image_array = np.expand_dims(image_array, axis=0)
         return image_array
+    
+    def publish_line(self, line: Line):
+        """Publishes custom line message containing the Line object's attributes."""
+        # Construct line message from the object attributes
+        msg = LineMsg(
+            point1 = Point(
+                x=float(line.x1),
+                y=float(line.y1),
+                z=0.0
+            ),
+            point2 = Point(
+                x=float(line.x2),
+                y=float(line.y2),
+                z=0.0
+            ),
+            angle = line.getDegrees()
+        )
+        # Publish the line message
+        self.line_publisher.publish(msg)
+
+
 
 
 

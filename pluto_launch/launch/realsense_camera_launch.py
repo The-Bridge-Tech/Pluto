@@ -49,6 +49,6 @@ def generate_launch_description():
     
     return LaunchDescription([
         camera_launch,
-        # camera_node,
+        camera_node,
         # imu_tool
    ])

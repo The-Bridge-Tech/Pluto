@@ -207,13 +207,11 @@ class SplunkLogger(Node):
                 "devicename": gethostname(),
                 "point1": {
                     "x": msg.point1.x,
-                    "y": msg.point1.y,
-                    "z": msg.point1.z
+                    "y": msg.point1.y
                 },
                 "point2": {
                     "x": msg.point2.x,
-                    "y": msg.point2.y,
-                    "z": msg.point2.z
+                    "y": msg.point2.y
                 },
                 "angle": msg.angle
             },

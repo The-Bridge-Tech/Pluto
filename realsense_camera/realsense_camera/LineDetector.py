@@ -32,9 +32,9 @@ class Line:
                 self.y2 = int(y0 - 1000 * (a))
                 self.theta = theta
 
-        def getDegrees(self):
+        def getDegrees(self) -> float:
                 """Returns angle of line in degrees"""
-                return np.degrees(self.theta)
+                return float(np.degrees(self.theta))
         
         def getPoint1(self) -> tuple[int, int]:
                 """Returns left endpoint of line."""
@@ -78,7 +78,7 @@ class Line:
                 print("Record sucessful." if saved else "Error recording image.")
 
         def __str__(self) -> str:
-                return f"Line: {self.getPoint1()}, {self.getPoint2()}, {self.getDegrees()}°"
+                return f"Line[{self.getPoint1()}, {self.getPoint2()}, {self.getDegrees()}°]"
         
         def __repr__(self) -> str:
                 return self.__str__()
@@ -104,7 +104,7 @@ def detectLine(image: np.ndarray) -> Line:
         """Detects the most prominent line from numpy image array. Returns the detected line as a Line object."""
         # Perform a binary search on the threshold
         min_threshold = 0
-        max_threshold = 1000
+        max_threshold = 2000
         lines = None
         i = 0
         max_i = 1000
@@ -126,6 +126,8 @@ def detectLine(image: np.ndarray) -> Line:
                         # decrease
                         max_threshold = mid_threshold - 1
                 i += 1
+        if lines is None:
+                return None
         # Construct Line object from the matrix
         rho, theta = lines[0][0]
         return Line(rho, theta)
