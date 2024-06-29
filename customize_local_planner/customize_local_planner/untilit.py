@@ -168,6 +168,8 @@ def angle_difference_in_degree(current_angle_in_degree, goal_position_x, goal_po
 
 # function specific for PID Base strategy
 def pidCalculation(kp: int, kd: int, ki: int, error: float, previous_error: float, accumulate_error: float):
+    # NOTE Joel explained this here: https://en.wikipedia.org/wiki/Proportional%E2%80%93integral%E2%80%93derivative_controller
+    # NOTE adjust kp, kd, and ki in local_planner.py parameters
     # return self.moving_straight_kp * self.angleOffError + self.moving_straight_kd * (self.angleOffError-self.previousError) + self.moving_straight_ki*self.accumulateError
     return kp * error + kd * (error - previous_error) + ki*accumulate_error
 
@@ -212,12 +214,21 @@ def pidCalculation(kp: int, kd: int, ki: int, error: float, previous_error: floa
 
 # modify base on https://github.com/danielsnider/gps_goal
 def calc_goal(origin_lat, origin_long, goal_lat, goal_long):
-
-    origin_utm =  fromLatLong(longitude=origin_long, latitude=origin_lat)
-    new_utm = fromLatLong(longitude=goal_long, latitude=goal_lat)
-
-    diff_y = new_utm.easting - origin_utm.easting
-    diff_x = new_utm.northing - origin_utm.northing
+    """Convert GPS point to xy coordinate relative to origin point."""
+    # origin lat-long to north, south, east, west
+    origin_utm =  fromLatLong(
+        longitude=origin_long, 
+        latitude=origin_lat
+    )
+    # goal lat-long to north, south, east, west
+    new_utm = fromLatLong(
+        longitude=goal_long, 
+        latitude=goal_lat
+    )
+    # x distance between origin and goal (along east-west axis in east direction)
+    diff_x = new_utm.easting - origin_utm.easting
+    # y distance between origin and goal (along north-south axis in north direction)
+    diff_y = new_utm.northing - origin_utm.northing
 
     return diff_x, diff_y
 

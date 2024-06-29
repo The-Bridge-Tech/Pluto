@@ -19,10 +19,10 @@ from .untilit import *
 
 # CONSTANTS
 GPS_POINTS = [
-    (34.841433, -82.411767), 
-    (34.841367,-82.411833), 
-    (34.841283,  -82.411717), 
-    (34.84135, -82.4117)
+    (34.841433, -82.411767),    # front-right corner
+    (34.841367,-82.411833),     # back-right corner
+    (34.841283,  -82.411717),   # back-left corner
+    (34.84135, -82.4117)        # front-right corner
 ]
 
 
@@ -72,10 +72,12 @@ class PhaseOneDemo(Node):
         self.current_pose_to_navigate_index = 0
 
     def publish_tuning_plan(self):
+        """Publish path based on the current goal pose to local_planner node."""
         if self.latest_odom == None or self.initial_gps == None:
             self.get_logger().info("Waiting for odom and gps data to be initalized.")
             return
         # when data is available
+        # CALCULATE GOAL POSES FROM GPS_POINTS
         if len(self.pose_to_navigate) == 0:
             for gps_tuple in GPS_POINTS:
                 goal_x, goal_y = calc_goal(
@@ -85,7 +87,7 @@ class PhaseOneDemo(Node):
                     goal_long=gps_tuple[1]
                 )
                 self.get_logger().info(f"""Distance to navigate to from origin({self.initial_gps.latitude}, {self.initial_gps.longitude}) to goal{gps_tuple} with distance ({goal_x},{goal_y})""")
-                self.get_logger().info(f"Current gps is ({self.initial_gps.latitude}, {self.initial_gps.longitude}), distance is ({goal_x}, {goal_y})")
+                self.get_logger().info(f"Current gps is ({self.initial_gps.latitude}, {self.initial_gps.longitude}), distance is ({goal_x}, {goal_y}) at waypoint {len(self.pose_to_navigate) +1}")
                 self.pose_to_navigate.append((goal_x, goal_y))
         
         publishPath = Path()
@@ -116,14 +118,17 @@ class PhaseOneDemo(Node):
         #     tempPose.orientation.y = 0.0
         #     tempPose.orientation.z = 0.7071068
         #     tempPose.orientation.w = 0.7071068
+
+        # UPDATE GOAL POSE WHEN REACHED
         if(distance_remaining_from_goal < 0.5): # (within 0.5 of goal - close enough)
             # If this is not the last pose to navigate
             if(self.current_pose_to_navigate_index + 1 < len(self.pose_to_navigate)):
                 # Set the next pose in self.pose_to_navigate
                 self.current_pose_to_navigate_index += 1
                 next_pose = self.pose_to_navigate[self.current_pose_to_navigate_index]
+                self.get_logger().info(f"Reached waypoint #{self.current_pose_to_navigate_index + 1}")
             else:
-                self.get_logger().info("At the end of pose!!")
+                self.get_logger().info("Reached last waypoint!!!")
         
         tempPose.position.x, tempPose.position.y = next_pose[0:2]
 
@@ -134,14 +139,16 @@ class PhaseOneDemo(Node):
             goalPosePoseStamp,
             goalPosePoseStamp
         ]
-        # NOTE publish path to local_planner
+        # PUBLISH PATH TO LOCAL_PLANNER
         self.tuning_local_plan_publisher.publish(publishPath)
     
     def gps_fix_callback(self, gps_data: NavSatFix):
+        """Update GPS data."""
         if self.initial_gps == None:
             self.initial_gps = gps_data
 
-    def globalOdometryCallback(self, odom:Odometry):
+    def globalOdometryCallback(self, odom: Odometry):
+        """Update global odometry."""
         self.latest_odom = odom
 
 
