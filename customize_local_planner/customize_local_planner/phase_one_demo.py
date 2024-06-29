@@ -106,9 +106,8 @@ class PhaseOneDemo(Node):
             (next_pose[0], next_pose[1])
         )
 
-        currentPosePoseStamp = PoseStamped(
-            pose=self.latest_odom.pose.pose
-        )
+        currentPosePoseStamp = PoseStamped()
+        currentPosePoseStamp.pose = self.latest_odom.pose.pose
 
         goalPosePoseStamp = PoseStamped()
         tempPose = Pose()
