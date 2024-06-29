@@ -92,8 +92,12 @@ class PhaseOneDemo(Node):
         
         publishPath = Path()
 
-        self.tuning_is_autonomous_mode_publisher.publish(Bool(data=True))
-        self.tuning_is_pure_pursuit_controller_mode_publisher.publish(Bool(data=False))
+        msg = Bool()
+        msg.data = True
+        self.tuning_is_autonomous_mode_publisher.publish(msg)
+        msg = Bool()
+        msg.data = False
+        self.tuning_is_pure_pursuit_controller_mode_publisher.publish(msg)
 
         current_pose = self.latest_odom.pose.pose.position # NOTE current position is determined from odometry
         next_pose = self.pose_to_navigate[self.current_pose_to_navigate_index]
