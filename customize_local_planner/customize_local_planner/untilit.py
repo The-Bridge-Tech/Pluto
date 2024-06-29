@@ -1,12 +1,13 @@
-import numpy as np
+# CALCULATION MODULES
 import math
-from math import atan2, pi, sin, cos, atan
-from typing import Tuple
-from nav_msgs.msg import Odometry, Path
-from geometry_msgs.msg import Pose, PoseStamped
+from math import atan2
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
 import tf_transformations
-from geographiclib.geodesic import Geodesic
 from geodesy.utm import *
+
+
+
 def roundPwmValue(max_pwm, min_pwm,  pwm_value) -> float:
     if pwm_value > max_pwm:
         return max_pwm
@@ -14,7 +15,6 @@ def roundPwmValue(max_pwm, min_pwm,  pwm_value) -> float:
         return min_pwm
     else:
         return int(pwm_value)
-
 
 def calculateEulerAngleFromOdometry(odom: Odometry):
     # angle are returned in -180 to 180 degree

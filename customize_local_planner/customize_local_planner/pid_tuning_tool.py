@@ -1,73 +1,65 @@
+# ROS MODULES
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import Bool
+from geometry_msgs.msg import Pose, PoseStamped
+from nav_msgs.msg import Odometry, Path
 
-from .controller import Controller
-from .move_straight_pid_controller import MovingStraightPIDController
-from .turning_pid_controller import TurningPIDController
-from .stop_controller import Stop
-from .untilit import *
-from tf2_ros import TransformBroadcaster
-import numpy as np
+# CALCULATION MODULES
 import math
-from math import atan2, pi, sin, cos, atan
-from std_msgs.msg import UInt32, Bool
-import tf_transformations
-import tf2_ros
-# TODO: need to change to standard message type later
-from std_msgs.msg import Float32
 
-# http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/Imu.html
-from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Vector3Stamped, Pose, PoseStamped, PointStamped
-from nav_msgs.msg import Odometry, OccupancyGrid, Path
-
+# HELPER MODULES
 from .untilit import *
 
-
+# GLOBALS
 tuningStraight=False
+
+
 class PidTuningPublisher(Node):
 
     def __init__(self):
         super().__init__('PidTuningPublisher')
+        # Publishers
         self.tuning_local_plan_publisher = self.create_publisher(
-            Path, "local_plan",  10
+            Path, 
+            "local_plan", 
+            10
         )
-
-
         self.tuning_is_pure_pursuit_controller_mode_publisher = self.create_publisher(
-
-            Bool, "is_pure_pursuit_controller_mode", 10
+            Bool, 
+            "is_pure_pursuit_controller_mode", 
+            10
         )
         self.tuning_is_autonomous_mode_publisher = self.create_publisher(
-            Bool, "is_autonomous_mode" , 10
+            Bool, 
+            "is_autonomous_mode", 
+            10
         )
-
-
+        # Subscribers
         self.odom_sub = self.create_subscription(
-            Odometry, "odometry/global", self.globalOdometryCallback, 10
+            Odometry, 
+            "odometry/global", 
+            self.globalOdometryCallback, 
+            10
         )
-
+        # Timers
         timer_period = 0.3  # seconds
-        self.timer = self.create_timer(timer_period, self.tuning_plan_publisher)
-
+        self.timer = self.create_timer(
+            timer_period, 
+            self.tuning_plan_publisher
+        )
+        # Vars
         self.latest_odom = None
-    def tuning_plan_publisher(self):
-        
 
+    def tuning_plan_publisher(self):
         if self.latest_odom == None:
             return
         global tuningStraight
         publishPath = Path()
-        trueBool = Bool()
-        trueBool.data=True
-        falseBool = Bool()
-        falseBool.data=False
 
-        self.tuning_is_autonomous_mode_publisher.publish(trueBool)
-        self.tuning_is_pure_pursuit_controller_mode_publisher.publish(falseBool)
-
-
-
+        self.tuning_is_autonomous_mode_publisher.publish(Bool(data=True))
+        self.tuning_is_pure_pursuit_controller_mode_publisher.publish(Bool(data=False))
+        
         currentPosePoseStamp = PoseStamped()
         currentPosePoseStamp.pose = self.latest_odom.pose.pose
         goalPosePoseStamp = PoseStamped()

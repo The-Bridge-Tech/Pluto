@@ -1,26 +1,20 @@
+# ROS MODULES
 import rclpy
 from rclpy.node import Node
 
+# CALCULATION MODULES
+import math
+from math import atan2
+from std_msgs.msg import UInt32, Bool
+import tf_transformations
+from geometry_msgs.msg import PoseStamped, PointStamped
+from nav_msgs.msg import Odometry, Path
+
+# HELPER MODULES
 from .controller import Controller
 from .move_straight_pid_controller import MovingStraightPIDController
 from .turning_pid_controller import TurningPIDController
 from .stop_controller import Stop
-from .untilit import *
-from tf2_ros import TransformBroadcaster
-import numpy as np
-import math
-from math import atan2, pi, sin, cos, atan
-from std_msgs.msg import UInt32, Bool
-import tf_transformations
-import tf2_ros
-# TODO: need to change to standard message type later
-from std_msgs.msg import Float32
-
-# http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/Imu.html
-from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Vector3Stamped, Pose, PoseStamped, PointStamped
-from nav_msgs.msg import Odometry, OccupancyGrid, Path
-
 from .untilit import *
 
 
@@ -51,65 +45,27 @@ class LocalPlanner(Node):
         self.declare_parameter("local_plan_step_size", 1)
 
         # retrieve data from parameters, especially if loaded by yaml file later
-        self.moving_straight_initial_pwm = (
-            self.get_parameter("moving_straight_initial_pwm")
-            .get_parameter_value()
-            .integer_value
-        )
-        # self.moving_straight_distance_tolerance = self.get_parameter(
-        #     "moving_straight_distance_tolerance").get_parameter_value().double_value
-        self.moving_straight_kp = (
-            self.get_parameter("moving_straight_kp").get_parameter_value().double_value
-        )
-        self.moving_straight_kd = (
-            self.get_parameter("moving_straight_kd").get_parameter_value().double_value
-        )
-        self.moving_straight_ki = (
-            self.get_parameter("moving_straight_ki").get_parameter_value().double_value
-        )
-        self.moving_straight_angle_threshold = (
-            self.get_parameter("moving_straight_angle_threshold")
-            .get_parameter_value()
-            .double_value
-        )
-        self.moving_straight_forward_prediction_step = (
-            self.get_parameter("moving_straight_forward_prediction_step")
-            .get_parameter_value()
-            .integer_value
-        )
+        # self.moving_straight_distance_tolerance = self.get_parameter("moving_straight_distance_tolerance").get_parameter_value().double_value
+        self.moving_straight_kp = self.get_parameter("moving_straight_kp").get_parameter_value().double_value
+        self.moving_straight_kd = self.get_parameter("moving_straight_kd").get_parameter_value().double_value
+        self.moving_straight_ki = self.get_parameter("moving_straight_ki").get_parameter_value().double_value
+        self.moving_straight_initial_pwm = self.get_parameter("moving_straight_initial_pwm").get_parameter_value().integer_value
+        self.moving_straight_angle_threshold = self.get_parameter("moving_straight_angle_threshold").get_parameter_value().double_value
+        self.moving_straight_forward_prediction_step = self.get_parameter("moving_straight_forward_prediction_step").get_parameter_value().integer_value
 
-        self.turning_kp = (
-            self.get_parameter("turning_kp").get_parameter_value().double_value
-        )
-        self.turning_kd = (
-            self.get_parameter("turning_kd").get_parameter_value().double_value
-        )
-        self.turning_ki = (
-            self.get_parameter("turning_ki").get_parameter_value().double_value
-        )
-        self.turning_prediction_step = (
-            self.get_parameter("turning_prediction_step")
-            .get_parameter_value()
-            .integer_value
-        )
+        self.turning_kp = self.get_parameter("turning_kp").get_parameter_value().double_value
+        self.turning_kd = self.get_parameter("turning_kd").get_parameter_value().double_value
+        self.turning_ki = self.get_parameter("turning_ki").get_parameter_value().double_value
+        self.turning_prediction_step = self.get_parameter("turning_prediction_step").get_parameter_value().integer_value
 
-        self.neutral_pwm = (
-            self.get_parameter("neutral_pwm").get_parameter_value().integer_value
-        )
         self.max_pwm = self.get_parameter("max_pwm").get_parameter_value().integer_value
         self.min_pwm = self.get_parameter("min_pwm").get_parameter_value().integer_value
-        self.autonomous_controller_frequency = (
-            self.get_parameter("autonomous_controller_frequency")
-            .get_parameter_value()
-            .integer_value
-        )
-        
+        self.neutral_pwm = self.get_parameter("neutral_pwm").get_parameter_value().integer_value
+        self.autonomous_controller_frequency = self.get_parameter("autonomous_controller_frequency").get_parameter_value().integer_value
+
         self.error_distance_tolerance = self.get_parameter("error_distance_tolerance").get_parameter_value().double_value
-        self.local_plan_step_size = (
-            self.get_parameter("local_plan_step_size")
-            .get_parameter_value()
-            .integer_value
-        )
+
+        self.local_plan_step_size = self.get_parameter("local_plan_step_size").get_parameter_value().integer_value
         
         #TODO:
         self.turning_pid_filter_counter = 0  #TODO NEED documentation later
@@ -125,22 +81,32 @@ class LocalPlanner(Node):
 
         # timer for local planner to do processing
         self.autonomous_controller_process_timer = self.create_timer(
-            1 / self.autonomous_controller_frequency, self.local_planner_processor
+            1 / self.autonomous_controller_frequency, 
+            self.local_planner_processor
         )
 
         # first, create a subscriber to odometry/global
-        self.odometryGlobalSub = self.create_subscription(
-            Odometry, "/odometry/global", self.globalOdometryCallback, 10
-        )
+        # self.odometryGlobalSub = self.create_subscription(
+        #     Odometry, 
+        #     "/odometry/global", 
+        #     self.globalOdometryCallback, 
+        #     10
+        # )
         self.left_wheel_pwm_publisher = self.create_publisher(
-            UInt32, "/steering_left", 10
+            UInt32, 
+            "/steering_left", 
+            10
         )
         self.right_wheel_pwm_publisher = self.create_publisher(
-            UInt32, "/steering_right", 10
+            UInt32, 
+            "/steering_right", 
+            10
         )
 
         self.is_autonomous_state_sub = self.create_subscription(
-            Bool, "is_autonomous_mode", self.is_autonomous_state_callback, 10
+            Bool, 
+            "is_autonomous_mode", 
+            self.is_autonomous_state_callback, 10
         )
         self.coverage_area_end_pose_sub = self.create_subscription(
             PoseStamped,
@@ -149,18 +115,28 @@ class LocalPlanner(Node):
             10,
         )
         self.pure_pursuit_goal_pose_sub = self.create_subscription(
-            PointStamped, "/lookahead_point", self.pure_pursuit_goal_pose_callback, 10
+            PointStamped, 
+            "/lookahead_point", 
+            self.pure_pursuit_goal_pose_callback, 
+            10
         )
         self.local_plan = self.create_subscription(
-            Path, "local_plan", self.local_plan_callback, 10
+            Path, 
+            "local_plan", 
+            self.local_plan_callback, 
+            10
         )
         self.is_pure_pursuit_mode_sub = self.create_subscription(
-            Bool, "is_pure_pursuit_controller_mode", self.is_pure_pursuit_mode_callback, 10
+            Bool, 
+            "is_pure_pursuit_controller_mode", 
+            self.is_pure_pursuit_mode_callback, 10
         )
         self.forward_prediction_step_for_strategy_decision = 1
         self.waiting_for_initialization = True
         self.current_local_planner_controller: Controller = None
 
+    # Runs on timer
+    # Determines strategy -> sets controller based on strategy -> executes that controller's movement -> publishes left and right motor values
     def local_planner_processor(self):
         if (
             self.latestGlobalOdom == None
@@ -171,10 +147,14 @@ class LocalPlanner(Node):
         else:
             angle_difference_in_degree = self.determine_local_controller_strategy()
             self.current_local_planner_controller.execute_movement(
-                   current_loc=self.latestGlobalOdom, pose_to_navigate=self.pose_to_navigate, angle_difference_in_degree=angle_difference_in_degree
+                   current_loc=self.latestGlobalOdom, 
+                   pose_to_navigate=self.pose_to_navigate, 
+                   angle_difference_in_degree=angle_difference_in_degree
                 )
             self.publish_left_and_right_pwm()
 
+    # Determine the next strategy (straight, turn, or stop) based on the current angle difference
+    # Then set the controller based on the strategy with strategy_simple_factory()
     def determine_local_controller_strategy(self):
         
         # get robot's current heading
@@ -187,10 +167,16 @@ class LocalPlanner(Node):
 
         temp = math.degrees(math.atan2(round(goal_pose_y,2), round(goal_pose_x,2)))
     
-        angle_diff = angle_difference_in_degree(current_angle_in_degree=current_robot_heading,
-                                                goal_position_x=goal_pose_x, goal_position_y=goal_pose_y)
+        angle_diff = angle_difference_in_degree(
+            current_angle_in_degree = current_robot_heading,
+            goal_position_x = goal_pose_x, 
+            goal_position_y = goal_pose_y
+        )
         
-        distance_diff  = math.dist( [start_pose_x, start_pose_y], [goal_pose_x, goal_pose_y])
+        distance_diff  = math.dist( 
+            [start_pose_x, start_pose_y], 
+            [goal_pose_x, goal_pose_y]
+        )
 
         self.get_logger().info("Angle difference is {0} for start position x:{1} y{2} end position x:{3} y{4}  robotHEading {5} \n".format( 
             angle_diff, start_pose_x, start_pose_y, goal_pose_x, goal_pose_y,current_robot_heading
@@ -207,11 +193,10 @@ class LocalPlanner(Node):
             self.strategy_simple_factory("PIDStraight")
         return angle_diff
 
+    # Update the current controller subclass (MovingStraightPIDController, TurningPIDController, or Stop) based on the strategy
     def strategy_simple_factory(self, strategy: str):
         if strategy == "PIDStraight":
-            if not isinstance(
-                self.current_local_planner_controller, MovingStraightPIDController
-            ):
+            if not isinstance(self.current_local_planner_controller, MovingStraightPIDController):
                 self.current_local_planner_controller = MovingStraightPIDController(
                     max_pwm=self.max_pwm,
                     min_pwm=self.min_pwm,
@@ -224,9 +209,7 @@ class LocalPlanner(Node):
                 )
 
         elif strategy == "PIDTurn":
-            if not isinstance(
-                self.current_local_planner_controller, TurningPIDController
-            ):
+            if not isinstance(self.current_local_planner_controller, TurningPIDController):
                 tuned_min_pwm = self.neutral_pwm -  int(  (self.neutral_pwm -  self.min_pwm)*0.3)
                 tuned_max_pwm = self.neutral_pwm +  int(    (self.max_pwm - self.neutral_pwm )*0.3)
                 self.get_logger().info("The tuned max {0} and min {1}".format(tuned_max_pwm, tuned_min_pwm))
@@ -243,13 +226,15 @@ class LocalPlanner(Node):
         elif strategy == "Stop":
             if not isinstance(self.current_local_planner_controller, Stop):
                 self.current_local_planner_controller = Stop(
-                    neutral_pwm=self.neutral_pwm, logger=self.get_logger()
+                    neutral_pwm=self.neutral_pwm, 
+                    logger=self.get_logger()
                 )
         else:
             self.get_logger().warn(
                 "Strategy choice {0} is not provided".format(strategy)
             )
 
+    # Publish values to the left and right wheel motors
     def publish_left_and_right_pwm(self):
         # self.get_logger().info(type(self.current_local_planner_controller.left_pwm()))
         left_pwm_input = self.current_local_planner_controller.left_pwm()
