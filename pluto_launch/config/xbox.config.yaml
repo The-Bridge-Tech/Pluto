@@ -13,7 +13,7 @@ teleop_twist_joy_node:
     scale_angular:
       yaw: 2.2 # max speed is 2.2 rad/s
 
-    enable_button: 2  # Left trigger button
+    enable_button: 3  # Left trigger button
     enable_turbo_button: -1   # Right trigger button
 
     
