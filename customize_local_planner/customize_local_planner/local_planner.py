@@ -25,9 +25,9 @@ class LocalPlanner(Node):
         self.declare_parameter("moving_straight_kp", 2.0)
         self.declare_parameter("moving_straight_kd", 0.0)
         self.declare_parameter("moving_straight_ki", 0.0)
-        self.declare_parameter("moving_straight_initial_pwm", 1500)
+        self.declare_parameter("moving_straight_initial_pwm", 1500) # initial speed
         # self.declare_parameter("moving_straight_distance_tolerance", 0.3)
-        self.declare_parameter("moving_straight_angle_threshold", 15.0)
+        self.declare_parameter("moving_straight_angle_threshold", 15.0) # will only correct angle while moving straight if greater than this angle
         self.declare_parameter("moving_straight_forward_prediction_step", 1)
 
         self.declare_parameter("turning_kp", 3.0)

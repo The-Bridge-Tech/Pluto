@@ -87,7 +87,8 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "sensor": "log", # I know that this is not a sensor
+                "source": "log",
+                "type": "message",
                 "devicename": gethostname(),
                 "timestamp": msg.stamp.sec + msg.stamp.nanosec*(10**-9),
                 "level": levels[str(msg.level)], 
@@ -106,7 +107,8 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "sensor": "gps",
+                "source": "gps",
+                "type": "sensor",
                 "devicename": gethostname(),
                 "lat": msg.latitude, 
                 "log": msg.longitude, 
@@ -124,7 +126,8 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "sensor": "imu",
+                "source": "imu",
+                "type": "sensor",
                 "devicename": gethostname(),
                 "orientation": {
                     "x": o.x, 
@@ -152,7 +155,8 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "sensor": "joy",
+                "source": "joystick",
+                "type": "sensor",
                 "devicename": gethostname(),
                 "axes": str(msg.axes),
                 "buttons": str(msg.buttons)
@@ -170,7 +174,8 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "sensor": "odometry", # I know that this is not a sensor
+                "source": "odometry",
+                "type": "calculation",
                 "devicename": gethostname(),
                 "position": {
                     "x": p.x,
@@ -203,7 +208,8 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "sensor": "line_detection", # I know that this is not a sensor
+                "source": "line_detection",
+                "type": "calculation",
                 "devicename": gethostname(),
                 "point1": {
                     "x": msg.point1.x,
