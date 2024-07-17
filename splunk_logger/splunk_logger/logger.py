@@ -87,7 +87,7 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "source": "log",
+                "id": "log",
                 "type": "message",
                 "devicename": gethostname(),
                 "timestamp": msg.stamp.sec + msg.stamp.nanosec*(10**-9),
@@ -107,7 +107,7 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "source": "gps",
+                "id": "gps",
                 "type": "sensor",
                 "devicename": gethostname(),
                 "lat": msg.latitude, 
@@ -126,7 +126,7 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "source": "imu",
+                "id": "imu",
                 "type": "sensor",
                 "devicename": gethostname(),
                 "orientation": {
@@ -155,7 +155,7 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "source": "joystick",
+                "id": "joystick",
                 "type": "sensor",
                 "devicename": gethostname(),
                 "axes": str(msg.axes),
@@ -174,7 +174,7 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "source": "odometry",
+                "id": "odometry",
                 "type": "calculation",
                 "devicename": gethostname(),
                 "position": {
@@ -208,7 +208,7 @@ class SplunkLogger(Node):
         event = {
             "index": "pluto",
             "event": {
-                "source": "line_detection",
+                "id": "line_detection",
                 "type": "calculation",
                 "devicename": gethostname(),
                 "point1": {
