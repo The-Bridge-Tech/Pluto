@@ -10,6 +10,7 @@ from std_msgs.msg import Bool
 from sensor_msgs.msg import NavSatFix
 from geometry_msgs.msg import Pose, PoseStamped, PointStamped
 from nav_msgs.msg import Odometry, Path
+from custom_msgs.msg import WaypointMsg
 
 # CALCULATION MODULES
 import math
@@ -46,6 +47,11 @@ class PhaseOneDemo(Node):
             "is_autonomous_mode", 
             10
         )
+        self.ping_publisher = self.create_publisher(
+            WaypointMsg,
+            "/waypoint_ping",
+            10
+        )
         # Subscribers
         self.odom_sub = self.create_subscription(
             Odometry, 
@@ -65,6 +71,12 @@ class PhaseOneDemo(Node):
             timer_period, 
             self.publish_tuning_plan
         )
+        self.ready_to_ping = False
+        ping_timer_period = 1 # seconds
+        self.ping_timer = self.create_timer(
+            ping_timer_period,
+            self.publish_waypoint_ping
+        )
         # Variables
         self.latest_odom: Odometry = None
         self.initial_gps: NavSatFix = None
@@ -76,8 +88,8 @@ class PhaseOneDemo(Node):
         if self.latest_odom == None or self.initial_gps == None:
             self.get_logger().info("Waiting for odom and gps data to be initalized.")
             return
-        # when data is available
-        # CALCULATE GOAL POSES FROM GPS_POINTS
+        # (gps data is now available)
+        # calculate goal poses (waypoints) from gps points (only runs the first time gps data is available)
         if len(self.pose_to_navigate) == 0:
             for gps_tuple in GPS_POINTS:
                 goal_x, goal_y = calc_goal(
@@ -87,7 +99,7 @@ class PhaseOneDemo(Node):
                     goal_long=gps_tuple[1]
                 )
                 self.get_logger().info(f"""Distance to navigate to from origin({self.initial_gps.latitude}, {self.initial_gps.longitude}) to goal{gps_tuple} with distance ({goal_x},{goal_y})""")
-                self.get_logger().info(f"Current gps is ({self.initial_gps.latitude}, {self.initial_gps.longitude}), distance is ({goal_x}, {goal_y}) at waypoint {len(self.pose_to_navigate) +1}")
+                self.get_logger().info(f"Current gps is ({self.initial_gps.latitude}, {self.initial_gps.longitude}), distance is ({goal_x}, {goal_y}) from waypoint {len(self.pose_to_navigate) +1}")
                 self.pose_to_navigate.append((goal_x, goal_y))
         
         publishPath = Path()
@@ -101,10 +113,12 @@ class PhaseOneDemo(Node):
 
         current_pose = self.latest_odom.pose.pose.position # NOTE current position is determined from odometry
         next_pose = self.pose_to_navigate[self.current_pose_to_navigate_index]
-        distance_remaining_from_goal = math.dist(
+        self.distance_remaining_from_goal = math.dist(
             (current_pose.x, current_pose.y),
             (next_pose[0], next_pose[1])
         )
+
+        self.ready_to_ping = True
 
         currentPosePoseStamp = PoseStamped()
         currentPosePoseStamp.pose = self.latest_odom.pose.pose
@@ -123,7 +137,7 @@ class PhaseOneDemo(Node):
         #     tempPose.orientation.w = 0.7071068
 
         # UPDATE GOAL POSE WHEN REACHED
-        if(distance_remaining_from_goal < 0.5): # (within 0.5 of goal - close enough)
+        if(self.distance_remaining_from_goal < 0.5): # (within 0.5 of goal - close enough)
             # If this is not the last pose to navigate
             if(self.current_pose_to_navigate_index + 1 < len(self.pose_to_navigate)):
                 # Set the next pose in self.pose_to_navigate
@@ -131,7 +145,7 @@ class PhaseOneDemo(Node):
                 next_pose = self.pose_to_navigate[self.current_pose_to_navigate_index]
                 self.get_logger().info(f"Reached waypoint #{self.current_pose_to_navigate_index + 1}")
             else:
-                self.get_logger().info("Reached last waypoint!!!")
+                self.get_logger().info("Reached last waypoint!")
         
         tempPose.position.x, tempPose.position.y = next_pose[0:2]
 
@@ -154,6 +168,14 @@ class PhaseOneDemo(Node):
         """Update global odometry."""
         self.latest_odom = odom
 
+    def publish_waypoint_ping(self):
+        # wait until publish_tuning_plan() has created the data to publish
+        if self.ready_to_ping:
+            ping = WaypointMsg(
+                waypoint_number = self.current_pose_to_navigate_index+1,
+                distance = self.distance_remaining_from_goal
+            )
+            self.ping_publisher.publish(ping)
 
 
 def main(args=None):

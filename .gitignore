@@ -3,3 +3,4 @@
 /log
 /rosbag2*
 /12-20*
+/splunk_logger/splunk_logger/mock_splunk.json

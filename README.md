@@ -14,3 +14,4 @@ Ros2 Developement for autonomous lawnmower Phase 2
 | joystick       | sensor      | /joy             |
 | odometry       | calculation | /odometry/global |
 | line_detection | calculation | /line            |
+| waypoint_ping  | calculation | /waypoint_ping   |

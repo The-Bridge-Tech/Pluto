@@ -185,9 +185,11 @@ class LocalPlanner(Node):
         if  distance_diff < self.error_distance_tolerance:
             self.get_logger().info("Stop due to within tolerance error distance")
             self.strategy_simple_factory("Stop")
+        # NOTE this is where we turn when the angle difference is above the threshold
         elif abs(angle_diff) > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
             self.strategy_simple_factory("PIDTurn")
+        # if the angle difference is below the threshold -> move straight
         else:
             self.get_logger().info("PID moving straight")
             self.strategy_simple_factory("PIDStraight")
@@ -291,7 +293,7 @@ class LocalPlanner(Node):
                 # right now, get the mid point of the path
                 mid_point = int(len(loc_path.poses)/2)
                 self.pose_to_navigate = loc_path.poses[mid_point]
-                self.get_logger().info("local plan path has total {0} pose".format(len(loc_path.poses)))
+                self.get_logger().info("local plan path has {0} poses left to navigate".format(len(loc_path.poses)))
             # if len(loc_path.poses) <= self.local_plan_step_size - 1:
             #     self.get_logger().info(
             #         "local plan path only have {0} pose, smaller than configure path size. Thus, using the very first pose in path".format(len(loc_path.poses))

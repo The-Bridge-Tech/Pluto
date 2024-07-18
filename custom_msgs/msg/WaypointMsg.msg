@@ -1,0 +1,2 @@
+int64 waypoint_number
+float64 distance
