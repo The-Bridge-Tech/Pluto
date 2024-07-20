@@ -10,8 +10,8 @@ Ros2 Developement for autonomous lawnmower Phase 2
 | startup        | message     | -                |
 | log            | message     | rosout           |
 | gps            | sensor      | /fix/filtered    |
-| imu            | sensor      | /imu/data        |
 | joystick       | sensor      | /joy             |
 | odometry       | calculation | /odometry/global |
 | line_detection | calculation | /line            |
-| waypoint_ping  | calculation | /waypoint_ping   |
+| waypoint_ping  | ping        | /waypoint_ping   |
+| startup_ping   | ping        | -

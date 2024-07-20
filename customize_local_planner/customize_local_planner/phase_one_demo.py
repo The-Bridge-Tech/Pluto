@@ -23,7 +23,7 @@ GPS_POINTS = [
     (34.841433, -82.411767),    # front-right corner
     (34.841367,-82.411833),     # back-right corner
     (34.841283,  -82.411717),   # back-left corner
-    (34.84135, -82.4117)        # front-right corner
+    (34.84135, -82.4117)        # front-left corner
 ]
 
 
@@ -171,10 +171,14 @@ class PhaseOneDemo(Node):
     def publish_waypoint_ping(self):
         # wait until publish_tuning_plan() has created the data to publish
         if self.ready_to_ping:
+            roll, pitch, yaw = euler_from_quaternion(self.latest_odom.pose.pose.orientation)
             ping = WaypointMsg(
                 waypoint_number = self.current_pose_to_navigate_index+1,
-                distance = self.distance_remaining_from_goal
+                distance = self.distance_remaining_from_goal,
+                yaw = yaw # orientation around the vertical axis
             )
+            # log so that you can see realtime messages on monitor in phaseOne terminal
+            self.get_logger().info(f"GPS: {(self.initial_gps.latitude, self.initial_gps.longitude)}\tHeading: {yaw}\tDistance: {self.distance_remaining_from_goal}\tWaypoint #{self.current_pose_to_navigate_index+1}")
             self.ping_publisher.publish(ping)
 
 
