@@ -4,3 +4,9 @@
 /rosbag2*
 /12-20*
 /splunk_logger/splunk_logger/mock_splunk.json
+/bbox_ex_msgs
+/imu_tools
+/nmea_navsat_driver
+/phidgets_drivers
+/YOLOv5-ROS
+/log/latest_build
