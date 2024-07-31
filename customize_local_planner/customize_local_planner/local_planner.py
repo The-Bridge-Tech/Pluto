@@ -1,14 +1,15 @@
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
+import tf_transformations
+from std_msgs.msg import UInt32, Bool
+from geometry_msgs.msg import PoseStamped, PointStamped
+from nav_msgs.msg import Odometry, Path
+from rcl_interfaces.msg import ParameterValue
 
 # CALCULATION MODULES
 import math
 from math import atan2
-from std_msgs.msg import UInt32, Bool
-import tf_transformations
-from geometry_msgs.msg import PoseStamped, PointStamped
-from nav_msgs.msg import Odometry, Path
 
 # HELPER MODULES
 from .controller import Controller
@@ -18,54 +19,65 @@ from .stop_controller import Stop
 from .untilit import *
 
 
+# PARAMETERS (must be declared even when using a YAML file)
+DEFAULT_PARAMS = {
+    # STRATEGY: MOVING STRAIGHT
+    'moving_straight_kp': 2.0,
+    'moving_straight_kd': 0.0,
+    'moving_straight_ki': 0.0,
+    'moving_straight_initial_pwm': 1500, # initial speed
+    'moving_straight_angle_threshold': 15.0, # will only correct angle while moving straight if greater than this angle
+    'moving_straight_forward_prediction_step': 1,
+
+    # STRATEGY: TURNING
+    'turning_kp': 3.0,
+    'turning_kd': 0.7,
+    'turning_ki': 0.5,
+    'turning_prediction_step': 1,
+
+    # PWM
+    'max_pwm': 1765,
+    'min_pwm': 992,
+    'neutral_pwm': 1376,
+
+    # OTHER
+    'autonomous_controller_frequency': 10,
+    'error_distance_tolerance': 0.5,
+    'local_plan_step_size': 1,
+}
+
+
 class LocalPlanner(Node):
     def __init__(self):
-        super().__init__("Autonomous_Controller")
+        super().__init__("local_planner", allow_undeclared_parameters=True)
 
-        self.declare_parameter("moving_straight_kp", 2.0)
-        self.declare_parameter("moving_straight_kd", 0.0)
-        self.declare_parameter("moving_straight_ki", 0.0)
-        self.declare_parameter("moving_straight_initial_pwm", 1500) # initial speed
-        # self.declare_parameter("moving_straight_distance_tolerance", 0.3)
-        self.declare_parameter("moving_straight_angle_threshold", 15.0) # will only correct angle while moving straight if greater than this angle
-        self.declare_parameter("moving_straight_forward_prediction_step", 1)
-
-        self.declare_parameter("turning_kp", 3.0)
-        self.declare_parameter("turning_kd", 0.7)
-        self.declare_parameter("turning_ki", 0.5)
-        self.declare_parameter("turning_prediction_step", 1)
-
-        self.declare_parameter("max_pwm", 1765)
-        self.declare_parameter("min_pwm", 992)
-        self.declare_parameter("neutral_pwm", 1376)
-        self.declare_parameter("autonomous_controller_frequency", 10)
-        
-        self.declare_parameter("error_distance_tolerance", 0.5)
-
-        self.declare_parameter("local_plan_step_size", 1)
-
-        # retrieve data from parameters, especially if loaded by yaml file later
-        # self.moving_straight_distance_tolerance = self.get_parameter("moving_straight_distance_tolerance").get_parameter_value().double_value
-        self.moving_straight_kp = self.get_parameter("moving_straight_kp").get_parameter_value().double_value
-        self.moving_straight_kd = self.get_parameter("moving_straight_kd").get_parameter_value().double_value
-        self.moving_straight_ki = self.get_parameter("moving_straight_ki").get_parameter_value().double_value
-        self.moving_straight_initial_pwm = self.get_parameter("moving_straight_initial_pwm").get_parameter_value().integer_value
-        self.moving_straight_angle_threshold = self.get_parameter("moving_straight_angle_threshold").get_parameter_value().double_value
-        self.moving_straight_forward_prediction_step = self.get_parameter("moving_straight_forward_prediction_step").get_parameter_value().integer_value
-
-        self.turning_kp = self.get_parameter("turning_kp").get_parameter_value().double_value
-        self.turning_kd = self.get_parameter("turning_kd").get_parameter_value().double_value
-        self.turning_ki = self.get_parameter("turning_ki").get_parameter_value().double_value
-        self.turning_prediction_step = self.get_parameter("turning_prediction_step").get_parameter_value().integer_value
-
-        self.max_pwm = self.get_parameter("max_pwm").get_parameter_value().integer_value
-        self.min_pwm = self.get_parameter("min_pwm").get_parameter_value().integer_value
-        self.neutral_pwm = self.get_parameter("neutral_pwm").get_parameter_value().integer_value
-        self.autonomous_controller_frequency = self.get_parameter("autonomous_controller_frequency").get_parameter_value().integer_value
-
-        self.error_distance_tolerance = self.get_parameter("error_distance_tolerance").get_parameter_value().double_value
-
-        self.local_plan_step_size = self.get_parameter("local_plan_step_size").get_parameter_value().integer_value
+        # declare all parameters with default values
+        for name, value in DEFAULT_PARAMS.items():
+            self.declare_parameter(name, value)
+            
+        # load parameter values from YAML file (pluto_launch/config/local_planner.yaml)
+        load_param = lambda param_name: self.get_parameter(param_name).get_parameter_value()
+        # STRATEGY: MOVING STRAIGHT
+        self.moving_straight_kp = load_param("moving_straight_kp").double_value
+        self.moving_straight_kd = load_param("moving_straight_kd").double_value
+        self.moving_straight_ki = load_param("moving_straight_ki").double_value
+        self.moving_straight_initial_pwm = load_param("moving_straight_initial_pwm").integer_value
+        # self.moving_straight_distance_tolerance = load_param("moving_straight_distance_tolerance").double_value
+        self.moving_straight_angle_threshold = load_param("moving_straight_angle_threshold").double_value
+        self.moving_straight_forward_prediction_step = load_param("moving_straight_forward_prediction_step").integer_value
+        # STRATEGY: TURNING
+        self.turning_kp = load_param("turning_kp").double_value
+        self.turning_kd = load_param("turning_kd").double_value
+        self.turning_ki = load_param("turning_ki").double_value
+        self.turning_prediction_step = load_param("turning_prediction_step").integer_value
+        # PWM
+        self.max_pwm = load_param("max_pwm").integer_value
+        self.min_pwm = load_param("min_pwm").integer_value
+        self.neutral_pwm = load_param("neutral_pwm").integer_value
+        # OTHER
+        self.autonomous_controller_frequency = load_param("autonomous_controller_frequency").integer_value
+        self.error_distance_tolerance = load_param("error_distance_tolerance").double_value
+        self.local_plan_step_size = load_param("local_plan_step_size").integer_value
         
         #TODO:
         self.turning_pid_filter_counter = 0  #TODO NEED documentation later
@@ -307,14 +319,11 @@ class LocalPlanner(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_publisher = LocalPlanner()
+    local_planner = LocalPlanner()
 
-    rclpy.spin(minimal_publisher)
+    rclpy.spin(local_planner)
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    minimal_publisher.destroy_node()
+    local_planner.destroy_node()
     rclpy.shutdown()
 
 
