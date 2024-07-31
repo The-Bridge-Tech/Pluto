@@ -172,13 +172,18 @@ class PhaseOneDemo(Node):
         # wait until publish_tuning_plan() has created the data to publish
         if self.ready_to_ping:
             roll, pitch, yaw = euler_from_quaternion(self.latest_odom.pose.pose.orientation)
+            yaw_degrees = math.degrees(yaw)
             ping = WaypointMsg(
                 waypoint_number = self.current_pose_to_navigate_index+1,
                 distance = self.distance_remaining_from_goal,
-                yaw = yaw # orientation around the vertical axis
+                yaw = yaw_degrees # orientation around the vertical axis
             )
             # log so that you can see realtime messages on monitor in phaseOne terminal
-            self.get_logger().info(f"GPS: {(self.initial_gps.latitude, self.initial_gps.longitude)}\tHeading: {yaw}\tDistance: {self.distance_remaining_from_goal}\tWaypoint #{self.current_pose_to_navigate_index+1}")
+            lat = self.initial_gps.latitude
+            long = self.initial_gps.longitude
+            lat_str = f"{int(lat)}° {((lat - int(lat)) * 60)}"
+            long_str = f"{int(long)}° {((long - int(long)) * 60)}"
+            self.get_logger().info(f"GPS: {(lat_str, long_str)}\tHeading: {yaw_degrees}°\tDistance: {self.distance_remaining_from_goal}\tWaypoint #{self.current_pose_to_navigate_index+1}")
             self.ping_publisher.publish(ping)
 
 
