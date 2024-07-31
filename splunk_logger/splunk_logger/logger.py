@@ -37,18 +37,18 @@ PRIORITY = { # for message priority queue - adjust as needed
 
 
 # STRUCTS
-class Message:
-    """Data structure for message priority queue."""
-    def __init__(self, event: dict):
-        self.priority = PRIORITY[event["event"]["type"]]
-        self.event = event
-    # compare by priority
-    def __lt__(self, other):
-        return self.priority < other.priority
-    def __eq__(self, other):
-        return self.priority == other.priority
-    def __gt__(self, other):
-        return self.priority > other.priority
+# class Message:
+#     """Data structure for message priority queue."""
+#     def __init__(self, event: dict):
+#         self.priority = PRIORITY[event["event"]["type"]]
+#         self.event = event
+#     # compare by priority
+#     def __lt__(self, other):
+#         return self.priority < other.priority
+#     def __eq__(self, other):
+#         return self.priority == other.priority
+#     def __gt__(self, other):
+#         return self.priority > other.priority
 
 
 # NODE
@@ -57,11 +57,11 @@ class SplunkLogger(Node):
     def __init__(self):
         super().__init__('splunk_logger')
         # Message Queue (to store messages until they're sent to splunk)
-        self.messageQueue = Queue() # PriorityQueue()
-        self.messageQueueManagerThread = Thread(
-            target=self.manageMessageQueue,
-            daemon=True
-        )
+        # self.messageQueue = Queue() # PriorityQueue()
+        # self.messageQueueManagerThread = Thread(
+        #     target=self.manageMessageQueue,
+        #     daemon=True
+        # )
         # Logger
         self.log_subscriber = self.create_subscription(
             Log,
@@ -137,43 +137,44 @@ class SplunkLogger(Node):
         # self.messageQueue.put(event)
         try:
             status_code = self.sendToSplunk(event)
+            print(f"{status_code}\t{event['id']}\tsent to splunk")
         except Exception as e:
             pass
         self.saveToMockSplunk(event)
 
 
-    def manageMessageQueue(self):
-        """Continously try to send messages from messageQueue to splunk."""
-        network_connection = False
-        while True:
-            # wait until messageQueue has an item -> then pop it
-            # message: Message = self.messageQueue.get(block = True)
-            # event = message.event
-            event = self.messageQueue.get(block = True)
-            self.saveToMockSplunk(event)
-            sent = False
-            while not sent:
-                try:
-                    status_code = self.sendToSplunk(event)
-                    print(f"{status_code}\t{event['id']}\tsent to splunk")
-                    network_connection = True
-                    sent = True
-                except Exception as e:
-                    # if this is the first failure to send
-                    if network_connection:
-                        network_connection = False
-                        network_error_event = {
-                            "index": "pluto",
-                            "event": {
-                                "id": "startup",
-                                "type": "message",
-                                "devicename": gethostname(),
-                                "timestamp": str(datetime.now()),
-                                "level": "error",
-                                "msg": f"Error sending to splunk: {e}",
-                            }
-                        }
-                        self.saveToMockSplunk(network_error_event)
+    # def manageMessageQueue(self):
+    #     """Continously try to send messages from messageQueue to splunk."""
+    #     network_connection = False
+    #     while True:
+    #         # wait until messageQueue has an item -> then pop it
+    #         # message: Message = self.messageQueue.get(block = True)
+    #         # event = message.event
+    #         event = self.messageQueue.get(block = True)
+    #         self.saveToMockSplunk(event)
+    #         sent = False
+    #         while not sent:
+    #             try:
+    #                 status_code = self.sendToSplunk(event)
+    #                 print(f"{status_code}\t{event['id']}\tsent to splunk")
+    #                 network_connection = True
+    #                 sent = True
+    #             except Exception as e:
+    #                 # if this is the first failure to send
+    #                 if network_connection:
+    #                     network_connection = False
+    #                     network_error_event = {
+    #                         "index": "pluto",
+    #                         "event": {
+    #                             "id": "startup",
+    #                             "type": "message",
+    #                             "devicename": gethostname(),
+    #                             "timestamp": str(datetime.now()),
+    #                             "level": "error",
+    #                             "msg": f"Error sending to splunk: {e}",
+    #                         }
+    #                     }
+    #                     self.saveToMockSplunk(network_error_event)
     
     def log_callback(self, msg: Log) -> None:
         """Callback for log_subscriber"""
@@ -240,8 +241,8 @@ class SplunkLogger(Node):
         a = msg.twist.twist.angular
         # calculate roll, pitch, and yaw
         rpy = tf_transformations.euler_from_quaternion([o.x, o.y, o.z, o.w])
-        roll_degree, pitch_degree, yaw_degree = ( math.degrees(x) for x in rpy)
-        yaw_degree_compass = yaw_degree  - 90
+        roll_degree, pitch_degree, yaw_degree = (math.degrees(x) for x in rpy)
+        yaw_degree_compass = (yaw_degree - 90) % 360
         event = {
             "index": "pluto",
             "event": {
