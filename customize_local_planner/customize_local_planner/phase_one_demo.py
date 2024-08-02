@@ -21,9 +21,9 @@ from .untilit import *
 # CONSTANTS
 GPS_POINTS = [
     (34.841433, -82.411767),    # front-right corner
-    (34.841367,-82.411833),     # back-right corner
-    (34.841283,  -82.411717),   # back-left corner
-    (34.84135, -82.4117)        # front-left corner
+    (34.841367, -82.411833),    # back-right corner
+    (34.841283, -82.411717),    # back-left corner
+    (34.841350, -82.411700)     # front-left corner
 ]
 
 
@@ -160,7 +160,7 @@ class PhaseOneDemo(Node):
         self.tuning_local_plan_publisher.publish(publishPath)
     
     def gps_fix_callback(self, gps_data: NavSatFix):
-        """Update GPS data."""
+        """Set initial gps data."""
         if self.initial_gps == None:
             self.initial_gps = gps_data
 

@@ -159,10 +159,10 @@ class LocalPlanner(Node):
         else:
             angle_difference_in_degree = self.determine_local_controller_strategy()
             self.current_local_planner_controller.execute_movement(
-                   current_loc=self.latestGlobalOdom, 
-                   pose_to_navigate=self.pose_to_navigate, 
-                   angle_difference_in_degree=angle_difference_in_degree
-                )
+                current_loc=self.latestGlobalOdom, 
+                pose_to_navigate=self.pose_to_navigate, 
+                angle_difference_in_degree=angle_difference_in_degree
+            )
             self.publish_left_and_right_pwm()
 
     # Determine the next strategy (straight, turn, or stop) based on the current angle difference
