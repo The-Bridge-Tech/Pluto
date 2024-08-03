@@ -90,11 +90,18 @@ class GPSPlotter(Node):
                 # Show the background image
                 self.ax.imshow(self.img, extent=self.img_extent, aspect='auto')
                 # Create plot for dynamic gps points (trail)
-                self.scatter, = self.ax.plot([], [], 'bo', markersize=3)
+                self.scatter, = self.ax.plot(
+                        [], # initially empty
+                        [], # initially empty
+                        color='blue', 
+                        marker='o',
+                        markersize=2,
+                        label='Trail'
+                )
                 # Plot the fence corner points
                 self.fence_corners_scatter = self.ax.scatter(
-                        x = [p[1] for p in FENCE_GPS_POINTS], # longitudes
-                        y = [p[0] for p in FENCE_GPS_POINTS], # latitudes
+                        x=[p[1] for p in FENCE_GPS_POINTS], # longitudes
+                        y=[p[0] for p in FENCE_GPS_POINTS], # latitudes
                         color='white', 
                         marker='o', 
                         label='Fence Corners'
