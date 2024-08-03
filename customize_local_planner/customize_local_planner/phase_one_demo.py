@@ -20,12 +20,11 @@ from .untilit import *
 
 # CONSTANTS
 GPS_POINTS = [
-    (34.841433, -82.411767),    # front-right corner
-    (34.841367, -82.411833),    # back-right corner
-    (34.841283, -82.411717),    # back-left corner
-    (34.841350, -82.411700)     # front-left corner
+    (34.841434, -82.411776),    # front-right corner
+    (34.841327, -82.411853),    # back-right corner
+    (34.841254, -82.411731),    # back-left corner
+    (34.841362, -82.411681)     # front-left corner
 ]
-
 
 class PhaseOneDemo(Node):
 
