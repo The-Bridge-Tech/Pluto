@@ -249,3 +249,11 @@ def calc_goal(origin_lat, origin_long, goal_lat, goal_long):
 
 
     # return x, y
+
+def meters_to_gps_degrees(meters, latitude):
+        # Approximate conversion from meters to degrees
+        # 1 degree of latitude is approximately 111,320 meters
+        lat_degree = meters / 111320
+        # 1 degree of longitude varies with latitude
+        lon_degree = meters / (111320 * np.cos(np.radians(latitude)))
+        return max(lat_degree, lon_degree)  # Use the larger value to ensure the circle is visible

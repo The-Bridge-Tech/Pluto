@@ -19,12 +19,14 @@ import math
 from .untilit import *
 
 # CONSTANTS
-GPS_POINTS = [
-    (34.841434, -82.411776),    # front-right corner
-    (34.841327, -82.411853),    # back-right corner
-    (34.841254, -82.411731),    # back-left corner
-    (34.841362, -82.411681)     # front-left corner
+WAYPOINTS = [
+        (34.841362, -82.411681),        # front-left corner
+        (34.841254, -82.411731),        # back-left corner
+        (34.841327, -82.411853),        # back-right corner
+        (34.841434, -82.411776),        # front-right corner
+        (34.841362, -82.411681),        # front-left corner (return to #1)
 ]
+WAYPOINT_RADIUS = 0.5
 
 class PhaseOneDemo(Node):
 
@@ -90,7 +92,7 @@ class PhaseOneDemo(Node):
         # (gps data is now available)
         # calculate goal poses (waypoints) from gps points (only runs the first time gps data is available)
         if len(self.pose_to_navigate) == 0:
-            for gps_tuple in GPS_POINTS:
+            for gps_tuple in WAYPOINTS:
                 goal_x, goal_y = calc_goal(
                     origin_lat=self.initial_gps.latitude,
                     origin_long=self.initial_gps.longitude,
@@ -136,7 +138,7 @@ class PhaseOneDemo(Node):
         #     tempPose.orientation.w = 0.7071068
 
         # UPDATE GOAL POSE WHEN REACHED
-        if(self.distance_remaining_from_goal < 0.5): # (within 0.5 of goal - close enough)
+        if(self.distance_remaining_from_goal < WAYPOINT_RADIUS): # (within radius of goal -> close enough)
             # If this is not the last pose to navigate
             if(self.current_pose_to_navigate_index + 1 < len(self.pose_to_navigate)):
                 # Set the next pose in self.pose_to_navigate
