@@ -26,6 +26,12 @@ FENCE_GPS_POINTS=[
         (34.8412136, -82.4116773),      # back-left corner
         (34.8413433, -82.4115738)       # front-left corner
 ]
+WAYPOINTS = [
+        (34.841434, -82.411776),    # front-right corner
+        (34.841327, -82.411853),    # back-right corner
+        (34.841254, -82.411731),    # back-left corner
+        (34.841362, -82.411681)     # front-left corner
+]
 MAP_IMAGE_POINTS = [
         (34.8416957, -82.4121168),      # top-left
         (34.8411813, -82.4112818)       # bottom-right
@@ -37,7 +43,7 @@ MAP_IMAGE_LOCATION = {
         "bottom": 34.8411813    # y2
 }
 PARENT_DIR = os.path.join("src", "Pluto", "customize_local_planner", "customize_local_planner")
-MAP_IMAGE_DIR = os.path.join(PARENT_DIR, "map.png")
+MAP_IMAGE_DIR = os.path.join(PARENT_DIR, "map2.png")
 
 
 class GPSPlotter(Node):
@@ -90,14 +96,22 @@ class GPSPlotter(Node):
                         x = [p[1] for p in FENCE_GPS_POINTS], # longitudes
                         y = [p[0] for p in FENCE_GPS_POINTS], # latitudes
                         color='white', 
-                        marker='x', 
+                        marker='o', 
                         label='Fence Corners'
                 )
                 # Plot the fence lines between the fence points
-                self.fence_lines, = self.ax.plot(
-                        [p[1] for p in FENCE_GPS_POINTS + [FENCE_GPS_POINTS[0]]],
-                        [p[0] for p in FENCE_GPS_POINTS + [FENCE_GPS_POINTS[0]]],
-                        color='red',
+                # self.fence_lines, = self.ax.plot(
+                #         [p[1] for p in FENCE_GPS_POINTS + [FENCE_GPS_POINTS[0]]],
+                #         [p[0] for p in FENCE_GPS_POINTS + [FENCE_GPS_POINTS[0]]],
+                #         color='red',
+                # )
+                # Plot the waypoints
+                self.waypoints_scatter = self.ax.scatter(
+                        x = [p[1] for p in WAYPOINTS], # longitudes
+                        y = [p[0] for p in WAYPOINTS], # latitudes
+                        color='red', 
+                        marker='x', 
+                        label='Waypoints'
                 )
                 # ANIMATION
                 self.animation = animation.FuncAnimation(
