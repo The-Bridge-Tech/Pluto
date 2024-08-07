@@ -10,18 +10,18 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 from nav_msgs.msg import Odometry, Path
+from custom_msgs.msg import WaypointMsg
 # CALCULATION MODULES
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.image as mpimg
 import matplotlib.patches as patches
-import numpy as np
 from threading import Thread
 import os
 
 # HELPER MODULES
 from .phase_one_demo import WAYPOINTS, WAYPOINT_RADIUS
-from .untilit import meters_to_gps_degrees
+from .untilit import meters_to_gps_degrees, haversine
 
 
 # CONSTANTS
@@ -76,6 +76,15 @@ class GPSPlotter(Node):
                         10
                 )
                 self.currentOdom = None
+                # Subscribe to waypoint ping topic
+                self.waypoint_ping_subscriber = self.create_subscription(
+                        WaypointMsg,
+                        "/waypoint_ping",
+                        self.waypoint_ping_callback,
+                        10
+                )
+                self.currentWaypointNumber = 1
+                self.currentDistance = None
                 # Timer to process current data (don't want to process each time data is received)
                 process_timer_period = 0.3
                 self.process_timer = self.create_timer(
@@ -151,7 +160,10 @@ class GPSPlotter(Node):
                 plt.xlabel('Longitude')
                 plt.ylabel('Latitude')
                 plt.title('Dynamic GPS Plotter')
-                # plt.show()
+        
+        # HELPERS
+        def getCurrentWaypoint(self) -> tuple:
+                return WAYPOINTS[self.currentWaypointNumber - 1]
 
         # CALLBACKS
         def gps_callback(self, gps_msg: NavSatFix):
@@ -160,6 +172,9 @@ class GPSPlotter(Node):
         def odom_callback(self, odom_msg: Odometry):
                 """Update current odometry."""
                 self.currentOdom = odom_msg
+        def waypoint_ping_callback(self, ping_msg: WaypointMsg):
+                """Update current waypoint number."""
+                self.currentWaypointNumber = ping_msg.waypoint_number
 
         # INTERVAL UPDATES
         def update_plot(self, frame):
@@ -167,6 +182,10 @@ class GPSPlotter(Node):
                 self.scatter.set_data(self.longitudes, self.latitudes)
                 self.ax.relim()
                 self.ax.autoscale_view()
+                # Redraw the figure canvas with the latest changes
+                self.fig.canvas.draw()
+                # Process any pending GUI events
+                self.fig.canvas.flush_events()
                 return self.scatter,
         def process(self):
                 """Process on an interval (timer) rather than every time data is received (when the subscriber callbacks are called)."""
@@ -174,8 +193,16 @@ class GPSPlotter(Node):
                 if self.currentGPS is None or self.currentOdom is None:
                         self.get_logger().info("Waiting for odom and gps data to be initalized.")
                         return
+                # Calculate distance from current gps to the current waypoint
+                currentWaypoint = self.getCurrentWaypoint()
+                self.currentDistance = haversine(
+                        lat1 = self.currentGPS.latitude,
+                        lon1 = self.currentGPS.longitude,
+                        lat2 = currentWaypoint[0],
+                        lon2 = currentWaypoint[1]
+                )
                 # (gps and odom data are available)
-                self.get_logger().info(f'Current GPS data: Lat: {self.currentGPS.latitude}, Lon: {self.currentGPS.longitude}')
+                self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {self.currentDistance}\t Waypoint #{self.currentWaypointNumber}')
                 # update latitudes and longitudes with current gps for plot
                 self.latitudes.append(self.currentGPS.latitude)
                 self.longitudes.append(self.currentGPS.longitude)
@@ -183,7 +210,6 @@ class GPSPlotter(Node):
 # MAIN
 def main(args=None):
         rclpy.init(args=args)
-
         gps_plotter = GPSPlotter()
 
         # spin the node in a separate thread since plt.show() blocks and is not thread-safe

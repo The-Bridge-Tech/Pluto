@@ -250,10 +250,27 @@ def calc_goal(origin_lat, origin_long, goal_lat, goal_long):
 
     # return x, y
 
-def meters_to_gps_degrees(meters, latitude):
-        # Approximate conversion from meters to degrees
+def meters_to_gps_degrees(meters: float, latitude: float) -> float:
+        """Approximate conversion from a distance in meters to gps degrees"""
         # 1 degree of latitude is approximately 111,320 meters
         lat_degree = meters / 111320
         # 1 degree of longitude varies with latitude
         lon_degree = meters / (111320 * np.cos(np.radians(latitude)))
         return max(lat_degree, lon_degree)  # Use the larger value to ensure the circle is visible
+
+def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculate the distance in meters between 2 gps points."""
+    # Convert latitude and longitude from degrees to radians
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    # Radius of the Earth in meters
+    R = 6371000
+    distance = R * c
+    
+    return distance
