@@ -26,7 +26,7 @@ WAYPOINTS = [
         (34.841434, -82.411776),        # front-right corner
         (34.841384, -82.411669),        # front-left corner (return to #1)
 ]
-WAYPOINT_RADIUS = 0.5
+WAYPOINT_RADIUS = 1.0
 
 class PhaseOneDemo(Node):
 
