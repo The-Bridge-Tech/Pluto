@@ -81,6 +81,7 @@ class PhaseOneDemo(Node):
         # Variables
         self.latest_odom: Odometry = None
         self.initial_gps: NavSatFix = None
+        self.current_gps: NavSatFix = None
         self.pose_to_navigate = []
         self.current_pose_to_navigate_index = 0
 
@@ -112,11 +113,17 @@ class PhaseOneDemo(Node):
         msg.data = False
         self.tuning_is_pure_pursuit_controller_mode_publisher.publish(msg)
 
-        current_pose = self.latest_odom.pose.pose.position # NOTE current position is determined from odometry
+        current_pose = self.latest_odom.pose.pose.position
         next_pose = self.pose_to_navigate[self.current_pose_to_navigate_index]
-        self.distance_remaining_from_goal = math.dist(
-            (current_pose.x, current_pose.y),
-            (next_pose[0], next_pose[1])
+        # self.distance_remaining_from_goal = math.dist(
+        #     (current_pose.x, current_pose.y),
+        #     (next_pose[0], next_pose[1])
+        # )
+        self.distance_remaining_from_goal = haversine(
+            self.current_gps.latitude,
+            self.current_gps.longitude,
+            WAYPOINTS[self.current_pose_to_navigate_index][0],
+            WAYPOINTS[self.current_pose_to_navigate_index][1]
         )
 
         self.ready_to_ping = True
@@ -148,12 +155,12 @@ class PhaseOneDemo(Node):
             else:
                 self.get_logger().info("Reached last waypoint!")
         
-        tempPose.position.x, tempPose.position.y = next_pose[0:2]
+        tempPose.position.x, tempPose.position.y = next_pose
 
         goalPosePoseStamp.pose = tempPose
         publishPath.poses =  [
             currentPosePoseStamp,
-            goalPosePoseStamp,
+            goalPosePoseStamp, # Why are all three of these the same?
             goalPosePoseStamp,
             goalPosePoseStamp
         ]
@@ -161,9 +168,10 @@ class PhaseOneDemo(Node):
         self.tuning_local_plan_publisher.publish(publishPath)
     
     def gps_fix_callback(self, gps_data: NavSatFix):
-        """Set initial gps data."""
+        """Set initial gps and update gps."""
         if self.initial_gps == None:
             self.initial_gps = gps_data
+        self.current_gps = gps_data
 
     def globalOdometryCallback(self, odom: Odometry):
         """Update global odometry."""
