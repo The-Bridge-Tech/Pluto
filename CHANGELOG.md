@@ -1,6 +1,22 @@
 # Changelog for Pluto
 
 
+## 2.6.2 (2024-08-09)
+* Calculate current distance from waypoint in gps_plotter node using haversine
+* Adjust first waypoint
+* Increase waypoint radius
+* Use gps instead of odom to calculate distance in phase_one_demo
+* Fix: waypoint number not updating issue
+
+## 2.6.1 (2024-08-03)
+* Add waypoints to gps plotter
+* Adjust gps plotter trail markers
+* Refactor: customize_local_planner
+
+## 2.6.0 (2024-08-03)
+* Add: gps plotter node
+* Add: new waypoints
+
 ## 2.5.7 (2024-08-01)
 * Add: changelog
 * Contributor: Matthew Lauriault
