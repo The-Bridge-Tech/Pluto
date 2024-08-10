@@ -1,5 +1,5 @@
 """
-Calculates tuning plan and publishes path to local_planner
+Publishes path with goal poses to local_planner node
 """
 
 
