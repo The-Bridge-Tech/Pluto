@@ -1,3 +1,8 @@
+"""
+Interprets joystick message from topic '/joy' and publishes interpreted message to topic '/cmd_vel'
+"""
+
+
 
 from operator import ne
 import rclpy

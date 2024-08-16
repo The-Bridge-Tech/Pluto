@@ -1,3 +1,8 @@
+"""
+Directly controls the servos using data from subscriptions to '/steering_right' and '/steering_left'
+"""
+
+
 # command to allow dmesg: sudo sysctl kernel.dmesg_restrict=0
 # command to see serial : dmesg | grep tty
 # get permission sudo chmod 666 /dev/ttyACM0

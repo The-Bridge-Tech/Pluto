@@ -1,3 +1,9 @@
+"""
+Gets interpreted joystick message from topic '/cmd_vel' (from JoystickInterpreter node) 
+and publishes the corresponding servo values (topics '/steering_left' and '/steering_right')
+"""
+
+
 import rclpy
 from rclpy.node import Node
 
