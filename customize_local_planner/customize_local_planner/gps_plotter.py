@@ -32,14 +32,14 @@ FENCE_GPS_POINTS=[
         (34.8413433, -82.4115738),      # front-left corner
 ]
 MAP_IMAGE_POINTS = [
-        (34.8416957, -82.4121168),      # top-left
-        (34.8411813, -82.4112818)       # bottom-right
+        (34.8414997, -82.4119735),      # top-left
+        (34.8411603, -82.4114941)       # bottom-right
 ]
 MAP_IMAGE_LOCATION = {
-        "left":  -82.4121168,           # x1
-        "right": -82.4112818,           # x2
-        "top":    34.8416957,           # y1
-        "bottom": 34.8411813,           # y2
+        "left":   MAP_IMAGE_POINTS[0][1],
+        "right":  MAP_IMAGE_POINTS[1][1],
+        "top":    MAP_IMAGE_POINTS[0][0],
+        "bottom": MAP_IMAGE_POINTS[1][0],
 }
 PARENT_DIR = os.path.join(
         "src", 
@@ -49,7 +49,7 @@ PARENT_DIR = os.path.join(
 )
 MAP_IMAGE_DIR = os.path.join(
         PARENT_DIR, 
-        "map2.png"
+        "map3.png"
 )
 
 
