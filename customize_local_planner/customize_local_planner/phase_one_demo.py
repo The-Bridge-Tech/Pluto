@@ -19,12 +19,19 @@ import math
 from .untilit import *
 
 # CONSTANTS
+OLD_WAYPOINTS = [
+    (34.841433, -82.411767),    # front-right corner
+    (34.841367, -82.411833),    # back-right corner
+    (34.841283, -82.411717),    # back-left corner
+    (34.841350, -82.411700),    # front-left corner
+    (34.841433, -82.411767),    # front-right corner (return to #1)
+]
 WAYPOINTS = [
-        (34.841384, -82.411669),        # front-left corner
-        (34.841254, -82.411731),        # back-left corner
-        (34.841327, -82.411853),        # back-right corner
-        (34.841434, -82.411776),        # front-right corner
-        (34.841384, -82.411669),        # front-left corner (return to #1)
+    (34.841384, -82.411669),    # front-left corner
+    (34.841254, -82.411731),    # back-left corner
+    (34.841327, -82.411853),    # back-right corner
+    (34.841434, -82.411776),    # front-right corner
+    (34.841384, -82.411669),    # front-left corner (return to #1)
 ]
 WAYPOINT_RADIUS = 1.0
 

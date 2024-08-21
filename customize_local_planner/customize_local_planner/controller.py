@@ -8,14 +8,15 @@ from .untilit import *
 
 
 class Controller:
+    
     def __init__(self, logger: RcutilsLogger) -> None:
         self.logger = logger
         self.direction: int = None
         self.angle_off_error: float = 0
         self.accumulate_error: float = 0
         self.previous_error: float = 0
-        self.left_value: int = 0
-        self.right_value: int = 0
+        self.left_pwm: int = 0
+        self.right_pwm: int = 0
     
     def angle_error_calculation(self, angle_difference_in_degree: float):      
         angle_error_from_goal = angle_difference_in_degree
@@ -37,31 +38,25 @@ class Controller:
             accumulate_error=self.accumulate_error 
         )
         # Initialize left and right pwm values
-        self.left_value = initial_pwm
-        self.right_value = initial_pwm
+        self.left_pwm = initial_pwm
+        self.right_pwm = initial_pwm
         # If there is angle off error, add the compensate value to the right value
         if(self.angle_off_error == 0):
             pass
         else:
-            self.right_value +=compensate_value
+            self.right_pwm += compensate_value
         
         # Set left and right pwm values
-        self.left_value = int(roundPwmValue(
+        self.left_pwm = int(roundPwmValue(
             max_pwm=max_pwm, 
             min_pwm=min_pwm, 
-            pwm_value=self.left_value
+            pwm_value=self.left_pwm
         ))
-        self.right_value = int(roundPwmValue(
+        self.right_pwm = int(roundPwmValue(
             max_pwm=max_pwm, 
             min_pwm=min_pwm, 
-            pwm_value=self.right_value
+            pwm_value=self.right_pwm
         ))
 
     def execute_movement(self, current_loc: Odometry, pose_to_navigate: PoseStamped, angle_difference_in_degree:float):
         pass
-
-    def left_pwm(self):
-        return self.left_value
-
-    def right_pwm(self):
-        return self.right_value

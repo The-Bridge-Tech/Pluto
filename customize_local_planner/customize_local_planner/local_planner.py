@@ -48,6 +48,7 @@ DEFAULT_PARAMS = {
 
 
 class LocalPlanner(Node):
+
     def __init__(self):
         super().__init__("local_planner", allow_undeclared_parameters=True)
 
@@ -149,31 +150,31 @@ class LocalPlanner(Node):
         # Variables
         self.forward_prediction_step_for_strategy_decision = 1
         self.waiting_for_initialization = True
-        self.current_local_planner_controller: Controller = None
+        self.current_controller: Controller = None
 
     
     # HELPERS
 
     def local_planner_processor(self):
         """Determines strategy -> sets controller based on strategy -> executes that controller's movement -> publishes left and right motor values"""
-        if (
-            self.current_odom is None 
-            or (not self.is_autonomous_state.data) 
-            or self.pose_to_navigate is None
-        ):
-            pass
-        else:
-            angle_difference_in_degree = self.determine_local_controller_strategy()
-            self.current_local_planner_controller.execute_movement(
-                current_loc=self.current_odom, 
-                pose_to_navigate=self.pose_to_navigate, 
-                angle_difference_in_degree=angle_difference_in_degree
-            )
-            self.publish_left_and_right_pwm()
+        if ((self.current_odom is None) or (not self.is_autonomous_state.data) or (self.pose_to_navigate is None)):
+            return
+        # update self.current_controller subclass (strategy) and return the difference between the following angles:
+        #   current heading from odometry
+        #   angle between current location and current goal pose
+        angle_difference_in_degree = self.determine_controller_strategy()
+        # update self.current_controller.left_pwm and .right_pwm
+        self.current_controller.execute_movement(
+            current_loc=self.current_odom, 
+            pose_to_navigate=self.pose_to_navigate, 
+            angle_difference_in_degree=angle_difference_in_degree
+        )
+        # publish self.current_controller.left_pwm and .right_pwm to '/steering_left' and '/steering_right' respectively
+        self.publish_left_and_right_pwm()
 
-    def determine_local_controller_strategy(self):
+    def determine_controller_strategy(self):
         """Determine the next strategy (straight, turn, or stop) based on the current angle difference.
-        Then set the controller based on the strategy with strategy_simple_factory()"""
+        Then set the controller based on the strategy with set_controller_strategy()"""
         
         # get robot's current heading
         current_robot_heading = calculateEulerAngleFromOdometry(self.current_odom)
@@ -202,22 +203,22 @@ class LocalPlanner(Node):
 
         if distance_diff < self.error_distance_tolerance:
             self.get_logger().info("Stop due to within tolerance error distance")
-            self.strategy_simple_factory("Stop")
+            self.set_controller_strategy("Stop")
         # NOTE this is where we turn when the angle difference is above the threshold
         elif abs(angle_diff) > self.moving_straight_angle_threshold:
             self.get_logger().info("PID Turning Due to angle difference")
-            self.strategy_simple_factory("PIDTurn")
+            self.set_controller_strategy("PIDTurn")
         # if the angle difference is below the threshold -> move straight
         else:
             self.get_logger().info("PID moving straight")
-            self.strategy_simple_factory("PIDStraight")
+            self.set_controller_strategy("PIDStraight")
         return angle_diff
 
-    def strategy_simple_factory(self, strategy: str):
+    def set_controller_strategy(self, strategy: str):
         """Update the current controller subclass (MovingStraightPIDController, TurningPIDController, or Stop) based on the strategy"""
         if strategy == "PIDStraight":
-            if not isinstance(self.current_local_planner_controller, MovingStraightPIDController):
-                self.current_local_planner_controller = MovingStraightPIDController(
+            if not isinstance(self.current_controller, MovingStraightPIDController):
+                self.current_controller = MovingStraightPIDController(
                     max_pwm=self.max_pwm,
                     min_pwm=self.min_pwm,
                     neutral_pwm=self.neutral_pwm,
@@ -228,11 +229,11 @@ class LocalPlanner(Node):
                     logger=self.get_logger()
                 )
         elif strategy == "PIDTurn":
-            if not isinstance(self.current_local_planner_controller, TurningPIDController):
+            if not isinstance(self.current_controller, TurningPIDController):
                 tuned_min_pwm = self.neutral_pwm -  int(  (self.neutral_pwm -  self.min_pwm)*0.3)
                 tuned_max_pwm = self.neutral_pwm +  int(    (self.max_pwm - self.neutral_pwm )*0.3)
                 self.get_logger().info("The tuned max {0} and min {1}".format(tuned_max_pwm, tuned_min_pwm))
-                self.current_local_planner_controller = TurningPIDController(
+                self.current_controller = TurningPIDController(
                     max_pwm=tuned_max_pwm,
                     min_pwm=tuned_min_pwm,
                     neutral_pwm=self.neutral_pwm,
@@ -243,8 +244,8 @@ class LocalPlanner(Node):
                     logger=self.get_logger(),
                 )
         elif strategy == "Stop":
-            if not isinstance(self.current_local_planner_controller, Stop):
-                self.current_local_planner_controller = Stop(
+            if not isinstance(self.current_controller, Stop):
+                self.current_controller = Stop(
                     neutral_pwm=self.neutral_pwm, 
                     logger=self.get_logger()
                 )
@@ -255,19 +256,14 @@ class LocalPlanner(Node):
 
     def publish_left_and_right_pwm(self):
         """Publishes left and right pwm values to the left and right motors."""
-        # self.get_logger().info(type(self.current_local_planner_controller.left_pwm()))
-        left_pwm_input = self.current_local_planner_controller.left_pwm()
-        right_pwm_input = self.current_local_planner_controller.right_pwm()
+        # self.get_logger().info(type(self.current_controller.left_pwm()))
+        left_pwm_input = self.current_controller.left_pwm
+        right_pwm_input = self.current_controller.right_pwm
 
-        left_pwm = UInt32()
-        left_pwm.data = left_pwm_input
-        right_pwm = UInt32()
-        right_pwm.data = right_pwm_input
+        self.left_wheel_pwm_publisher.publish(UInt32(data=left_pwm_input))
+        self.right_wheel_pwm_publisher.publish(UInt32(data=right_pwm_input))
 
-        self.left_wheel_pwm_publisher.publish(left_pwm)
-        self.right_wheel_pwm_publisher.publish(right_pwm)
-
-        self.get_logger().info("local planner info: {0}".format(repr(self.current_local_planner_controller)))
+        self.get_logger().info("local planner info: {0}".format(repr(self.current_controller)))
         self.get_logger().info(
             "left pwm {0} right pwm {1}".format(left_pwm_input, right_pwm_input)
         )
@@ -306,17 +302,17 @@ class LocalPlanner(Node):
             self.pose_to_navigate.pose.orientation.w = q[3]
 
     def local_plan_callback(self, loc_path: Path):
-        """Sets the pose the navigate to be the midpoint between the current location and the current waypoint"""
+        """Sets the goal pose to the middle pose in the path"""
         # NOTE: local plan includes the following locations:
         #   1. current location
-        #   2. midpoint between current location and current waypoint
+        #   2. middle pose in the path
         if self.is_pure_pursuit_mode.data == False:
             if len(loc_path.poses) == 0:
                 self.get_logger().warn("no local path plan has been created")
             else:
                 # right now, get the mid point of the path
-                mid_point = int(len(loc_path.poses)/2)
-                self.pose_to_navigate = loc_path.poses[mid_point]
+                mid_point = int(len(loc_path.poses)/2) # middle index
+                self.pose_to_navigate = loc_path.poses[mid_point] # this will always be the middle pose in the path
                 self.get_logger().info("local plan path has {0} poses left to navigate".format(len(loc_path.poses)))
             # if len(loc_path.poses) <= self.local_plan_step_size - 1:
             #     self.get_logger().info(
