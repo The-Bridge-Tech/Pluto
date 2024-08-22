@@ -57,6 +57,8 @@ class GPSPlotter(Node):
 
         def __init__(self):
                 super().__init__('gps_plotter')
+
+                # SUBSCRIBERS
                 # Subscribe to gps topic to get initial gps data
                 self.gps_subscriber = self.create_subscription(
                         NavSatFix, 
@@ -83,14 +85,18 @@ class GPSPlotter(Node):
                         self.waypoint_ping_callback,
                         10
                 )
+                self.lastWaypointNumber = 1
                 self.currentWaypointNumber = 1
                 self.currentDistance = None
+
+                # TIMERS
                 # Timer to process current data (don't want to process each time data is received)
                 process_timer_period = 0.3
                 self.process_timer = self.create_timer(
                         process_timer_period, 
                         self.process
                 )
+
                 # PLOT
                 # Load background image (map)
                 self.img = mpimg.imread(MAP_IMAGE_DIR)
@@ -99,87 +105,150 @@ class GPSPlotter(Node):
                         MAP_IMAGE_LOCATION["right"],
                         MAP_IMAGE_LOCATION["bottom"],
                         MAP_IMAGE_LOCATION["top"]
-                ]  # [left, right, bottom, top] in plot coordinates
+                ]
                 # Turn on interactive mode
                 plt.ion()
                 # Create figure and axes
                 self.fig, self.ax = plt.subplots()
                 # Show the background image
-                self.ax.imshow(self.img, extent=self.img_extent, aspect='auto')
+                self.ax.imshow(
+                        self.img, 
+                        extent=self.img_extent, 
+                        aspect='auto'
+                )
                 # Create plot for dynamic gps points (trail)
-                self.scatter, = self.ax.plot(
+                self.scatter = self.ax.plot(
                         [], # initially empty
                         [], # initially empty
                         color='blue', 
                         marker='o',
                         markersize=2,
                         label='Trail'
-                )
+                )[0] # get the first and only item in the list returned by Axes.plot()
+                self.current_position_scatter = self.ax.plot(
+                        [], # initially empty
+                        [], # initially empty
+                        color='cyan', 
+                        marker='+',
+                        markersize=10,
+                        label='Current Position'
+                )[0] # get the first and only item in the list returned by Axes.plot()
                 # Plot the fence corner points
                 self.fence_corners_scatter = self.ax.scatter(
                         x = [p[1] for p in FENCE_GPS_POINTS],   # longitudes
                         y = [p[0] for p in FENCE_GPS_POINTS],   # latitudes
-                        s = 3,                                  # marker-size
-                        color='white', 
+                        s = 5,                                  # marker-size
+                        color='black', 
                         marker='o', 
                         label='Fence Corners'
                 )
-                # Plot the fence lines between the fence points
-                # self.fence_lines, = self.ax.plot(
-                #         [p[1] for p in FENCE_GPS_POINTS + [FENCE_GPS_POINTS[0]]],
-                #         [p[0] for p in FENCE_GPS_POINTS + [FENCE_GPS_POINTS[0]]],
-                #         color='red',
-                # )
-                # Plot the waypoints
-                self.waypoints_scatter = self.ax.scatter(
-                        x = [p[1] for p in WAYPOINTS],  # longitudes
-                        y = [p[0] for p in WAYPOINTS],  # latitudes
-                        s = 2,                          # marker-size
+                # Plot the future waypoints
+                self.future_waypoints_scatter = self.ax.plot(
+                        [p[1] for p in WAYPOINTS[1:-1]],  # longitudes
+                        [p[0] for p in WAYPOINTS[1:-1]],  # latitudes
+                        'o',                              # only points, no lines
+                        color='white', 
+                        marker='o',
+                        markersize=2,
+                        label='Waypoints'
+                )[0] # get the first and only item in the list returned by Axes.plot()
+                # Plot the current waypoint
+                self.current_waypoint_scatter = self.ax.plot(
+                        [WAYPOINTS[0][1]],  # longitude
+                        [WAYPOINTS[0][0]],  # latitude
+                        'o',                # only points, no lines
                         color='red', 
                         marker='o',
-                        label='Waypoints'
-                )
+                        markersize=2,
+                        label='Current Waypoint'
+                )[0] # get the first and only item in the list returned by Axes.plot()
                 # Add radius circles around each waypoint
-                for waypoint in WAYPOINTS:
+                self.waypoint_radius_circles = list[patches.Circle]()
+                for waypoint in WAYPOINTS[:-1]:
                         circle = patches.Circle(
                                 (waypoint[1], waypoint[0]),  # (x=longitude, y=latitude)
                                 meters_to_gps_degrees(WAYPOINT_RADIUS, waypoint[0]),  # Convert meter radius to degrees
-                                edgecolor='red', 
+                                edgecolor='white', 
                                 facecolor='none', 
                                 # linestyle='--',
                         )
+                        self.waypoint_radius_circles.append(circle)
                         self.ax.add_patch(circle)
-                # ANIMATION
+                # Update the color of the radius circle around the current waypoint
+                self.waypoint_radius_circles[0].set_edgecolor('red')
+                # Allow the plot to be dynamic
                 self.animation = animation.FuncAnimation(
                         fig = self.fig, 
                         func = self.update_plot, 
                         interval=1000 # ms
                 )
-                # finish plot
+                # Finish plot
                 plt.legend()
                 plt.xlabel('Longitude')
                 plt.ylabel('Latitude')
                 plt.title('Dynamic GPS Plotter')
         
+
         # HELPERS
+
         def getCurrentWaypoint(self) -> tuple:
                 return WAYPOINTS[self.currentWaypointNumber - 1]
+        
+        def updateWaypoints(self):
+                if self.currentWaypointNumber > self.lastWaypointNumber:
+                        self.current_waypoint_scatter.set_data(
+                                [self.getCurrentWaypoint()[1]], # longitude
+                                [self.getCurrentWaypoint()[0]]  # latitude
+                        )
+                        self.future_waypoints_scatter.set_data(
+                                [p[1] for p in WAYPOINTS[self.currentWaypointNumber:-1]],  # longitudes
+                                [p[0] for p in WAYPOINTS[self.currentWaypointNumber:-1]],  # latitudes
+                        )
+                        for i, circle in enumerate(self.waypoint_radius_circles):
+                                n = i + 1 # waypoint number
+                                # if this belongs to the last reached waypoint
+                                if n == self.lastWaypointNumber:
+                                        circle.set_edgecolor('green')
+                                # if this belongs to the current waypoint
+                                elif n == self.currentWaypointNumber:
+                                        circle.set_edgecolor('red')
+                        self.lastWaypointNumber = self.currentWaypointNumber
+
 
         # CALLBACKS
+
         def gps_callback(self, gps_msg: NavSatFix):
                 """Update current GPS."""
                 self.currentGPS = gps_msg
+
         def odom_callback(self, odom_msg: Odometry):
                 """Update current odometry."""
                 self.currentOdom = odom_msg
+
         def waypoint_ping_callback(self, ping_msg: WaypointMsg):
                 """Update current waypoint number."""
-                self.currentWaypointNumber = ping_msg.waypoint_number
+                if ping_msg.waypoint_number > self.currentWaypointNumber:
+                        self.currentWaypointNumber = ping_msg.waypoint_number
+
 
         # INTERVAL UPDATES
+
         def update_plot(self, frame):
                 """Update scatter plot with gps points."""
-                self.scatter.set_data(self.longitudes, self.latitudes)
+                # If there are dynamic gps points to plot
+                if self.latitudes and self.longitudes:
+                        # Update all points (trail)
+                        self.scatter.set_data(
+                                self.longitudes,
+                                self.latitudes
+                        )
+                        # Update the last point (current position)
+                        self.current_position_scatter.set_data(
+                                self.longitudes[-1:], 
+                                self.latitudes[-1:]
+                        )
+                # Update the current waypoint
+                self.updateWaypoints()
                 self.ax.relim()
                 self.ax.autoscale_view()
                 # Redraw the figure canvas with the latest changes
@@ -187,6 +256,7 @@ class GPSPlotter(Node):
                 # Process any pending GUI events
                 self.fig.canvas.flush_events()
                 return self.scatter,
+
         def process(self):
                 """Process on an interval (timer) rather than every time data is received (when the subscriber callbacks are called)."""
                 # Wait until gps and odom data have been received
@@ -207,7 +277,9 @@ class GPSPlotter(Node):
                 self.latitudes.append(self.currentGPS.latitude)
                 self.longitudes.append(self.currentGPS.longitude)
 
+
 # MAIN
+
 def main(args=None):
         rclpy.init(args=args)
         gps_plotter = GPSPlotter()
