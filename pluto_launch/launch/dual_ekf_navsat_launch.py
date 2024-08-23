@@ -30,6 +30,7 @@ def generate_launch_description():
             'output_location',
             default_value='~/dual_ekf_navsat_example_debug.txt'),
 
+        # filters /odometry/local
         launch_ros.actions.Node(
             package='robot_localization',
             executable='ekf_node',
@@ -38,6 +39,7 @@ def generate_launch_description():
             parameters=[ekf_navsat_config],
             remappings=[('odometry/filtered', 'odometry/local')]
         ),
+        # filters /odometry/global
         launch_ros.actions.Node(
             package='robot_localization',
             executable='ekf_node',
@@ -46,19 +48,20 @@ def generate_launch_description():
             parameters=[ekf_navsat_config],
             remappings=[('odometry/filtered', 'odometry/global')]
         ),
+        # publishes odometry data using gps and imu topics
         launch_ros.actions.Node(
             package='robot_localization',
             executable='navsat_transform_node',
             name='navsat_transform',
             output='screen',
             parameters=[ekf_navsat_config],
-            remappings=[#('imu', 'imu/data_raw'),
-                        ('gps/fix', 'fix/filtered'),
-                        ('gps/filtered', 'gps/filtered'),
-                        ('odometry/gps', 'odometry/gps'),
-                        ('odometry/filtered', 'odometry/global'),
-                        ('imu','imu/data')
-                        ]
-
+            remappings=[
+                #('imu', 'imu/data_raw'),
+                ('gps/fix', 'fix/filtered'),
+                ('gps/filtered', 'gps/filtered'),
+                ('odometry/gps', 'odometry/gps'),
+                ('odometry/filtered', 'odometry/global'),
+                ('imu','imu/data')
+            ]
         )
     ])

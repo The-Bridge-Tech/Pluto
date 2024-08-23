@@ -157,6 +157,7 @@ class LocalPlanner(Node):
 
     def local_planner_processor(self):
         """Determines strategy -> sets controller based on strategy -> executes that controller's movement -> publishes left and right motor values"""
+        # wait until /odometry/global has been subscribed, /is_autonomous_mode has been subscribed as True, and /local_plan has been subscribed
         if ((self.current_odom is None) or (not self.is_autonomous_state.data) or (self.pose_to_navigate is None)):
             return
         # update self.current_controller subclass (strategy) and return the difference between the following angles:

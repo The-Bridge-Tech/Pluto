@@ -24,7 +24,7 @@ def calculateEulerAngleFromOdometry(odom: Odometry):
     # angle = rpy[2]*(180/pi)
     # if(angle < 0):
     #     angle +=360
-    return math.degrees(rpy[2])
+    return math.degrees(rpy[2]) # rpy[2] = yaw (orientation around the vertical axis)
     return angle
 
 def calculateEulerAngleFromPoseStamped(pose: PoseStamped):
