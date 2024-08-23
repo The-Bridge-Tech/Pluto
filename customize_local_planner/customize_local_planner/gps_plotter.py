@@ -18,10 +18,11 @@ import matplotlib.image as mpimg
 import matplotlib.patches as patches
 from threading import Thread
 import os
+import math
 
 # HELPER MODULES
 from .phase_one_demo import WAYPOINTS, WAYPOINT_RADIUS
-from .untilit import meters_to_gps_degrees, haversine
+from .untilit import meters_to_gps_degrees, haversine, calculateEulerAngleFromOdometry
 
 
 # CONSTANTS
@@ -51,6 +52,7 @@ MAP_IMAGE_DIR = os.path.join(
         PARENT_DIR, 
         "map3.png"
 )
+HEADING_LINE_LENGTH = 0.000025
 
 
 class GPSPlotter(Node):
@@ -131,6 +133,7 @@ class GPSPlotter(Node):
                         color='cyan', 
                         marker='+',
                         markersize=10,
+                        markeredgewidth=2,
                         label='Current Position'
                 )[0] # get the first and only item in the list returned by Axes.plot()
                 # Plot the fence corner points
@@ -176,6 +179,8 @@ class GPSPlotter(Node):
                         self.ax.add_patch(circle)
                 # Update the color of the radius circle around the current waypoint
                 self.waypoint_radius_circles[0].set_edgecolor('red')
+                # Initialize heading line
+                self.heading_line = None
                 # Allow the plot to be dynamic
                 self.animation = animation.FuncAnimation(
                         fig = self.fig, 
@@ -214,6 +219,31 @@ class GPSPlotter(Node):
                                         circle.set_edgecolor('red')
                         self.lastWaypointNumber = self.currentWaypointNumber
 
+        def getCurrentHeading(self) -> float:
+                return calculateEulerAngleFromOdometry(self.currentOdom)
+        
+        def drawHeadingLine(self):
+                # Remove previous heading line
+                if self.heading_line:
+                        self.heading_line.remove()
+                # Get start point
+                start_x = self.longitudes[-1] # current longitude
+                start_y = self.latitudes[-1] # current latitude
+                # Calculate x and y change based on the heading
+                heading_rad = math.radians(self.getCurrentHeading())
+                dx = HEADING_LINE_LENGTH * math.cos(heading_rad)
+                dy = HEADING_LINE_LENGTH * math.sin(heading_rad)
+                # Calculate end point by adding the change to start point
+                end_x = start_x + dx
+                end_y = start_y + dy
+                # Draw the line indicating the heading direction
+                self.heading_line, = self.ax.plot(
+                        [start_x, end_x], 
+                        [start_y, end_y], 
+                        color='red',
+                        linewidth=2
+                )
+
 
         # CALLBACKS
 
@@ -247,6 +277,10 @@ class GPSPlotter(Node):
                                 self.longitudes[-1:], 
                                 self.latitudes[-1:]
                         )
+                        # If odom data is available (for heading)
+                        if self.currentOdom:
+                                # Re-draw heading line
+                                self.drawHeadingLine()
                 # Update the current waypoint
                 self.updateWaypoints()
                 self.ax.relim()
@@ -263,8 +297,8 @@ class GPSPlotter(Node):
                 if self.currentGPS is None or self.currentOdom is None:
                         self.get_logger().info("Waiting for odom and gps data to be initalized.")
                         return
-                # Calculate distance from current gps to the current waypoint
                 currentWaypoint = self.getCurrentWaypoint()
+                # Calculate distance from current gps to the current waypoint
                 self.currentDistance = haversine(
                         lat1 = self.currentGPS.latitude,
                         lon1 = self.currentGPS.longitude,
