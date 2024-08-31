@@ -14,6 +14,7 @@ from custom_msgs.msg import WaypointMsg
 
 # CALCULATION MODULES
 import math
+import time
 
 # HELPER MODULES
 from .untilit import *
@@ -125,6 +126,8 @@ class PhaseOneDemo(Node):
                 self.get_logger().info(f"Reached waypoint #{self.pose_i + 1}")
             else:
                 self.get_logger().info("Reached last waypoint!")
+            # Stop for 2 seconds before going to next waypoint
+            time.sleep(2)
 
     def get_goal_pose(self) -> tuple:
         """Return the current goal pose."""
@@ -170,6 +173,7 @@ class PhaseOneDemo(Node):
         if not self.is_autonomous_mode:
             self.get_logger().info("Waiting for autonomous mode.")
             return
+        self.ready_to_ping = True
         # If the goal poses need to be calculated
         if len(self.goal_poses) == 0:
             self.calculate_goal_poses()
@@ -248,8 +252,8 @@ class PhaseOneDemo(Node):
         # if autonomous to manual -> reset
         if self.is_autonomous_mode and not msg.data:
             self.reset()
+            self.ready_to_ping = False
         self.is_autonomous_mode = msg.data
-        self.ready_to_ping = msg.data
 
 
 # MAIN
