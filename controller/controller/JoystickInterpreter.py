@@ -33,14 +33,32 @@ from std_msgs.msg import Bool
 #TODO: change later
 
 
+# CONSTANTS
+BUTTONS = {
+    'Y': 0,
+    'B': 1,
+    'A': 2,
+    'X': 3,
+    'L1': 4,
+    'R1': 5,
+    'L2': 6,
+    'R2': 7,
+    'SELECT': 8,
+    'START': 9,
+    'LEFT JOYSTICK PUSH IN': 10,
+    'RIGHT JOYSTICK PUSH IN': 11,
+    'HOME': 12,
+}
+
+
 class JoystickInterpreter(Node):
     
-    def __init__(self, mode:int) -> None:
+    def __init__(self, mode: int) -> None:
         super().__init__("joystick_interpreter")
-        self.mode  = mode # mode of joystick
+        self.mode = mode # mode of joystick
 
+        # PARAMETERS
         self.define_parameters()
-            # call parameters 
         self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
         self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
         self.RIGHT_MAX = self.get_parameter("RIGHT_MAX").get_parameter_value().integer_value
@@ -56,33 +74,39 @@ class JoystickInterpreter(Node):
         self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
         self.PUBLISH_RATE = self.get_parameter('PUBLISH_RATE').get_parameter_value().integer_value
         
-        
-
+        # SUBSCRIBERS
+        self.joy_sub = self.create_subscription(
+            Joy,
+            'joy',
+            self.joy_callback,
+            10
+        )
         self.last_joy_message = Joy()
-        self.last_cmd_vel_joy_message : Twist = Twist()
-
-        self.twist_msg = Twist()
-        self.joy_subscription = self.create_subscription(
-                Joy,'joy',self.joy_listerner,10)
         
-        
-        
-        
+        # CMD_VEL
         # publish the command from joystick to cmd_vel
-        self.cmd_vel_publisher = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.cmd_vel_publisher = self.create_publisher(
+            Twist, 
+            'cmd_vel', 
+            10
+        )
         cmd_vel_publisher_period =1/self.PUBLISH_RATE # seconds
-        self.cmd_vel_timer = self.create_timer(cmd_vel_publisher_period, self.interpret_message)
+        self.cmd_vel_timer = self.create_timer(
+            cmd_vel_publisher_period, 
+            self.interpret_message
+        )
         
+        # AUTONOMOUS MODE
         # publish change of state for 'A' button, which suppose to change back and forth between joystick and autonomous
-        self.autonomous_button_change_publisher = self.create_publisher(Bool, 'autonomous_button', 1)
-        self.autonomous_button_counter=0 # 0 means did not turn on, 
+        self.is_autonomous_mode_publisher = self.create_publisher(
+            Bool, 
+            'is_autonomous_mode', 
+            10
+        )
+        self.is_autonomous_mode = False
+        self.button_states = [0] * len(BUTTONS)
 
-        self.is_autonomous_mode_indicator = Bool()
-    
-        self.is_autonomous_mode_subscription = self.create_subscription(
-            Bool, 'is_autonomous_mode', self.autonomous_mode_listerner,1)
-        
-        
+        # JOYSTICK MODE
         if mode == 1:
             # setup listerner for mode 1
             # this case, we listen to /joy topic
@@ -92,17 +116,18 @@ class JoystickInterpreter(Node):
             # setup listerner for mode 2
             self.cmd_joy_subscription = self.create_subscription(
                 Twist,
-            'cmd_vel_joy',
-            self.cmd_vel_joy_listerner,
-            10)
-
-
+                'cmd_vel_joy',
+                self.cmd_vel_joy_callback,
+                10
+            )
+            self.last_cmd_vel_joy_message = Twist()
+            self.twist_msg = Twist()
         else:
-            raise ValueError("Unknown mode in joystick_interpret")
+            raise ValueError("Unknown mode in joystick_interpreter")
         
 
-        
-        
+    # HELPERS
+
     def define_parameters(self)->None:
         self.declare_parameter('LEFT_NEUTRAL', 0)
         self.declare_parameter('RIGHT_NEUTRAL',0)
@@ -117,8 +142,7 @@ class JoystickInterpreter(Node):
         self.declare_parameter('KNOW_LEFT_FULL_FORWARD_SPEED',1.514 )
         self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
         self.declare_parameter('PUBLISH_RATE',30)
-        
-        
+
     def calculate_pwm_from_axis(self, axis: float, neutral, min, max):
         if axis == 0:
             return neutral
@@ -126,68 +150,31 @@ class JoystickInterpreter(Node):
             return neutral + abs(axis) *(max-neutral)
             #return axis * (max-neutral)
         else:
-            # when aixs <0
+            # when axis <0
             return neutral  - abs(axis) * (neutral - min)
             #return abs(abs(axis) * (neutral-min)) - min
         
-    def autonomous_mode_listerner(self, mes:Bool)->None:
-        self.is_autonomous_mode_indicator = mes
-        
-        
-    def joy_listerner(self, message:Joy) ->None:
-        if(message.buttons[0] == 1):
-            # self.get_logger().info("here")
-            if self.autonomous_button_counter == 0:
-                self.autonomous_button_counter = 1         
-                # k  = Bool()
-                # k.data=True
-                # self.autonomous_button_change_publisher.publish(k)
-                # self.autonomous_button_counter = 0
-            # else:
-            #     self.autonomous_button_counter += 1
-        else:
-            if self.autonomous_button_counter == 1:
-                self.autonomous_button_counter = 0
-                k  = Bool()
-                k.data=True
-                self.autonomous_button_change_publisher.publish(k)
-        #self.get_logger().info("autonomousButtonIndicator" + str(self.autonomous_button_counter))
-        self.last_joy_message = message
-        
-    
-    def cmd_vel_joy_listerner(self, message:Twist) -> None:
-        # x =  self.last_twist_message.linear.x
-        # yaw = self.last_twist_message.angular.z
-        #self.get_logger().info("Publish " + str(x) + " and " + str(yaw))
-        self.last_cmd_vel_joy_message = message
-            
-        # x =  self.last_twist_message.linear.x
-        # yaw = self.last_twist_message.angular.z
-        # print(x, yaw)
-        
     def interpret_message(self):
-        
-        # only interpret if is_autonomous_indicator == FAlse
-        if self.is_autonomous_mode_indicator.data == False:
+        # only interpret if not in autonomous mode
+        if not self.is_autonomous_mode:
             if self.mode == 1:
                 self._interpret_mode_one(self.last_joy_message)
             elif self.mode == 2:
                 self._interpret_mode_two(self.last_cmd_vel_joy_message)
         # else, means it is autonomous_mode now, simply ignore everything.
        
-            
-    def _interpret_mode_two(self, last_twist_message:Twist) -> None:
+    def _interpret_mode_two(self, last_twist_msg:Twist) -> None:
         # as of right now, just publish what we heard
         
-        # final_velocity_x = (last_twist_message.linear.x/ MAX_X_VELOCITY) * (last_joy_message.axes[4]/ MAX_ALLOWED_X_VELOCITY)
-        # final_velocity_yaw= (last_twist_message.angular.z/ MAX_YAW_VELOCITY) *(last_joy_message.axes[4]/ MAX_ALLOWED_YAW_VELOCITY)  
+        # final_velocity_x = (last_twist_msg.linear.x/ MAX_X_VELOCITY) * (last_joy_message.axes[4]/ MAX_ALLOWED_X_VELOCITY)
+        # final_velocity_yaw= (last_twist_msg.angular.z/ MAX_YAW_VELOCITY) *(last_joy_message.axes[4]/ MAX_ALLOWED_YAW_VELOCITY)  
         
         # self.twist_msg.linear.x = final_velocity_x
         # self.twist_msg.angular.z = final_velocity_yaw
-        # x =  last_twist_message.linear.x
-        # yaw = last_twist_message.angular.z
+        # x =  last_twist_msg.linear.x
+        # yaw = last_twist_msg.angular.z
         #self.get_logger().info("Publish cmd vel")
-        self.twist_msg = last_twist_message
+        self.twist_msg = last_twist_msg
         self.cmd_vel_publisher.publish(self.twist_msg)
         
     def _interpret_mode_one(self, message: Joy)->None:
@@ -211,7 +198,6 @@ class JoystickInterpreter(Node):
         left_velocity =  calculate_velocity_from_pwm2(left_pwm,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
         right_velocity =  calculate_velocity_from_pwm2(right_pwm,self.KNOW_RIGHT_FULL_FORWARD_SPEED, self.KNOW_RIGHT_FULL_BACKWARD_SPEED, self.RIGHT_MAX, self.RIGHT_MIN, self.RIGHT_NEUTRAL)
         
-        
         # self.get_logger().info('left velocity: ' + str(left_velocity))
         # self.get_logger().info('right velocity: ' + str(right_velocity))
         # print("Velocity left" + str(left_velocity))
@@ -220,33 +206,63 @@ class JoystickInterpreter(Node):
         velocity_x = ( self.WHEEL_RADIUS*left_velocity) + (self.WHEEL_RADIUS*right_velocity - self.WHEEL_RADIUS*left_velocity)/2
         velocity_yaw = (right_velocity*self.WHEEL_RADIUS - left_velocity*self.WHEEL_RADIUS) / self.WHEEL_SEPARATION
         
-
-        
         self.twist_msg.linear.x = velocity_x
         self.twist_msg.angular.z = velocity_yaw
         self.cmd_vel_publisher.publish(self.twist_msg)
         
+
+    # BUTTON HELPERS
+
+    def getButtonState(self, msg: Joy, button_name: str) -> int:
+        return msg.buttons[BUTTONS[button_name]]
+    
+    def getLastButtonState(self, button_name: str) -> int:
+        return self.button_states[BUTTONS[button_name]]
+    
+    def updateButtonStates(self, msg: Joy):
+        self.button_states = msg.buttons
+
+    def isButtonRelease(self, msg: Joy, button_name: str):
+        return self.getLastButtonState(button_name) == 1 and self.getButtonState(msg, button_name) == 0
+
+
+    # SUBSCRIBER CALLBACKS
         
+    def joy_callback(self, msg: Joy) -> None:
+        """Handle button presses. Only do action on button release."""
+        # "A" button -> toggle autonomous mode
+        if self.isButtonRelease(msg, 'A'):
+            # toggle autonomous mode
+            self.is_autonomous_mode = not self.is_autonomous_mode
+            # publish the new state of the mode
+            self.is_autonomous_mode_publisher.publish(Bool(data=self.is_autonomous_mode))
+            self.get_logger().info(f'autonomous mode set to {self.is_autonomous_mode}')
+        # Update button states
+        self.updateButtonStates(msg)
+        self.last_joy_message = msg
 
+    def cmd_vel_joy_callback(self, message: Twist) -> None:
+        # x =  self.last_twist_message.linear.x
+        # yaw = self.last_twist_message.angular.z
+        #self.get_logger().info("Publish " + str(x) + " and " + str(yaw))
+        self.last_cmd_vel_joy_message = message
+            
+        # x =  self.last_twist_message.linear.x
+        # yaw = self.last_twist_message.angular.z
+        # print(x, yaw)
 
+# MAIN
 
 def main(args=None):
-
     rclpy.init(args=args)
 
-    #TODO: modify later, right now is in mode 1
     joy_interpreter = JoystickInterpreter(mode=2)
 
     rclpy.spin(joy_interpreter)
-  
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     joy_interpreter.destroy_node()
     rclpy.shutdown()
 
 
 if __name__ == '__main__':
-
     main()

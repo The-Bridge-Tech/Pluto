@@ -42,7 +42,7 @@ class OdomPlotter(Node):
 
                 # TIMERS
                 # Timer to process current data (don't want to process each time data is received)
-                process_timer_period = 0.3 # seconds
+                process_timer_period = 0.1 # seconds
                 self.process_timer = self.create_timer(
                         process_timer_period, 
                         self.process

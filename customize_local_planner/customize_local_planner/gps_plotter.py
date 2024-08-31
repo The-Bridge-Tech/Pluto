@@ -93,7 +93,7 @@ class GPSPlotter(Node):
 
                 # TIMERS
                 # Timer to process current data (don't want to process each time data is received)
-                process_timer_period = 0.3
+                process_timer_period = 0.1 # seconds
                 self.process_timer = self.create_timer(
                         process_timer_period, 
                         self.process
@@ -185,8 +185,10 @@ class GPSPlotter(Node):
                 self.animation = animation.FuncAnimation(
                         fig = self.fig, 
                         func = self.update_plot, 
-                        interval=1000 # ms
+                        interval=process_timer_period*1000 # ms
                 )
+                # Only update plot if there is new data
+                self.new_data = False
                 # Finish plot
                 plt.legend()
                 plt.xlabel('Longitude')
@@ -265,8 +267,8 @@ class GPSPlotter(Node):
 
         def update_plot(self, frame):
                 """Update scatter plot with gps points."""
-                # If there are dynamic gps points to plot
-                if self.latitudes and self.longitudes:
+                # If there are new gps points to plot
+                if self.new_data:
                         # Update all points (trail)
                         self.scatter.set_data(
                                 self.longitudes,
@@ -281,6 +283,7 @@ class GPSPlotter(Node):
                         if self.currentOdom:
                                 # Re-draw heading line
                                 self.drawHeadingLine()
+                        self.new_data = False
                 # Update the current waypoint
                 self.updateWaypoints()
                 self.ax.relim()
@@ -307,9 +310,16 @@ class GPSPlotter(Node):
                 )
                 # (gps and odom data are available)
                 self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {self.currentDistance}\t Waypoint #{self.currentWaypointNumber}')
-                # update latitudes and longitudes with current gps for plot
-                self.latitudes.append(self.currentGPS.latitude)
-                self.longitudes.append(self.currentGPS.longitude)
+                # if this is the first update
+                if len(self.latitudes) == 0 and len(self.longitudes) == 0:
+                        self.new_data = True
+                else:
+                        # if new gps data is different from the last update
+                        self.new_data = self.currentGPS.latitude != self.latitudes[-1] or self.currentGPS.longitude != self.longitudes[-1]
+                if self.new_data:
+                        # update latitudes and longitudes with current gps for plot
+                        self.latitudes.append(self.currentGPS.latitude)
+                        self.longitudes.append(self.currentGPS.longitude)
 
 
 # MAIN

@@ -35,8 +35,9 @@ class ControllerNode(Node):
 
     def __init__(self):
         super().__init__('controller_node')
+
+        # PARAMETERS
         self.define_parameters()
-        # call parameters 
         self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
         self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
         self.RIGHT_MAX = self.get_parameter("RIGHT_MAX").get_parameter_value().integer_value
@@ -52,8 +53,17 @@ class ControllerNode(Node):
         self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
         self.PUBLISH_RATE = self.get_parameter('PUBLISH_RATE').get_parameter_value().integer_value
         
-        self.right_server_publisher = self.create_publisher(UInt32, 'steering_right', 10)
-        self.left_server_publisher = self.create_publisher(UInt32, 'steering_left', 10)        
+        # PUBLISHERS
+        self.right_server_publisher = self.create_publisher(
+            UInt32, 
+            'steering_right', 
+            10
+        )
+        self.left_server_publisher = self.create_publisher(
+            UInt32, 
+            'steering_left', 
+            10
+        )        
         #self.differential_raw_twist_publisher = self.create_publisher(TwistStamped, 'differential_raw_twist', 10)
         
         timer_period = 1/self.PUBLISH_RATE  # publish speed
@@ -62,35 +72,32 @@ class ControllerNode(Node):
         #self.differential_raw_twist_timer = self.create_timer(timer_period, self.differential_raw_twist_callback)
         self.i = 0
     
-    
         self.new_left_pwm = UInt32()
         self.new_right_pwm = UInt32()
         self.differential_twist  = TwistStamped()
         self.differential_twist_frame_id = "differential_twist"
         
-
-
         # set the servo to neutral at startup
         self.new_left_pwm.data = self.LEFT_NEUTRAL
         self.new_right_pwm.data = self.RIGHT_NEUTRAL
-        
-        # subscribe to cmd_vel 
-        self.cmd_vel_subscription = self.create_subscription(
-            Twist, 'cmd_vel', self.listen_cmd_vel_callback, 10
+
+        # SUBSCRIBERS
+        self.cmd_vel_sub = self.create_subscription(
+            Twist, 
+            'cmd_vel', 
+            self.cmd_vel_callback, 
+            10
         )
-        self.cmd_vel_subscription
-        
-        # subscribte to 'autonomous_button'
-        
-        self.autonomous_button_subscription = self.create_subscription(
-            Bool, 'autonomous_button', self.listen_autonomous_button_callback, 10
+        self.is_autonomous_mode_sub = self.create_subscription(
+            Bool, 
+            "is_autonomous_mode", 
+            self.is_autonomous_mode_callback, 
+            10
         )
-        # publish the if is in autonomous state
-        self.is_autonomous_state = Bool()
-        self.is_autonomous_state.data = False
-        self.is_autonomous_state_publisher =  self.create_publisher(Bool, 'is_autonomous_mode', 10)
-        self.is_autonomous_state_publisher_timer = self.create_timer(1, self.publish_autonomous_mode)
-        
+        self.is_autonomous_mode = False
+    
+
+    # HELPERS
     
     def define_parameters(self)->None:
         self.declare_parameter('LEFT_NEUTRAL', 0)
@@ -110,20 +117,15 @@ class ControllerNode(Node):
         self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
         self.declare_parameter('PUBLISH_RATE',30)
 
-    def publish_autonomous_mode(self):
-        self.is_autonomous_state_publisher.publish(self.is_autonomous_state)
-    def listen_autonomous_button_callback(self, mes:Bool):
-        if(mes.data == True):
-            if self.is_autonomous_state.data == False:
-                self.is_autonomous_state.data = True
-            else:
-                self.is_autonomous_state.data = False
 
-        
+    # SUBSCRIBER CALLBACKS
+
+    def is_autonomous_mode_callback(self, msg: Bool):
+        self.is_autonomous_mode = msg.data
         
     # interpret from cmd_vel to both left&right servo
-    def listen_cmd_vel_callback(self, message:Twist):
-        if self.is_autonomous_state.data == False:
+    def cmd_vel_callback(self, msg: Twist):
+        if not self.is_autonomous_mode:
             # do math to update the pwm
             
             # calculate left and right wheel's velocity base on 
@@ -135,8 +137,8 @@ class ControllerNode(Node):
             # https://answers.ros.org/question/334022/how-to-split-cmd_vel-into-left-and-right-wheel-of-2wd-robot/
             # https://answers.ros.org/question/308340/exact-rotational-speed-of-a-wheel/
             
-            velocity_x = message.linear.x
-            velocity_yaw = message.angular.z
+            velocity_x = msg.linear.x
+            velocity_yaw = msg.angular.z
             
 
             
@@ -206,19 +208,17 @@ class ControllerNode(Node):
     #     self.differential_raw_twist_publisher.publish(self.differential_twist)
         
     def right_servero_timer_callback(self):
-        """
-        Publish pwm value to '/steering_right'
-        """
+        """Publish right servo value to '/steering_right'"""
         self.right_server_publisher.publish(self.new_right_pwm)
         #self.get_logger().info("Publish " + str(self.new_right_pwm.data) + " to right servero")
     
     def left_servero_time_callback(self):
-        """
-        Publish pwm value to '/steering_left'
-        """
+        """Publish left servo value to '/steering_left'"""
         self.left_server_publisher.publish(self.new_left_pwm)
         #self.get_logger().info("Publish " + str(self.new_left_pwm.data) + " to left servero")
 
+
+# MAIN
 
 def main(args=None):
     rclpy.init(args=args)
@@ -227,9 +227,6 @@ def main(args=None):
 
     rclpy.spin(controller_node)
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
     controller_node.destroy_node()
     rclpy.shutdown()
 

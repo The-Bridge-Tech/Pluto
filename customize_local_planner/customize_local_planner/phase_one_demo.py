@@ -39,20 +39,16 @@ class PhaseOneDemo(Node):
 
     def __init__(self):
         super().__init__('PhaseOneDemo')
-        # Publishers
-        self.tuning_plan_publisher = self.create_publisher(
+
+        # PUBLISHERS
+        self.plan_publisher = self.create_publisher(
             Path, 
             "local_plan",
             10
         )
-        self.tuning_is_pure_pursuit_controller_mode_publisher = self.create_publisher(
+        self.is_pure_pursuit_controller_mode_publisher = self.create_publisher(
             Bool, 
             "is_pure_pursuit_controller_mode", 
-            10
-        )
-        self.tuning_is_autonomous_mode_publisher = self.create_publisher(
-            Bool, 
-            "is_autonomous_mode", 
             10
         )
         self.ping_publisher = self.create_publisher(
@@ -60,20 +56,32 @@ class PhaseOneDemo(Node):
             "/waypoint_ping",
             10
         )
-        # Subscribers
+
+        # SUBSCRIBERS
         self.odom_sub = self.create_subscription(
             Odometry, 
             "odometry/global", 
             self.globalOdometryCallback, 
             10
         )
+        self.current_odom: Odometry = None
         self.gps_sub = self.create_subscription(
             NavSatFix, 
             "/fix", 
             self.gps_fix_callback, 
             10
         )
-        # Timers
+        self.initial_gps: NavSatFix = None
+        self.current_gps: NavSatFix = None
+        self.is_autonomous_mode_sub = self.create_subscription(
+            Bool, 
+            "is_autonomous_mode",
+            self.is_autonomous_mode_callback,
+            10
+        )
+        self.is_autonomous_mode = False
+
+        # TIMERS
         timer_period = 0.3  # seconds
         self.timer = self.create_timer(
             timer_period, 
@@ -85,12 +93,9 @@ class PhaseOneDemo(Node):
             ping_timer_period,
             self.publish_waypoint_ping
         )
-        # Variables
-        self.current_odom: Odometry = None
-        self.initial_gps: NavSatFix = None
-        self.current_gps: NavSatFix = None
-        self.goal_poses = []
-        self.pose_i = 0
+
+        # Initialize goal poses and current goal pose
+        self.reset()
 
 
     # HELPERS
@@ -107,6 +112,7 @@ class PhaseOneDemo(Node):
                 self.get_logger().info(f"""Distance to navigate to from origin({self.initial_gps.latitude}, {self.initial_gps.longitude}) to goal{waypoint} with distance ({goal_x},{goal_y})""")
                 self.get_logger().info(f"Current gps is ({self.initial_gps.latitude}, {self.initial_gps.longitude}), distance is ({goal_x}, {goal_y}) from waypoint {len(self.goal_poses)+1}")
                 self.goal_poses.append((goal_x, goal_y))
+        self.get_logger().info("Calculated goal poses.")
 
     def update_goal_pose(self):
         """Update goal pose when current goal is reached."""
@@ -145,23 +151,31 @@ class PhaseOneDemo(Node):
             gps_distance_from_goal
         )
 
+    def reset(self):
+        """Reset goal poses and current goal pose."""
+        self.goal_poses = []
+        self.pose_i = 0
+        self.get_logger().info("Reset.")
+
 
     # PUBLISHER CALLBACKS
 
     def publish_tuning_plan(self):
         """Publish path based on the current goal pose to local_planner node."""
-        if self.current_odom == None or self.initial_gps == None:
+        # Wait for odom and gps data
+        if self.current_odom is None or self.initial_gps is None:
             self.get_logger().info("Waiting for odom and gps data to be initalized.")
             return
-        # (gps data is now available)
-        self.ready_to_ping = True
-        # calculate goal poses (waypoints) from gps points (only runs the first time gps data is available)
+        # Wait for autonomous mode to be True
+        if not self.is_autonomous_mode:
+            self.get_logger().info("Waiting for autonomous mode.")
+            return
+        # If the goal poses need to be calculated
         if len(self.goal_poses) == 0:
             self.calculate_goal_poses()
 
-        # change mode from pure_pursuit_controller to autonomous
-        self.tuning_is_autonomous_mode_publisher.publish(Bool(data=True))
-        self.tuning_is_pure_pursuit_controller_mode_publisher.publish(Bool(data=False))
+        # Set pure_pursuit_controller mode to False
+        self.is_pure_pursuit_controller_mode_publisher.publish(Bool(data=False))
 
         # calculate the current distance from goal
         self.calculate_distance_from_goal()
@@ -195,7 +209,7 @@ class PhaseOneDemo(Node):
             ]
         )
         # PUBLISH PATH TO LOCAL_PLANNER
-        self.tuning_plan_publisher.publish(path)
+        self.plan_publisher.publish(path)
 
     def publish_waypoint_ping(self):
         """Publish waypoint info to splunk_logger node and gps_plotter node."""
@@ -228,6 +242,14 @@ class PhaseOneDemo(Node):
     def globalOdometryCallback(self, odom: Odometry):
         """Update global odometry."""
         self.current_odom = odom
+
+    def is_autonomous_mode_callback(self, msg: Bool):
+        """Update if in autonomous mode."""
+        # if autonomous to manual -> reset
+        if self.is_autonomous_mode and not msg.data:
+            self.reset()
+        self.is_autonomous_mode = msg.data
+        self.ready_to_ping = msg.data
 
 
 # MAIN
