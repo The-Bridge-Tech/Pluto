@@ -52,10 +52,10 @@ class LocalPlanner(Node):
     def __init__(self):
         super().__init__("local_planner", allow_undeclared_parameters=True)
 
+        # PARAMETERS
         # declare all parameters with default values
         for name, value in DEFAULT_PARAMS.items():
             self.declare_parameter(name, value)
-            
         # load parameter values from YAML file (pluto_launch/config/local_planner.yaml)
         load_param = lambda param_name: self.get_parameter(param_name).get_parameter_value()
         # STRATEGY: MOVING STRAIGHT
@@ -79,27 +79,14 @@ class LocalPlanner(Node):
         self.autonomous_controller_frequency = load_param("autonomous_controller_frequency").integer_value
         self.error_distance_tolerance = load_param("error_distance_tolerance").double_value
         self.local_plan_step_size = load_param("local_plan_step_size").integer_value
-        
-        #TODO:
-        self.turning_pid_filter_counter = 0  #TODO NEED documentation later
-        # some variable
-        self.current_odom: Odometry = None
-        self.is_autonomous_state: Bool = Bool()
-        self.is_autonomous_state.data = False
-        self.coverage_area_end_pose: PoseStamped = None
-        self.is_pure_pursuit_mode: Bool = Bool()
-        self.is_pure_pursuit_mode.data = True  # TODO: subscribe topic to update this
 
-        self.pose_to_navigate: PoseStamped = None
-
-
-        # Timer for interval processing
+        # TIMER - for interval processing
         self.autonomous_controller_process_timer = self.create_timer(
             1 / self.autonomous_controller_frequency, 
             self.local_planner_processor
         )
 
-        # Publishers
+        # PUBLISHERS
         self.left_wheel_pwm_publisher = self.create_publisher(
             UInt32, 
             "/steering_left", 
@@ -111,17 +98,26 @@ class LocalPlanner(Node):
             10
         )
 
-        # Subscribers
+        # SUBSCRIBERS
         self.odom_sub = self.create_subscription(
             Odometry, 
             "/odometry/global", 
             self.odom_callback, 
             10
         )
-        self.is_autonomous_state_sub = self.create_subscription(
+        self.current_odom: Odometry = None
+        self.is_autonomous_mode_sub = self.create_subscription(
             Bool, 
             "is_autonomous_mode", 
-            self.is_autonomous_state_callback, 10
+            self.is_autonomous_mode_callback, 
+            10
+        )
+        self.is_autonomous_mode = False
+        self.local_plan = self.create_subscription(
+            Path, 
+            "local_plan", 
+            self.local_plan_callback, 
+            10
         )
         self.coverage_area_end_pose_sub = self.create_subscription(
             PoseStamped,
@@ -129,36 +125,40 @@ class LocalPlanner(Node):
             self.coverage_area_end_pose_callback,
             10,
         )
+        self.coverage_area_end_pose: PoseStamped = None
         self.pure_pursuit_goal_pose_sub = self.create_subscription(
             PointStamped, 
             "/lookahead_point", 
             self.pure_pursuit_goal_pose_callback, 
             10
         )
-        self.local_plan = self.create_subscription(
-            Path, 
-            "local_plan", 
-            self.local_plan_callback, 
-            10
-        )
         self.is_pure_pursuit_mode_sub = self.create_subscription(
             Bool, 
             "is_pure_pursuit_controller_mode", 
-            self.is_pure_pursuit_mode_callback, 10
+            self.is_pure_pursuit_mode_callback, 
+            10
         )
+        self.is_pure_pursuit_mode = True  # TODO: subscribe topic to update this
 
-        # Variables
-        self.forward_prediction_step_for_strategy_decision = 1
-        self.waiting_for_initialization = True
+        # VARIABLES
         self.current_controller: Controller = None
+        self.pose_to_navigate: PoseStamped = None
+
+        # set servos to neutral position
+        self.publish_neutral_pwm()
 
     
     # HELPERS
 
     def local_planner_processor(self):
         """Determines strategy -> sets controller based on strategy -> executes that controller's movement -> publishes left and right motor values"""
-        # wait until /odometry/global has been subscribed, /is_autonomous_mode has been subscribed as True, and /local_plan has been subscribed
-        if ((self.current_odom is None) or (not self.is_autonomous_state.data) or (self.pose_to_navigate is None)):
+        # wait until /odometry/global and /local_plan have been subscribed
+        if self.current_odom is None or self.pose_to_navigate is None:
+            self.get_logger().info("Waiting for odom and local_plan data to be initialized.")
+            return
+        # wait for autonomous mode to be True
+        if not self.is_autonomous_mode:
+            self.get_logger().info("Waiting for autonomous mode.")
             return
         # update self.current_controller subclass (strategy) and return the difference between the following angles:
         #   current heading from odometry
@@ -251,12 +251,10 @@ class LocalPlanner(Node):
                     logger=self.get_logger()
                 )
         else:
-            self.get_logger().warn(
-                "Strategy choice {0} is not provided".format(strategy)
-            )
+            self.get_logger().warn(f"Strategy choice {strategy} is not provided")
 
     def publish_left_and_right_pwm(self):
-        """Publishes left and right pwm values to the left and right motors."""
+        """Publishes left and right pwm values to the left and right servos."""
         # self.get_logger().info(type(self.current_controller.left_pwm()))
         left_pwm_input = self.current_controller.left_pwm
         right_pwm_input = self.current_controller.right_pwm
@@ -264,10 +262,15 @@ class LocalPlanner(Node):
         self.left_wheel_pwm_publisher.publish(UInt32(data=left_pwm_input))
         self.right_wheel_pwm_publisher.publish(UInt32(data=right_pwm_input))
 
-        self.get_logger().info("local planner info: {0}".format(repr(self.current_controller)))
-        self.get_logger().info(
-            "left pwm {0} right pwm {1}".format(left_pwm_input, right_pwm_input)
-        )
+        self.get_logger().info(f"Current controller: {self.current_controller}")
+        self.get_logger().info(f"left pwm: {left_pwm_input} right pwm: {right_pwm_input}")
+
+    def publish_neutral_pwm(self):
+        """Publish neutral pwm values to the left and right servos."""
+        self.left_wheel_pwm_publisher.publish(UInt32(data=0))
+        self.right_wheel_pwm_publisher.publish(UInt32(data=0))
+        self.get_logger().info("Servos set to neutral.")
+
 
 
     # SUBSCRIBER CALLBACKS
@@ -275,39 +278,19 @@ class LocalPlanner(Node):
     def odom_callback(self, global_odom: Odometry):
         self.current_odom: Odometry = global_odom
 
-    def is_autonomous_state_callback(self, state: Bool):
-        self.is_autonomous_state = state
+    def is_autonomous_mode_callback(self, msg: Bool):
+        # if autonomous to manual or manual to autonomous -> set servos to neutral
+        if self.is_autonomous_mode ^ msg.data:
+            self.publish_neutral_pwm()
+        self.is_autonomous_mode = msg.data
 
-    def coverage_area_end_pose_callback(self, pose: PoseStamped):
-        self.coverage_area_end_pose = pose
-
-    def is_pure_pursuit_mode_callback(self, val: Bool):
-        self.is_pure_pursuit_mode = val
-
-    def pure_pursuit_goal_pose_callback(self, pose: PointStamped):
-        if self.is_pure_pursuit_mode.data == True:
-            self.pose_to_navigate = PoseStamped()
-            goal_x = pose.point.x
-            goal_y = pose.point.y
-
-            #TODO: possibly don't need to calculate the angle
-            euler_angle = atan2(goal_y, goal_x)
-
-            #q = quaternion_from_euler(0, euler_angle, 0)
-            self.pose_to_navigate.pose.position.x = goal_x
-            self.pose_to_navigate.pose.position.y = goal_y
-            q = tf_transformations.quaternion_from_euler(0.0,0.0,math.radians(euler_angle))
-            self.pose_to_navigate.pose.orientation.x = q[0]
-            self.pose_to_navigate.pose.orientation.y = q[1]
-            self.pose_to_navigate.pose.orientation.z = q[2]
-            self.pose_to_navigate.pose.orientation.w = q[3]
 
     def local_plan_callback(self, loc_path: Path):
         """Sets the goal pose to the middle pose in the path"""
         # NOTE: local plan includes the following locations:
         #   1. current location
         #   2. middle pose in the path
-        if self.is_pure_pursuit_mode.data == False:
+        if not self.is_pure_pursuit_mode:
             if len(loc_path.poses) == 0:
                 self.get_logger().warn("no local path plan has been created")
             else:
@@ -324,6 +307,32 @@ class LocalPlanner(Node):
             #     self.get_logger().info("local plan path has total {0} pose".format(len(loc_path.poses)))
             #     self.pose_to_navigate = loc_path.poses[self.local_plan_step_size - 1]
 
+    def coverage_area_end_pose_callback(self, pose: PoseStamped):
+        self.coverage_area_end_pose = pose
+
+    def is_pure_pursuit_mode_callback(self, msg: Bool):
+        self.is_pure_pursuit_mode = msg.data
+
+    def pure_pursuit_goal_pose_callback(self, pose: PointStamped):
+        if self.is_pure_pursuit_mode:
+            self.pose_to_navigate = PoseStamped()
+            goal_x = pose.point.x
+            goal_y = pose.point.y
+
+            #TODO: possibly don't need to calculate the angle
+            euler_angle = atan2(goal_y, goal_x)
+
+            #q = quaternion_from_euler(0, euler_angle, 0)
+            self.pose_to_navigate.pose.position.x = goal_x
+            self.pose_to_navigate.pose.position.y = goal_y
+            q = tf_transformations.quaternion_from_euler(0.0,0.0,math.radians(euler_angle))
+            self.pose_to_navigate.pose.orientation.x = q[0]
+            self.pose_to_navigate.pose.orientation.y = q[1]
+            self.pose_to_navigate.pose.orientation.z = q[2]
+            self.pose_to_navigate.pose.orientation.w = q[3]
+
+
+# MAIN
 
 def main(args=None):
     rclpy.init(args=args)
