@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
-package_name = 'customize_local_planner'
+package_name = 'gps_offset'
 
 setup(
     name=package_name,
@@ -20,11 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'localPlanner = customize_local_planner.local_planner:main',
-            'pidTuning = customize_local_planner.pid_tuning_tool:main',
-            'phaseOne = customize_local_planner.phase_one_demo:main',
-            'gps_plotter = customize_local_planner.gps_plotter:main',
-            'odom_plotter = customize_local_planner.odom_plotter:main'
+                'gps_offsetter = gps_offset.gps_offsetter:main'
         ],
     },
 )

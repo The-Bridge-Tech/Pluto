@@ -19,7 +19,7 @@ class GPSFilter(Node):
         self.gps_filtered_message = self.create_publisher(NavSatFix, "fix/filtered",10)
         self.gps_velocity_odom = self.create_publisher(TwistWithCovarianceStamped, '/twist/gps_vel',10)
         
-        self.gps_fix_sub = self.create_subscription(NavSatFix, "/fix", self.update_gps_fix_covariance,10)
+        self.gps_fix_sub = self.create_subscription(NavSatFix, "/fix/offset", self.update_gps_fix_covariance,10)
         self.gps_vel_sub = self.create_subscription(TwistStamped, "/vel", self.generate_gps_vel,10)
         # timer_period = 0.1  # seconds
         # self.timer = self.create_timer(timer_period, self.message_filter_callback)

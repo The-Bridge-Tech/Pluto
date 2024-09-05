@@ -68,7 +68,7 @@ class PhaseOneDemo(Node):
         self.current_odom: Odometry = None
         self.gps_sub = self.create_subscription(
             NavSatFix, 
-            "/fix", 
+            "/fix/offset", 
             self.gps_fix_callback, 
             10
         )
@@ -237,11 +237,13 @@ class PhaseOneDemo(Node):
 
     # SUBSCRIBER CALLBACKS
     
-    def gps_fix_callback(self, gps_data: NavSatFix):
-        """Set initial gps and update gps."""
-        if self.initial_gps == None:
-            self.initial_gps = gps_data
-        self.current_gps = gps_data
+    def gps_fix_callback(self, msg: NavSatFix):
+        """Update initial and current GPS."""
+        # Wait for autonous mode -> then get initial gps
+        if self.is_autonomous_mode:
+            if not self.initial_gps:
+                self.initial_gps = msg
+            self.current_gps = msg
 
     def globalOdometryCallback(self, odom: Odometry):
         """Update global odometry."""

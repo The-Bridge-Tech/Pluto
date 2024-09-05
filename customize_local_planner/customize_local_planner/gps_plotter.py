@@ -61,17 +61,28 @@ class GPSPlotter(Node):
                 super().__init__('gps_plotter')
 
                 # SUBSCRIBERS
-                # Subscribe to gps topic to get initial gps data
-                self.gps_subscriber = self.create_subscription(
+                # Subscribe to original gps topic
+                self.gps_sub = self.create_subscription(
                         NavSatFix, 
                         "/fix", 
                         self.gps_callback, 
                         10
                 )
                 self.currentGPS = None
-                # For storing GPS coordinates
+                # For storing original GPS coordinates
                 self.latitudes = []
                 self.longitudes = []
+                # Subscribe to offset gps topic
+                self.offset_gps_sub = self.create_subscription(
+                        NavSatFix, 
+                        "/fix/offset", 
+                        self.offset_gps_callback, 
+                        10
+                )
+                self.offsetGPS = None
+                # For storing offset (corrected) GPS coordinates
+                self.offset_latitudes = []
+                self.offset_longitudes = []
                 # Subscribe to odometry topic
                 self.odom_subscriber = self.create_subscription(
                         Odometry, 
@@ -118,14 +129,23 @@ class GPSPlotter(Node):
                         extent=self.img_extent, 
                         aspect='auto'
                 )
-                # Create plot for dynamic gps points (trail)
-                self.scatter = self.ax.plot(
+                # Create plot for original gps points (trail)
+                self.original_scatter = self.ax.plot(
+                        [], # initially empty
+                        [], # initially empty
+                        color='purple', 
+                        marker='o',
+                        markersize=2,
+                        label='Original Trail'
+                )[0] # get the first and only item in the list returned by Axes.plot()
+                # Create plot for offset (corrected) gps points (trail)
+                self.offset_scatter = self.ax.plot(
                         [], # initially empty
                         [], # initially empty
                         color='blue', 
                         marker='o',
                         markersize=2,
-                        label='Trail'
+                        label='Offset Trail'
                 )[0] # get the first and only item in the list returned by Axes.plot()
                 self.current_position_scatter = self.ax.plot(
                         [], # initially empty
@@ -189,6 +209,7 @@ class GPSPlotter(Node):
                 )
                 # Only update plot if there is new data
                 self.new_data = False
+                self.new_offset_data = False
                 # Finish plot
                 plt.legend()
                 plt.xlabel('Longitude')
@@ -224,13 +245,13 @@ class GPSPlotter(Node):
         def getCurrentHeading(self) -> float:
                 return calculateEulerAngleFromOdometry(self.currentOdom)
         
-        def drawHeadingLine(self):
+        def drawHeadingLine(self, current_lat: float, current_lon: float):
                 # Remove previous heading line
                 if self.heading_line:
                         self.heading_line.remove()
                 # Get start point
-                start_x = self.longitudes[-1] # current longitude
-                start_y = self.latitudes[-1] # current latitude
+                start_x = current_lon # current longitude
+                start_y = current_lat # current latitude
                 # Calculate x and y change based on the heading
                 heading_rad = math.radians(self.getCurrentHeading())
                 dx = HEADING_LINE_LENGTH * math.cos(heading_rad)
@@ -249,41 +270,70 @@ class GPSPlotter(Node):
 
         # CALLBACKS
 
-        def gps_callback(self, gps_msg: NavSatFix):
+        def gps_callback(self, msg: NavSatFix):
                 """Update current GPS."""
-                self.currentGPS = gps_msg
+                self.currentGPS = msg
 
-        def odom_callback(self, odom_msg: Odometry):
+        def offset_gps_callback(self, msg: NavSatFix):
+                """Update current GPS with offset"""
+                self.offsetGPS = msg
+
+        def odom_callback(self, msg: Odometry):
                 """Update current odometry."""
-                self.currentOdom = odom_msg
+                self.currentOdom = msg
 
-        def waypoint_ping_callback(self, ping_msg: WaypointMsg):
+        def waypoint_ping_callback(self, msg: WaypointMsg):
                 """Update current waypoint number."""
-                if ping_msg.waypoint_number > self.currentWaypointNumber:
-                        self.currentWaypointNumber = ping_msg.waypoint_number
+                if msg.waypoint_number > self.currentWaypointNumber:
+                        self.currentWaypointNumber = msg.waypoint_number
 
 
         # INTERVAL UPDATES
 
         def update_plot(self, frame):
                 """Update scatter plot with gps points."""
-                # If there are new gps points to plot
+                # If there is new original gps data
                 if self.new_data:
-                        # Update all points (trail)
-                        self.scatter.set_data(
+                        # Update all original gps points (trail)
+                        self.original_scatter.set_data(
                                 self.longitudes,
                                 self.latitudes
                         )
+                        # If there are not offset gps points yet
+                        if self.offsetGPS is None:
+                                # Update the last point (current position)
+                                self.current_position_scatter.set_data(
+                                        self.longitudes[-1:], 
+                                        self.latitudes[-1:]
+                                )
+                                # If odom data is available (for heading)
+                                if self.currentOdom:
+                                        # Re-draw heading line
+                                        self.drawHeadingLine(
+                                                current_lat = self.latitudes[-1],
+                                                current_lon = self.longitudes[-1]
+                                        )
+                        self.new_data = False
+                # If there is new offset gps data
+                if self.new_offset_data:
+                        # Update all offset (corrected) gps points (trail)
+                        self.offset_scatter.set_data(
+                                self.offset_longitudes,
+                                self.offset_latitudes
+                        )
                         # Update the last point (current position)
                         self.current_position_scatter.set_data(
-                                self.longitudes[-1:], 
-                                self.latitudes[-1:]
+                                self.offset_longitudes[-1:], 
+                                self.offset_latitudes[-1:]
                         )
                         # If odom data is available (for heading)
                         if self.currentOdom:
                                 # Re-draw heading line
-                                self.drawHeadingLine()
-                        self.new_data = False
+                                self.drawHeadingLine(
+                                        current_lat = self.offset_latitudes[-1],
+                                        current_lon = self.offset_longitudes[-1]
+                                )
+                        self.new_offset_data = False
                 # Update the current waypoint
                 self.updateWaypoints()
                 self.ax.relim()
@@ -292,7 +342,7 @@ class GPSPlotter(Node):
                 self.fig.canvas.draw()
                 # Process any pending GUI events
                 self.fig.canvas.flush_events()
-                return self.scatter,
+                return self.original_scatter,
 
         def process(self):
                 """Process on an interval (timer) rather than every time data is received (when the subscriber callbacks are called)."""
@@ -310,6 +360,7 @@ class GPSPlotter(Node):
                 )
                 # (gps and odom data are available)
                 self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {self.currentDistance}\t Waypoint #{self.currentWaypointNumber}')
+               
                 # if this is the first update
                 if len(self.latitudes) == 0 and len(self.longitudes) == 0:
                         self.new_data = True
@@ -320,6 +371,19 @@ class GPSPlotter(Node):
                         # update latitudes and longitudes with current gps for plot
                         self.latitudes.append(self.currentGPS.latitude)
                         self.longitudes.append(self.currentGPS.longitude)
+                
+                # if offset data has been received yet
+                if self.offsetGPS:
+                        # if this is the first update with offset data
+                        if len(self.offset_latitudes) == 0 and len(self.offset_longitudes) == 0:
+                                self.new_offset_data = True
+                        else:
+                                # if new offset gps data is different from the last update
+                                self.new_offset_data = self.offsetGPS.latitude != self.latitudes[-1] or self.offsetGPS.longitude != self.longitudes[-1]
+                        if self.new_offset_data:
+                                # update offset latitudes and longitudes with current offset gps for plot
+                                self.offset_latitudes.append(self.offsetGPS.latitude)
+                                self.offset_longitudes.append(self.offsetGPS.longitude)
 
 
 # MAIN
