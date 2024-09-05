@@ -267,8 +267,8 @@ class LocalPlanner(Node):
 
     def publish_neutral_pwm(self):
         """Publish neutral pwm values to the left and right servos."""
-        self.left_wheel_pwm_publisher.publish(UInt32(data=0))
-        self.right_wheel_pwm_publisher.publish(UInt32(data=0))
+        self.left_wheel_pwm_publisher.publish(UInt32(data=self.neutral_pwm))
+        self.right_wheel_pwm_publisher.publish(UInt32(data=self.neutral_pwm))
         self.get_logger().info("Servos set to neutral.")
 
 
