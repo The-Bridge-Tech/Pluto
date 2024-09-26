@@ -1,21 +1,59 @@
 # Changelog for Pluto
 
 
+## 2.8.0 (2024-09-05)
+* Add: GPS offset correction relative to fixed point
+* Contributor: Matthew Lauriault
+
+## 2.7.2 (2024-09-05)
+* Fix: neutral pwm value in local_planner logic
+* Contributor: Matthew Lauriault
+
+## 2.7.1 (2024-08-31)
+* Fix: set servos to neutral position on startup and mode change
+* Fix: disable movement while in autonomous mode
+* Refactor: controller package
+* Fix: stop for 2 seconds upon reaching a waypoint
+* Contributor: Matthew Lauriault
+
+## 2.7.0 (2024-08-23)
+* Add: current waypoint indicator on gps plot graph
+* Add: current heading direction on gps plot graph
+* Add: odometry plotter node
+* Add: documentation for odometry plotter node
+* Contributor: Matthew Lauriault
+
+## 2.6.4 (2024-08-22)
+* Refactor: customize_local_planner package
+* Resize map on gps plot graph
+* Remove: old autonomous method from launch file
+* Contributor: Matthew Lauriault
+
+## 2.6.3 (2024-08-16)
+* Refactor: phase_one_demo node
+* Refactor: arduino_controller node
+* Fix: local_planner processor logic
+* Refactor: add headers to files in controller package
+* Contributor: Matthew Lauriault
+
 ## 2.6.2 (2024-08-09)
 * Calculate current distance from waypoint in gps_plotter node using haversine
 * Adjust first waypoint
 * Increase waypoint radius
 * Use gps instead of odom to calculate distance in phase_one_demo
 * Fix: waypoint number not updating issue
+* Contributor: Matthew Lauriault
 
 ## 2.6.1 (2024-08-03)
 * Add waypoints to gps plotter
 * Adjust gps plotter trail markers
 * Refactor: customize_local_planner
+* Contributor: Matthew Lauriault
 
 ## 2.6.0 (2024-08-03)
 * Add: gps plotter node
 * Add: new waypoints
+* Contributor: Matthew Lauriault
 
 ## 2.5.7 (2024-08-01)
 * Add: changelog
