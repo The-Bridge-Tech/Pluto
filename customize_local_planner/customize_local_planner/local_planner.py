@@ -42,7 +42,7 @@ DEFAULT_PARAMS = {
 
     # OTHER
     'autonomous_controller_frequency': 10,
-    'error_distance_tolerance': 0.5,
+    'distance_error_tolerance': 0.5,
     'local_plan_step_size': 1,
 }
 
@@ -77,7 +77,7 @@ class LocalPlanner(Node):
         self.neutral_pwm = load_param("neutral_pwm").integer_value
         # OTHER
         self.autonomous_controller_frequency = load_param("autonomous_controller_frequency").integer_value
-        self.error_distance_tolerance = load_param("error_distance_tolerance").double_value
+        self.distance_error_tolerance = load_param("distance_error_tolerance").double_value
         self.local_plan_step_size = load_param("local_plan_step_size").integer_value
 
         # TIMER - for interval processing
@@ -180,39 +180,42 @@ class LocalPlanner(Node):
         # get robot's current heading
         current_robot_heading = calculateEulerAngleFromOdometry(self.current_odom)
         
+        # get robot's current position
         start_pose_x = self.current_odom.pose.pose.position.x
         start_pose_y = self.current_odom.pose.pose.position.y
+
+        # get robot's goal position
         goal_pose_x = self.pose_to_navigate.pose.position.x
         goal_pose_y = self.pose_to_navigate.pose.position.y
-
-        temp = math.degrees(math.atan2(round(goal_pose_y,2), round(goal_pose_x,2)))
     
+        # calculate difference between current angle and goal angle
         angle_diff = angle_difference_in_degree(
             current_angle_in_degree = current_robot_heading,
             goal_position_x = goal_pose_x, 
             goal_position_y = goal_pose_y
         )
         
+        # calculate distance between current position and goal position
         distance_diff  = math.dist( 
             [start_pose_x, start_pose_y], 
             [goal_pose_x, goal_pose_y]
         )
 
-        self.get_logger().info("Angle difference is {0} for start position x:{1} y{2} end position x:{3} y{4}  robotHeading {5} \n".format( 
-            angle_diff, start_pose_x, start_pose_y, goal_pose_x, goal_pose_y, current_robot_heading
-        ))
+        self.get_logger().info(f"Angle difference: {angle_diff}\tCurrent Pos: ({start_pose_x}, {start_pose_y})\tGoal Pos: ({goal_pose_x}, {goal_pose_y})\tHeading: {current_robot_heading} \n")
 
-        if distance_diff < self.error_distance_tolerance:
-            self.get_logger().info("Stop due to within tolerance error distance")
+        # If distance within error tolerance -> Stop
+        if distance_diff < self.distance_error_tolerance:
+            self.get_logger().info("Distance within error tolerance -> Stop")
             self.set_controller_strategy("Stop")
-        # NOTE this is where we turn when the angle difference is above the threshold
+        # Angle difference above threshold -> PIDTurn
         elif abs(angle_diff) > self.moving_straight_angle_threshold:
-            self.get_logger().info("PID Turning Due to angle difference")
+            self.get_logger().info("Angle difference above threshold -> PID Turning")
             self.set_controller_strategy("PIDTurn")
-        # if the angle difference is below the threshold -> move straight
+        # Distance and angle are good -> PIDStraight
         else:
-            self.get_logger().info("PID moving straight")
+            self.get_logger().info("PID Moving Straight")
             self.set_controller_strategy("PIDStraight")
+        # Return the angle difference
         return angle_diff
 
     def set_controller_strategy(self, strategy: str):
@@ -231,8 +234,9 @@ class LocalPlanner(Node):
                 )
         elif strategy == "PIDTurn":
             if not isinstance(self.current_controller, TurningPIDController):
-                tuned_min_pwm = self.neutral_pwm -  int(  (self.neutral_pwm -  self.min_pwm)*0.3)
-                tuned_max_pwm = self.neutral_pwm +  int(    (self.max_pwm - self.neutral_pwm )*0.3)
+                # Scale down the pwm range to 30%
+                tuned_min_pwm = self.neutral_pwm - int((self.neutral_pwm - self.min_pwm) * 0.3)
+                tuned_max_pwm = self.neutral_pwm + int((self.max_pwm - self.neutral_pwm) * 0.3)
                 self.get_logger().info("The tuned max {0} and min {1}".format(tuned_max_pwm, tuned_min_pwm))
                 self.current_controller = TurningPIDController(
                     max_pwm=tuned_max_pwm,
@@ -251,7 +255,7 @@ class LocalPlanner(Node):
                     logger=self.get_logger()
                 )
         else:
-            self.get_logger().warn(f"Strategy choice {strategy} is not provided")
+            self.get_logger().warn(f"Strategy '{strategy}' is not provided")
 
     def publish_left_and_right_pwm(self):
         """Publishes left and right pwm values to the left and right servos."""
