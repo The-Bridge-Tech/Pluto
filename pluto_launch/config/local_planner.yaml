@@ -14,6 +14,7 @@ local_planner:
     turning_kd: 0.7
     turning_ki: 0.5
     turning_prediction_step: 1
+    turning_angle_tolerance: 5
 
     # PWM
     max_pwm: 1765
@@ -22,5 +23,5 @@ local_planner:
 
     # OTHER
     autonomous_controller_frequency: 10
-    error_distance_tolerance: 0.5
+    distance_error_tolerance: 1.0
     local_plan_step_size: 1
