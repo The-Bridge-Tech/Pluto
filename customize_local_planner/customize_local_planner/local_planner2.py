@@ -7,7 +7,7 @@ Created: 10/1/24
 
 # ROS MODULES
 import rclpy
-from rclpy.node import Node
+from rclpy.node import Node, Publisher
 from std_msgs.msg import UInt32, Bool
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
@@ -46,6 +46,37 @@ DEFAULT_PARAMS = {
         'distance_error_tolerance': 0.5,
         'local_plan_step_size': 1,
 }
+
+
+class PWM:
+
+        """Struct class for servo pwm"""
+
+        def __init__(self, neutral: int, min: int, max: int, publisher: Publisher):
+                self._value = neutral
+                self.neutral = neutral
+                self.min = min
+                self.max = max
+                self.publisher = publisher
+
+        def get(self) -> int:
+                return self._value
+        
+        def set(self, value: int) -> None:
+                # if above max -> set to max
+                if value > self.max:
+                        self._value = self.max
+                # if below min -> set to min
+                elif value < self.min:
+                        self._value = self.min
+                # within min and max -> set
+                else:
+                        self._value = value
+                # publish new value
+                self.publisher.publish(UInt32(data=self._value))
+
+        def set_neutral(self) -> None:
+                self.set(self.neutral)
 
 
 class LocalPlanner(Node):
@@ -123,8 +154,24 @@ class LocalPlanner(Node):
                 )
                 self.goal_pose: PoseStamped = None
 
-                # VARIABLES
+                # STATE VARIABLES
                 self.state = "Stop"
+
+                # PWM OBJECTS
+                self.left_pwm = PWM(
+                        neutral = self.neutral_pwm,
+                        min = self.min_pwm,
+                        max = self.max_pwm,
+                        publisher = self.left_pwm_publisher
+                )
+                self.right_pwm = PWM(
+                        neutral = self.neutral_pwm,
+                        min = self.min_pwm,
+                        max = self.max_pwm,
+                        publisher = self.right_pwm_publisher
+                )
+
+                # CONDITION VARIABLES
                 self.heading = None
                 self.current_x = None
                 self.current_y = None
@@ -223,16 +270,26 @@ class LocalPlanner(Node):
         # STATE FUNCTIONS
 
         def stop(self):
-                """Publish neutral pwm values to the left and right servos."""
-                self.publish_left_pwm(self.neutral_pwm)
-                self.publish_right_pwm(self.neutral_pwm)
-                self.get_logger().info("Servos set to neutral.")
+                """Set left and right pwm values to neutral"""
+                self.left_pwm.set_neutral()
+                self.right_pwm.set_neutral()
 
         def turn(self):
                 # TODO Adjust 1 servo to turn the mower towards the next waypoint
-                        # Decide which servo to adjust
+                # negative angle difference -> goal angle < current angle -> turn right (clockwise)
+                if self.angle_diff < 0:
+                        # to turn right (clockwise) -> left forward, right backward
+                        
                         # Decide how much to adjust it (Maybe use Joel's PID error calc here)
-                pass
+                        pass
+                # positive angle difference -> goal angle > current angle -> turn left (counter-clockwise)
+                elif self.angle_diff > 0:
+                        # to turn left (counter-clockwise) -> left backward, right forward
+                        # Decide how much to adjust it (Maybe use Joel's PID error calc here)
+                        pass
+                # no angle difference -> goal angle = current angle -> do nothing
+                else:
+                        pass
 
         def straight(self):
                 # TODO Adjust 1 servo by small amount to correct the mower's direction
@@ -241,19 +298,6 @@ class LocalPlanner(Node):
                 # TODO Adjust both servos to maintain constant forward speed
                         # Use physics (velocity components) to figure out how much to adjust each servo
                 pass
-
-
-
-        # LOW-LEVEL HELPERS
-
-        def publish_left_pwm(self, pwm: int):
-               """Publish pwm value to left servo."""
-               self.left_pwm_publisher.publish(UInt32(data=pwm))
-
-        def publish_right_pwm(self, pwm: int):
-               """Publish pwm value to right servo."""
-               self.right_pwm_publisher.publish(UInt32(data=pwm))
-
 
         # SUBSCRIBER CALLBACKS
 
