@@ -6,7 +6,7 @@ local_planner:
     moving_straight_kd: 0.0
     moving_straight_ki: 0.0
     moving_straight_initial_pwm: 1500 # initial speed
-    moving_straight_angle_threshold: 15.0 # will only correct angle while moving straight if greater than this angle
+    moving_straight_angle_tolerance: 5.0 # will only correct angle difference while moving straight if outside this tolerance
     moving_straight_forward_prediction_step: 1 
 
     # STRATEGY: TURNING
@@ -14,7 +14,7 @@ local_planner:
     turning_kd: 0.7
     turning_ki: 0.5
     turning_prediction_step: 1
-    turning_angle_tolerance: 5
+    turning_angle_tolerance: 5.0 # will begin straight state once angle difference is within this tolerance
 
     # PWM
     max_pwm: 1765

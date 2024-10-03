@@ -26,7 +26,7 @@ DEFAULT_PARAMS = {
         'moving_straight_kd': 0.0,
         'moving_straight_ki': 0.0,
         'moving_straight_initial_pwm': 1500, # initial speed
-        'moving_straight_angle_threshold': 15.0, # will only correct angle while moving straight if greater than this angle
+        'moving_straight_angle_tolerance': 15.0, # will only correct angle while moving straight if greater than this angle
         'moving_straight_forward_prediction_step': 1,
 
         # STRATEGY: TURNING
@@ -75,21 +75,30 @@ class PWM:
                         self._value = value
                 # publish new value
                 self.publisher.publish(UInt32(data=self._value))
+        
+        @property
+        def percentage(self) -> int:
+                if self.value == self.neutral:
+                        return 0
+                elif self.value < self.neutral:
+                        return ((self.value - self.neutral) / (self.neutral - self.min)) * 100
+                elif self.value > self.neutral:
+                        return ((self.value - self.neutral) / (self.max - self.neutral)) * 100
+        @percentage.setter
+        def percentage(self, value: int|float):
+                if value == 0:
+                        self.set_neutral()
+                elif value < 0:
+                        if value < -100:
+                                raise ValueError("Cannot set servo pwm value below -100%")
+                        self.value = self.neutral + ((self.neutral - self.min) * (value / 100))
+                elif value > 0:
+                        if value > 100:
+                                raise ValueError("Cannot set servo pwm value above 100%")
+                        self.value = self.neutral + ((self.max - self.neutral) * (value / 100))
 
         def set_neutral(self) -> None:
                 self.value = self.neutral
-
-        def set_percentage(self, percentage: int|float):
-                if percentage == 0:
-                        self.set_neutral()
-                elif percentage < 0:
-                        if percentage < -100:
-                                raise ValueError("Cannot set servo pwm value below -100%")
-                        self.value = self.neutral + ((self.neutral - self.min) * (percentage / 100))
-                elif percentage > 0:
-                        if percentage > 100:
-                                raise ValueError("Cannot set servo pwm value above 100%")
-                        self.value = self.neutral + ((self.max - self.neutral) * (percentage / 100))
 
 
 class LocalPlanner(Node):
@@ -109,14 +118,14 @@ class LocalPlanner(Node):
                 self.moving_straight_ki = load_param("moving_straight_ki").double_value
                 self.moving_straight_initial_pwm = load_param("moving_straight_initial_pwm").integer_value
                 # self.moving_straight_distance_tolerance = load_param("moving_straight_distance_tolerance").double_value
-                self.moving_straight_angle_threshold = load_param("moving_straight_angle_threshold").double_value
+                self.moving_straight_angle_tolerance = load_param("moving_straight_angle_tolerance").double_value
                 self.moving_straight_forward_prediction_step = load_param("moving_straight_forward_prediction_step").integer_value
                 # STRATEGY: TURNING
                 self.turning_kp = load_param("turning_kp").double_value
                 self.turning_kd = load_param("turning_kd").double_value
                 self.turning_ki = load_param("turning_ki").double_value
                 self.turning_prediction_step = load_param("turning_prediction_step").integer_value
-                self.turning_angle_tolerance = load_param("turning_angle_tolerance").integer_value
+                self.turning_angle_tolerance = load_param("turning_angle_tolerance").double_value
                 # PWM
                 self.max_pwm = load_param("max_pwm").integer_value
                 self.min_pwm = load_param("min_pwm").integer_value
@@ -211,8 +220,8 @@ class LocalPlanner(Node):
                 self.update_conditions()
                 # update current state
                 self.update_state()
-                # execute current state
-                self.execute_state()
+                # maintain current state
+                self.maintain_state()
 
 
         # STATE MANAGEMENT
@@ -259,17 +268,17 @@ class LocalPlanner(Node):
                         return
                 else:
                         self.get_logger().error(f"Invalid state: '{self.state}'.")
-                        # Stop by default
-                        self.stop()
+                        self.stop() # default
                         return
 
 
-        def execute_state(self):
+        def maintain_state(self):
                 """Execute the function of the current state."""
                 if self.state == "Stop":
                         pass # no maintenance needed
                 elif self.state == "Turn":
-                        self.maintain_turn()
+                        # self.maintain_turn()
+                        pass
                 elif self.state == "Straight":
                         self.maintain_straight()
                 else:
@@ -290,44 +299,41 @@ class LocalPlanner(Node):
                 self.right_pwm.set_neutral()
 
         def turn(self):
-                """Turn in place towards the next waypoint"""
+                """Start turning in place towards the next waypoint"""
                 self.set_state("Turn")
                 # negative angle difference -> goal angle < current angle -> turn right (clockwise)
                 if self.angle_diff < 0:
                         # to turn right (clockwise) -> left forward, right backward
-                        self.left_pwm.set_percentage(10)
-                        self.right_pwm.set_percentage(-10)
+                        self.left_pwm.percentage = 5
+                        self.right_pwm.percentage = -5
                 # positive angle difference -> goal angle > current angle -> turn left (counter-clockwise)
                 elif self.angle_diff > 0:
                         # to turn left (counter-clockwise) -> left backward, right forward
-                        self.left_pwm.set_percentage(-10)
-                        self.right_pwm.set_percentage(10)
+                        self.left_pwm.percentage = -5
+                        self.right_pwm.percentage = 5
                 # no angle difference -> goal angle = current angle -> do nothing
                 else:
                         pass
 
         def straight(self):
-                """Move straight towards the next waypoint."""
+                """Start moving straight towards the next waypoint."""
                 self.set_state("Straight")
-                self.left_pwm.set_percentage(20)
-                self.right_pwm.set_percentage(20)
-
+                self.left_pwm.percentage = 30
+                self.right_pwm.percentage = 30
 
         # STATE MAINTENANCE
 
         def maintain_turn(self):
                 # TODO Adjust 1 servo to turn the mower towards the next waypoint
                 # negative angle difference -> goal angle < current angle -> turn right (clockwise)
-                if self.angle_diff < 0:
+                if self.angle_diff < -(self.turning_angle_tolerance / 2):
                         # to turn right (clockwise) -> left forward, right backward
-                        self.left_pwm.set_percentage(10)
-                        self.right_pwm.set_percentage(-10)
+                        pass
                         # Decide how much to adjust it (Maybe use Joel's PID error calc here)
                 # positive angle difference -> goal angle > current angle -> turn left (counter-clockwise)
-                elif self.angle_diff > 0:
+                elif self.angle_diff > (self.turning_angle_tolerance / 2):
                         # to turn left (counter-clockwise) -> left backward, right forward
-                        self.left_pwm.set_percentage(-10)
-                        self.right_pwm.set_percentage(10)
+                        pass
                         # Decide how much to adjust it (Maybe use Joel's PID error calc here)
                 # no angle difference -> goal angle = current angle -> do nothing
                 else:
@@ -335,11 +341,20 @@ class LocalPlanner(Node):
 
         def maintain_straight(self):
                 # TODO Adjust 1 servo by small amount to correct the mower's direction
-                        # Decide which servo to adjust
-                        # Decide how much to adjust it (Maybe use Joel's PID error calc here)
+                # negative angle difference -> goal angle < current angle -> turn right (clockwise)
+                if self.angle_diff < -(self.moving_straight_angle_tolerance / 2):
+                        # to turn right (clockwise) -> left forward, right backward
+                        self.left_pwm.percentage += 1
+                        self.right_pwm.percentage -= 1
+                        # TODO Use Joel's PID error calc here
+                # positive angle difference -> goal angle > current angle -> turn left (counter-clockwise)
+                elif self.angle_diff > (self.moving_straight_angle_tolerance / 2):
+                        # to turn left (counter-clockwise) -> left backward, right forward
+                        self.left_pwm.percentage -= 1
+                        self.right_pwm.percentage += 1
+                        # TODO Use Joel's PID error calc here
                 # TODO Adjust both servos to maintain constant forward speed
                         # Use physics (velocity components) to figure out how much to adjust each servo
-                pass
 
         # SUBSCRIBER CALLBACKS
 

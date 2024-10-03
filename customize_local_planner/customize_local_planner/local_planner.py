@@ -26,7 +26,7 @@ DEFAULT_PARAMS = {
     'moving_straight_kd': 0.0,
     'moving_straight_ki': 0.0,
     'moving_straight_initial_pwm': 1500, # initial speed
-    'moving_straight_angle_threshold': 15.0, # will only correct angle while moving straight if greater than this angle
+    'moving_straight_angle_tolerance': 15.0, # will only correct angle while moving straight if greater than this angle
     'moving_straight_forward_prediction_step': 1,
 
     # STRATEGY: TURNING
@@ -34,6 +34,7 @@ DEFAULT_PARAMS = {
     'turning_kd': 0.7,
     'turning_ki': 0.5,
     'turning_prediction_step': 1,
+    'turning_angle_tolerance': 5,
 
     # PWM
     'max_pwm': 1765,
@@ -64,7 +65,7 @@ class LocalPlanner(Node):
         self.moving_straight_ki = load_param("moving_straight_ki").double_value
         self.moving_straight_initial_pwm = load_param("moving_straight_initial_pwm").integer_value
         # self.moving_straight_distance_tolerance = load_param("moving_straight_distance_tolerance").double_value
-        self.moving_straight_angle_threshold = load_param("moving_straight_angle_threshold").double_value
+        self.moving_straight_angle_tolerance = load_param("moving_straight_angle_tolerance").double_value
         self.moving_straight_forward_prediction_step = load_param("moving_straight_forward_prediction_step").integer_value
         # STRATEGY: TURNING
         self.turning_kp = load_param("turning_kp").double_value
@@ -208,7 +209,7 @@ class LocalPlanner(Node):
             self.get_logger().info("Distance within error tolerance -> Stop")
             self.set_controller_strategy("Stop")
         # Angle difference above threshold -> PIDTurn
-        elif abs(angle_diff) > self.moving_straight_angle_threshold:
+        elif abs(angle_diff) > self.moving_straight_angle_tolerance:
             self.get_logger().info("Angle difference above threshold -> PID Turning")
             self.set_controller_strategy("PIDTurn")
         # Distance and angle are good -> PIDStraight
