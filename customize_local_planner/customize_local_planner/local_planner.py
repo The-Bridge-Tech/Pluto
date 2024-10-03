@@ -34,7 +34,7 @@ DEFAULT_PARAMS = {
     'turning_kd': 0.7,
     'turning_ki': 0.5,
     'turning_prediction_step': 1,
-    'turning_angle_tolerance': 5,
+    'turning_angle_tolerance': 5.0,
 
     # PWM
     'max_pwm': 1765,

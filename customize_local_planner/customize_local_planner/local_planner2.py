@@ -26,7 +26,7 @@ DEFAULT_PARAMS = {
         'moving_straight_kd': 0.0,
         'moving_straight_ki': 0.0,
         'moving_straight_initial_pwm': 1500, # initial speed
-        'moving_straight_angle_tolerance': 15.0, # will only correct angle while moving straight if greater than this angle
+        'moving_straight_angle_tolerance': 5.0, # will only correct angle while moving straight if greater than this angle
         'moving_straight_forward_prediction_step': 1,
 
         # STRATEGY: TURNING
@@ -34,7 +34,7 @@ DEFAULT_PARAMS = {
         'turning_kd': 0.7,
         'turning_ki': 0.5,
         'turning_prediction_step': 1,
-        'turning_angle_tolerance': 5,
+        'turning_angle_tolerance': 5.0,
 
         # PWM
         'max_pwm': 1765,
@@ -43,7 +43,7 @@ DEFAULT_PARAMS = {
 
         # OTHER
         'autonomous_controller_frequency': 10,
-        'distance_error_tolerance': 0.5,
+        'distance_error_tolerance': 1.0,
         'local_plan_step_size': 1,
 }
 
