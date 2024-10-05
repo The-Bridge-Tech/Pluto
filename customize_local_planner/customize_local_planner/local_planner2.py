@@ -33,6 +33,7 @@ DEFAULT_PARAMS = {
         'turning_kp': 3.0,
         'turning_kd': 0.7,
         'turning_ki': 0.5,
+        'turning_initial_pwm_percentage': 10.0, 
         'turning_prediction_step': 1,
         'turning_angle_tolerance': 5.0,
 
@@ -124,6 +125,7 @@ class LocalPlanner(Node):
                 self.turning_kp = load_param("turning_kp").double_value
                 self.turning_kd = load_param("turning_kd").double_value
                 self.turning_ki = load_param("turning_ki").double_value
+                self.turning_initial_pwm_percentage = load_param("turning_initial_pwm_percentage").double_value
                 self.turning_prediction_step = load_param("turning_prediction_step").integer_value
                 self.turning_angle_tolerance = load_param("turning_angle_tolerance").double_value
                 # PWM
@@ -255,21 +257,17 @@ class LocalPlanner(Node):
                         if not self.is_autonomous_mode:
                                 self.turn()
                         # TODO check if at last waypoint
-                        return
                 elif self.state == "Turn":
                         # If angle difference is within tolerance -> Straight
                         if abs(self.angle_diff) < self.turning_angle_tolerance:
                                 self.straight()
-                        return
                 elif self.state == "Straight":
                         # If within distance tolerance of goal position -> Stop
                         if self.distance_diff < self.distance_error_tolerance:
                                 self.stop()
-                        return
                 else:
                         self.get_logger().error(f"Invalid state: '{self.state}'.")
                         self.stop() # default
-                        return
 
 
         def maintain_state(self):
@@ -304,13 +302,13 @@ class LocalPlanner(Node):
                 # negative angle difference -> goal angle < current angle -> turn right (clockwise)
                 if self.angle_diff < 0:
                         # to turn right (clockwise) -> left forward, right backward
-                        self.left_pwm.percentage = 5
-                        self.right_pwm.percentage = -5
+                        self.left_pwm.percentage = self.turning_initial_pwm_percentage
+                        self.right_pwm.percentage = -self.turning_initial_pwm_percentage
                 # positive angle difference -> goal angle > current angle -> turn left (counter-clockwise)
                 elif self.angle_diff > 0:
                         # to turn left (counter-clockwise) -> left backward, right forward
-                        self.left_pwm.percentage = -5
-                        self.right_pwm.percentage = 5
+                        self.left_pwm.percentage = -self.turning_initial_pwm_percentage
+                        self.right_pwm.percentage = self.turning_initial_pwm_percentage
                 # no angle difference -> goal angle = current angle -> do nothing
                 else:
                         pass
@@ -318,8 +316,8 @@ class LocalPlanner(Node):
         def straight(self):
                 """Start moving straight towards the next waypoint."""
                 self.set_state("Straight")
-                self.left_pwm.percentage = 30
-                self.right_pwm.percentage = 30
+                self.left_pwm.value = self.moving_straight_initial_pwm
+                self.right_pwm.value = self.moving_straight_initial_pwm
 
         # STATE MAINTENANCE
 
@@ -375,7 +373,7 @@ class LocalPlanner(Node):
                         # right now, get the mid point of the path
                         mid_point = int(len(loc_path.poses)/2) # middle index
                         self.goal_pose = loc_path.poses[mid_point] # this will always be the middle pose in the path
-                        self.get_logger().info("local plan path has {0} poses left to navigate".format(len(loc_path.poses)))
+                        # self.get_logger().info("local plan path has {0} poses left to navigate".format(len(loc_path.poses)))
 
 
 # MAIN
