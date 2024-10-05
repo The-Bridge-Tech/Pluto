@@ -64,7 +64,7 @@ class GPSPlotter(Node):
                 # Subscribe to original gps topic
                 self.gps_sub = self.create_subscription(
                         NavSatFix, 
-                        "/fix", 
+                        "/fix/filtered", 
                         self.gps_callback, 
                         10
                 )

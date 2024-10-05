@@ -29,7 +29,7 @@ class GPSOffsetter(Node):
                 # Subscribe to gps topic to get initial gps data
                 self.gps_subscriber = self.create_subscription(
                         NavSatFix, 
-                        "/fix", 
+                        "/fix/filtered", 
                         self.gps_callback, 
                         10
                 )
