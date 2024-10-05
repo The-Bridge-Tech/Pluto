@@ -73,7 +73,7 @@ class PWM:
                         self._value = self.min
                 # within min and max -> set
                 else:
-                        self._value = value
+                        self._value = round(value)
                 # publish new value
                 self.publisher.publish(UInt32(data=self._value))
         
