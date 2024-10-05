@@ -8,6 +8,7 @@ Created: 10/1/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node, Publisher
+from rclpy.impl.rcutils_logger import RcutilsLogger
 from std_msgs.msg import UInt32, Bool
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
@@ -45,12 +46,13 @@ class PWM:
 
         """Struct class for servo pwm"""
 
-        def __init__(self, neutral: int, min: int, max: int, publisher: Publisher):
+        def __init__(self, neutral: int, min: int, max: int, publisher: Publisher, logger: RcutilsLogger):
                 self._value = neutral
                 self.neutral = neutral
                 self.min = min
                 self.max = max
                 self.publisher = publisher
+                self.logger = logger
 
         @property
         def value(self) -> int:
@@ -59,9 +61,11 @@ class PWM:
         def value(self, value: int) -> None:
                 # if above max -> set to max
                 if value > self.max:
+                        self.logger.warn("Attempted to set servo pwm above max.")
                         self._value = self.max
                 # if below min -> set to min
                 elif value < self.min:
+                        self.logger.warn("Attempted to set servo pwm below min.")
                         self._value = self.min
                 # within min and max -> set
                 else:
@@ -83,11 +87,13 @@ class PWM:
                         self.set_neutral()
                 elif value < 0:
                         if value < -100:
-                                raise ValueError("Cannot set servo pwm value below -100%")
+                                self.logger.warn("Attempted to set servo pwm below -100%.")
+                                value = -100
                         self.value = self.neutral + ((self.neutral - self.min) * (value / 100))
                 elif value > 0:
                         if value > 100:
-                                raise ValueError("Cannot set servo pwm value above 100%")
+                                self.logger.warn("Attempted to set servo pwm above 100%.")
+                                value = 100
                         self.value = self.neutral + ((self.max - self.neutral) * (value / 100))
 
         def set_neutral(self) -> None:
@@ -126,18 +132,6 @@ class LocalPlanner(Node):
                         self.process
                 )
 
-                # PUBLISHERS
-                self.left_pwm_publisher = self.create_publisher(
-                        UInt32, 
-                        "/steering_left", 
-                        10
-                )
-                self.right_pwm_publisher = self.create_publisher(
-                        UInt32, 
-                        "/steering_right", 
-                        10
-                )
-
                 # SUBSCRIBERS
                 self.odom_sub = self.create_subscription(
                         Odometry, 
@@ -161,21 +155,28 @@ class LocalPlanner(Node):
                 )
                 self.goal_pose: PoseStamped = None
 
-                # STATE VARIABLE
-                self.state = "Stop"
-
                 # PWM OBJECTS
                 self.left_pwm = PWM(
                         neutral = self.neutral_pwm,
                         min = self.min_pwm,
                         max = self.max_pwm,
-                        publisher = self.left_pwm_publisher
+                        publisher = self.create_publisher(
+                                UInt32, 
+                                "/steering_left", 
+                                10
+                        ),
+                        logger = self.get_logger()
                 )
                 self.right_pwm = PWM(
                         neutral = self.neutral_pwm,
                         min = self.min_pwm,
                         max = self.max_pwm,
-                        publisher = self.right_pwm_publisher
+                        publisher = self.create_publisher(
+                                UInt32, 
+                                "/steering_right", 
+                                10
+                        ),
+                        logger = self.get_logger()
                 )
 
                 # CONDITION VARIABLES
@@ -187,7 +188,9 @@ class LocalPlanner(Node):
                 self.angle_diff = None
                 self.distance_diff = None
 
-                # set servos to neutral position
+                # STATE MACHINE
+                self.state = None
+                # set state to "Stop" and servos to neutral
                 self.stop()
         
 
@@ -267,7 +270,7 @@ class LocalPlanner(Node):
                         self.get_logger().error(f"Invalid state: '{self.state}'.")
                 
 
-        # STATE TRANSITIONS
+        # STATE INITIATION
 
         def set_state(self, state: str):
                 """Set next state."""
