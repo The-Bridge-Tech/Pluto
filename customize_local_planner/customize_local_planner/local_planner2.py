@@ -254,7 +254,7 @@ class LocalPlanner(Node):
                 """Update state based on current conditions."""
                 if self.state == "Stop":
                         # If in autonomous mode -> Turn
-                        if not self.is_autonomous_mode:
+                        if self.is_autonomous_mode:
                                 self.turn()
                         # TODO check if at last waypoint
                 elif self.state == "Turn":
@@ -342,15 +342,19 @@ class LocalPlanner(Node):
                 # negative angle difference -> goal angle < current angle -> turn right (clockwise)
                 if self.angle_diff < -(self.moving_straight_angle_tolerance / 2):
                         # to turn right (clockwise) -> left forward, right backward
-                        self.left_pwm.percentage += 1
+                        # self.left_pwm.percentage += 1
                         self.right_pwm.percentage -= 1
                         # TODO Use Joel's PID error calc here
                 # positive angle difference -> goal angle > current angle -> turn left (counter-clockwise)
                 elif self.angle_diff > (self.moving_straight_angle_tolerance / 2):
                         # to turn left (counter-clockwise) -> left backward, right forward
-                        self.left_pwm.percentage -= 1
+                        # self.left_pwm.percentage -= 1
                         self.right_pwm.percentage += 1
                         # TODO Use Joel's PID error calc here
+                # no angle difference -> goal angle = current angle -> reset to initial pwm
+                else:
+                        if self.right_pwm.value != self.moving_straight_initial_pwm:
+                                self.right_pwm.value = self.moving_straight_initial_pwm
                 # TODO Adjust both servos to maintain constant forward speed
                         # Use physics (velocity components) to figure out how much to adjust each servo
 
