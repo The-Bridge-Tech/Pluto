@@ -8,7 +8,7 @@ def generate_launch_description():
     params_file = os.path.join(
         get_package_share_directory('pluto_launch'), 
         'config',
-        'local_planner.yaml'
+        'local_planner2.yaml'
     )
     # Return launch description for localPlanner node
     return LaunchDescription([
