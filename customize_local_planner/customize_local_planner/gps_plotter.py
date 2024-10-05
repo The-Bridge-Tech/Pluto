@@ -266,6 +266,14 @@ class GPSPlotter(Node):
                         color='red',
                         linewidth=2
                 )
+        
+        def isOutlier(self, lat: float, lon: float) -> bool:
+                return (
+                        lat > MAP_IMAGE_LOCATION["top"] or
+                        lat < MAP_IMAGE_LOCATION["bottom"] or
+                        lon > MAP_IMAGE_LOCATION["right"] or
+                        lon < MAP_IMAGE_LOCATION["left"]
+                )
 
 
         # CALLBACKS
@@ -365,8 +373,11 @@ class GPSPlotter(Node):
                 if len(self.latitudes) == 0 and len(self.longitudes) == 0:
                         self.new_data = True
                 else:
-                        # if new gps data is different from the last update
-                        self.new_data = self.currentGPS.latitude != self.latitudes[-1] or self.currentGPS.longitude != self.longitudes[-1]
+                        # if new gps data is different from the last update AND not an outlier
+                        self.new_data = (
+                                (self.currentGPS.latitude != self.latitudes[-1] or self.currentGPS.longitude != self.longitudes[-1])
+                                and (not self.isOutlier(self.currentGPS.latitude, self.currentGPS.longitude))
+                        )
                 if self.new_data:
                         # update latitudes and longitudes with current gps for plot
                         self.latitudes.append(self.currentGPS.latitude)
@@ -378,8 +389,11 @@ class GPSPlotter(Node):
                         if len(self.offset_latitudes) == 0 and len(self.offset_longitudes) == 0:
                                 self.new_offset_data = True
                         else:
-                                # if new offset gps data is different from the last update
-                                self.new_offset_data = self.offsetGPS.latitude != self.latitudes[-1] or self.offsetGPS.longitude != self.longitudes[-1]
+                                # if new offset gps data is different from the last update AND not an outlier
+                                self.new_offset_data = (
+                                        (self.offsetGPS.latitude != self.latitudes[-1] or self.offsetGPS.longitude != self.longitudes[-1])
+                                        and (not self.isOutlier(self.offsetGPS.latitude, self.offsetGPS.longitude))
+                                )
                         if self.new_offset_data:
                                 # update offset latitudes and longitudes with current offset gps for plot
                                 self.offset_latitudes.append(self.offsetGPS.latitude)

@@ -356,15 +356,14 @@ class LocalPlanner(Node):
                         self.stop()
                 self.is_autonomous_mode = msg.data
 
-        def local_plan_callback(self, loc_path: Path):
+        def local_plan_callback(self, msg: Path):
                 """Sets the goal pose to the middle pose in the path"""
-                if len(loc_path.poses) == 0:
-                        self.get_logger().warn("no local path plan has been created")
+                if len(msg.poses) == 0:
+                        self.get_logger().warn("local plan path has no poses.")
                 else:
                         # right now, get the mid point of the path
-                        mid_point = int(len(loc_path.poses)/2) # middle index
-                        self.goal_pose = loc_path.poses[mid_point] # this will always be the middle pose in the path
-                        # self.get_logger().info("local plan path has {0} poses left to navigate".format(len(loc_path.poses)))
+                        mid_point = int(len(msg.poses)/2) # middle index
+                        self.goal_pose = msg.poses[mid_point] # this will always be the middle pose in the path
 
 
 # MAIN
