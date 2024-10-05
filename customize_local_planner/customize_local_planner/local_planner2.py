@@ -120,7 +120,7 @@ class LocalPlanner(Node):
                 # OTHER
                 self.process_frequency = load_param("process_frequency").integer_value
 
-                # TIMER - for interval processing
+                # TIMERS
                 self.process_timer = self.create_timer(
                         1 / self.process_frequency, 
                         self.process
@@ -161,7 +161,7 @@ class LocalPlanner(Node):
                 )
                 self.goal_pose: PoseStamped = None
 
-                # STATE VARIABLES
+                # STATE VARIABLE
                 self.state = "Stop"
 
                 # PWM OBJECTS
@@ -186,6 +186,7 @@ class LocalPlanner(Node):
                 self.goal_y = None
                 self.angle_diff = None
                 self.distance_diff = None
+
                 # set servos to neutral position
                 self.stop()
         

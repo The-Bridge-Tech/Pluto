@@ -30,9 +30,9 @@ OLD_WAYPOINTS = [
 WAYPOINTS = [
     (34.841384, -82.411669),    # front-left corner
     (34.841254, -82.411731),    # back-left corner
-    (34.841327, -82.411853),    # back-right corner
-    (34.841434, -82.411776),    # front-right corner
-    (34.841384, -82.411669),    # front-left corner (return to #1)
+    # (34.841327, -82.411853),    # back-right corner
+    # (34.841434, -82.411776),    # front-right corner
+    # (34.841384, -82.411669),    # front-left corner (return to #1)
 ]
 WAYPOINT_RADIUS = 1.0           # should match local_planner's 'distance_error_tolerance' parameter
 
@@ -149,10 +149,11 @@ class PhaseOneDemo(Node):
             lon2 = WAYPOINTS[self.pose_i][1]
         )
         # select the calculation with the smallest result (will be most accurate in nearly every case)
-        self.distance_from_goal = min(
-            odom_distance_from_goal,
-            gps_distance_from_goal
-        )
+        self.distance_from_goal = odom_distance_from_goal
+        # min(
+        #     odom_distance_from_goal,
+        #     gps_distance_from_goal
+        # )
 
     def reset(self):
         """Reset goal poses and current goal pose."""
