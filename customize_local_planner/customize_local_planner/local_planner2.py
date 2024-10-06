@@ -8,7 +8,7 @@ Created: 10/1/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt32, Bool
+from std_msgs.msg import UInt32, Bool, String
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
 
@@ -72,6 +72,13 @@ class LocalPlanner(Node):
                 self.process_timer = self.create_timer(
                         1 / self.process_frequency, 
                         self.process
+                )
+
+                # PUBLISHERS
+                self.state_publisher = self.create_publisher(
+                        String,
+                        "/state",
+                        10
                 )
 
                 # SUBSCRIBERS
@@ -216,7 +223,11 @@ class LocalPlanner(Node):
 
         def set_state(self, state: str):
                 """Set next state."""
+                # log state change
                 self.get_logger().info(f"State: {self.state} -> {state}")
+                # publish state change
+                self.state_publisher.publish(String(data=f"{self.state} -> {state}"))
+                # actually change the state
                 self.state = state
 
         def stop(self):
