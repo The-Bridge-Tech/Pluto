@@ -134,6 +134,10 @@ class GPSOffsetter(Node):
         def is_autonomous_mode_callback(self, msg: Bool):
                 """Update if in autonomous mode."""
                 self.is_autonomous_mode = msg.data
+                # if now in manual mode -> reset initial gps
+                if not self.is_autonomous_mode:
+                        self.initialGPS = None
+
 
 
 # MAIN
