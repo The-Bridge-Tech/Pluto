@@ -197,10 +197,14 @@ class LocalPlanner(Node):
                         # If angle difference is within tolerance -> Straight
                         if abs(self.angle_diff) < self.turn_angle_tolerance:
                                 self.straight()
+                        else:
+                                self.get_logger().info(f"angle_diff = {self.angle_diff}")
                 elif self.state == "Straight":
                         # If within distance tolerance of goal position -> Stop
                         if self.distance_diff < self.straight_distance_tolerance:
                                 self.stop()
+                        else:
+                                self.get_logger().info(f"distance_diff = {self.distance_diff}")
                 else:
                         self.get_logger().error(f"Invalid state: '{self.state}'.")
                         self.stop() # default
