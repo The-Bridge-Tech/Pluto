@@ -42,7 +42,7 @@ class PhaseOneDemo(Node):
         super().__init__('PhaseOneDemo')
 
         # PUBLISHERS
-        self.plan_publisher = self.create_publisher(
+        self.local_plan_publisher = self.create_publisher(
             Path, 
             "local_plan",
             10
@@ -62,14 +62,14 @@ class PhaseOneDemo(Node):
         self.odom_sub = self.create_subscription(
             Odometry, 
             "odometry/global", 
-            self.globalOdometryCallback, 
+            self.odom_callback, 
             10
         )
         self.current_odom: Odometry = None
         self.gps_sub = self.create_subscription(
             NavSatFix, 
             "/fix/offset", 
-            self.gps_fix_callback, 
+            self.gps_callback, 
             10
         )
         self.initial_gps: NavSatFix = None
@@ -86,7 +86,7 @@ class PhaseOneDemo(Node):
         timer_period = 0.3  # seconds
         self.timer = self.create_timer(
             timer_period, 
-            self.publish_tuning_plan
+            self.publish_local_plan
         )
         self.ready_to_ping = False
         ping_timer_period = 1 # seconds
@@ -164,7 +164,7 @@ class PhaseOneDemo(Node):
 
     # PUBLISHER CALLBACKS
 
-    def publish_tuning_plan(self):
+    def publish_local_plan(self):
         """Publish path based on the current goal pose to local_planner node."""
         # Wait for odom and gps data
         if self.current_odom is None or self.initial_gps is None:
@@ -209,16 +209,16 @@ class PhaseOneDemo(Node):
             poses =  [
                 currentPoseStamp,
                 goalPoseStamp, # Why do we need 3 of the same goal poses in the path?
-                goalPoseStamp,
-                goalPoseStamp
+                # goalPoseStamp,
+                # goalPoseStamp
             ]
         )
         # PUBLISH PATH TO LOCAL_PLANNER
-        self.plan_publisher.publish(path)
+        self.local_plan_publisher.publish(path)
 
     def publish_waypoint_ping(self):
         """Publish waypoint info to splunk_logger node and gps_plotter node."""
-        # wait until publish_tuning_plan() has created the data to publish
+        # wait until publish_local_plan() has created the data to publish
         if self.ready_to_ping:
             roll, pitch, yaw = euler_from_quaternion(self.current_odom.pose.pose.orientation)
             yaw_degrees = math.degrees(yaw)
@@ -238,17 +238,17 @@ class PhaseOneDemo(Node):
 
     # SUBSCRIBER CALLBACKS
     
-    def gps_fix_callback(self, msg: NavSatFix):
+    def odom_callback(self, odom: Odometry):
+        """Update global odometry."""
+        self.current_odom = odom
+        
+    def gps_callback(self, msg: NavSatFix):
         """Update initial and current GPS."""
         # Wait for autonous mode -> then get initial gps
         if self.is_autonomous_mode:
             if not self.initial_gps:
                 self.initial_gps = msg
             self.current_gps = msg
-
-    def globalOdometryCallback(self, odom: Odometry):
-        """Update global odometry."""
-        self.current_odom = odom
 
     def is_autonomous_mode_callback(self, msg: Bool):
         """Update if in autonomous mode."""

@@ -303,9 +303,10 @@ class LocalPlanner(Node):
                 if len(msg.poses) == 0:
                         self.get_logger().warn("local plan path has no poses.")
                 else:
-                        # right now, get the mid point of the path
-                        mid_point = int(len(msg.poses)/2) # middle index
-                        self.goal_pose = msg.poses[mid_point] # this will always be the middle pose in the path
+                        self.goal_pose = msg.poses[1]
+                        # # right now, get the mid point of the path
+                        # mid_point = int(len(msg.poses)/2) # middle index
+                        # self.goal_pose = msg.poses[mid_point] # this will always be the middle pose in the path
 
 
 # MAIN
