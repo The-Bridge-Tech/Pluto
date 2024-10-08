@@ -21,11 +21,13 @@ import os
 import math
 
 # HELPER MODULES
+from.gps_list import GPSList
 from .phase_one_demo import WAYPOINTS, WAYPOINT_RADIUS
 from .untilit import meters_to_gps_degrees, haversine, calculateEulerAngleFromOdometry
 
 
 # CONSTANTS
+BASE_GPS = (34.841400, -82.411743)
 FENCE_GPS_POINTS=[
         (34.8414762, -82.4118085),      # front-right corner 
         (34.8413314, -82.4119220),      # back-right corner
@@ -70,8 +72,7 @@ class GPSPlotter(Node):
                 )
                 self.currentGPS = None
                 # For storing original GPS coordinates
-                self.latitudes = []
-                self.longitudes = []
+                self.original_gps = GPSList()
                 # Subscribe to offset gps topic
                 self.offset_gps_sub = self.create_subscription(
                         NavSatFix, 
@@ -79,10 +80,9 @@ class GPSPlotter(Node):
                         self.offset_gps_callback, 
                         10
                 )
-                self.offsetGPS = None
+                self.currentOffsetGPS = None
                 # For storing offset (corrected) GPS coordinates
-                self.offset_latitudes = []
-                self.offset_longitudes = []
+                self.offset_gps = GPSList()
                 # Subscribe to odometry topic
                 self.odom_subscriber = self.create_subscription(
                         Odometry, 
@@ -156,6 +156,15 @@ class GPSPlotter(Node):
                         markeredgewidth=2,
                         label='Current Position'
                 )[0] # get the first and only item in the list returned by Axes.plot()
+                # Plot the base point
+                self.base_scatter = self.ax.scatter(
+                        x = [BASE_GPS[1]],   # longitude
+                        y = [BASE_GPS[0]],   # latitude
+                        s = 7,               # marker-size
+                        color='red', 
+                        marker='o', 
+                        label='Base Point'
+                )
                 # Plot the fence corner points
                 self.fence_corners_scatter = self.ax.scatter(
                         x = [p[1] for p in FENCE_GPS_POINTS],   # longitudes
@@ -274,6 +283,17 @@ class GPSPlotter(Node):
                         lon > MAP_IMAGE_LOCATION["right"] or
                         lon < MAP_IMAGE_LOCATION["left"]
                 )
+        
+        def updateDistance(self):
+                """Update distance from current gps to the current waypoint"""
+                currentWaypoint = self.getCurrentWaypoint()
+                currentGPS = self.currentGPS if self.currentOffsetGPS is None else self.currentOffsetGPS
+                self.currentDistance = haversine(
+                        lat1 = currentGPS.latitude,
+                        lon1 = currentGPS.longitude,
+                        lat2 = currentWaypoint[0],
+                        lon2 = currentWaypoint[1]
+                )
 
 
         # CALLBACKS
@@ -284,7 +304,7 @@ class GPSPlotter(Node):
 
         def offset_gps_callback(self, msg: NavSatFix):
                 """Update current GPS with offset"""
-                self.offsetGPS = msg
+                self.currentOffsetGPS = msg
 
         def odom_callback(self, msg: Odometry):
                 """Update current odometry."""
@@ -301,47 +321,44 @@ class GPSPlotter(Node):
         def update_plot(self, frame):
                 """Update scatter plot with gps points."""
                 # If there is new original gps data
-                if self.new_data:
+                if self.original_gps.new:
                         # Update all original gps points (trail)
                         self.original_scatter.set_data(
-                                self.longitudes,
-                                self.latitudes
+                                self.original_gps.longitudes,
+                                self.original_gps.latitudes
                         )
                         # If there are not offset gps points yet
-                        if self.offsetGPS is None:
+                        if not self.currentOffsetGPS:
                                 # Update the last point (current position)
                                 self.current_position_scatter.set_data(
-                                        self.longitudes[-1:], 
-                                        self.latitudes[-1:]
+                                        self.original_gps.currentLon(), 
+                                        self.original_gps.currentLat()
                                 )
-                                # If odom data is available (for heading)
-                                if self.currentOdom:
-                                        # Re-draw heading line
-                                        self.drawHeadingLine(
-                                                current_lat = self.latitudes[-1],
-                                                current_lon = self.longitudes[-1]
-                                        )
-                        self.new_data = False
+                        self.original_gps.update()
                 # If there is new offset gps data
-                if self.new_offset_data:
+                if self.offset_gps.new:
                         # Update all offset (corrected) gps points (trail)
                         self.offset_scatter.set_data(
-                                self.offset_longitudes,
-                                self.offset_latitudes
+                                self.offset_gps.longitudes,
+                                self.offset_gps.latitudes
                         )
                         # Update the last point (current position)
                         self.current_position_scatter.set_data(
-                                self.offset_longitudes[-1:], 
-                                self.offset_latitudes[-1:]
+                                self.offset_gps.currentLon(), 
+                                self.offset_gps.currentLat()
                         )
-                        # If odom data is available (for heading)
-                        if self.currentOdom:
+                        self.offset_gps.update()
+                # If odom data is available (for heading)
+                if self.currentOdom:
+                        # Determine which gps data to use to draw heading line
+                        gps = self.original_gps if not self.currentOffsetGPS else self.offset_gps
+                        # if there is gps data available yet
+                        if len(gps) > 0:
                                 # Re-draw heading line
                                 self.drawHeadingLine(
-                                        current_lat = self.offset_latitudes[-1],
-                                        current_lon = self.offset_longitudes[-1]
+                                        current_lat = gps.currentLat(),
+                                        current_lon = gps.currentLon()
                                 )
-                        self.new_offset_data = False
                 # Update the current waypoint
                 self.updateWaypoints()
                 self.ax.relim()
@@ -358,46 +375,26 @@ class GPSPlotter(Node):
                 if self.currentGPS is None or self.currentOdom is None:
                         self.get_logger().info("Waiting for odom and gps data to be initalized.")
                         return
-                currentWaypoint = self.getCurrentWaypoint()
-                # Calculate distance from current gps to the current waypoint
-                self.currentDistance = haversine(
-                        lat1 = self.currentGPS.latitude,
-                        lon1 = self.currentGPS.longitude,
-                        lat2 = currentWaypoint[0],
-                        lon2 = currentWaypoint[1]
-                )
+                # Update distance from current gps to the current waypoint
+                self.updateDistance()
                 # (gps and odom data are available)
-                self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {self.currentDistance}\t Waypoint #{self.currentWaypointNumber}')
+                self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {round(self.currentDistance, 4)}\t Waypoint #{self.currentWaypointNumber}')
                
-                # if this is the first update
-                if len(self.latitudes) == 0 and len(self.longitudes) == 0:
-                        self.new_data = True
-                else:
-                        # if new gps data is different from the last update AND not an outlier
-                        self.new_data = (
-                                (self.currentGPS.latitude != self.latitudes[-1] or self.currentGPS.longitude != self.longitudes[-1])
-                                and (not self.isOutlier(self.currentGPS.latitude, self.currentGPS.longitude))
-                        )
-                if self.new_data:
+                # if new gps point is not an outlier
+                if not self.isOutlier(self.currentGPS.latitude, self.currentGPS.longitude):
                         # update latitudes and longitudes with current gps for plot
-                        self.latitudes.append(self.currentGPS.latitude)
-                        self.longitudes.append(self.currentGPS.longitude)
+                        self.original_gps.append(
+                                lat = self.currentGPS.latitude,
+                                lon = self.currentGPS.longitude
+                        )
                 
-                # if offset data has been received yet
-                if self.offsetGPS:
-                        # if this is the first update with offset data
-                        if len(self.offset_latitudes) == 0 and len(self.offset_longitudes) == 0:
-                                self.new_offset_data = True
-                        else:
-                                # if new offset gps data is different from the last update AND not an outlier
-                                self.new_offset_data = (
-                                        (self.offsetGPS.latitude != self.latitudes[-1] or self.offsetGPS.longitude != self.longitudes[-1])
-                                        and (not self.isOutlier(self.offsetGPS.latitude, self.offsetGPS.longitude))
-                                )
-                        if self.new_offset_data:
-                                # update offset latitudes and longitudes with current offset gps for plot
-                                self.offset_latitudes.append(self.offsetGPS.latitude)
-                                self.offset_longitudes.append(self.offsetGPS.longitude)
+                # if offset data has been received and is not an outlier
+                if self.currentOffsetGPS and not self.isOutlier(self.currentOffsetGPS.latitude, self.currentOffsetGPS.longitude):
+                        # update offset latitudes and longitudes with current offset gps for plot
+                        self.offset_gps.append(
+                                lat = self.currentOffsetGPS.latitude,
+                                lon = self.currentOffsetGPS.longitude
+                        )
 
 
 # MAIN
