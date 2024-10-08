@@ -196,7 +196,7 @@ class GPSPlotter(Node):
                 )[0] # get the first and only item in the list returned by Axes.plot()
                 # Add radius circles around each waypoint
                 self.waypoint_radius_circles = list[patches.Circle]()
-                for waypoint in WAYPOINTS[:-1]:
+                for waypoint in WAYPOINTS:
                         circle = patches.Circle(
                                 (waypoint[1], waypoint[0]),  # (x=longitude, y=latitude)
                                 meters_to_gps_degrees(WAYPOINT_RADIUS, waypoint[0]),  # Convert meter radius to degrees

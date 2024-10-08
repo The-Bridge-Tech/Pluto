@@ -16,17 +16,38 @@ class GPSFilter(Node):
     def __init__(self):
         super().__init__('gps_filter')
         
-        self.gps_filtered_message = self.create_publisher(NavSatFix, "fix/filtered",10)
-        self.gps_velocity_odom = self.create_publisher(TwistWithCovarianceStamped, '/twist/gps_vel',10)
+        # PUBLISHERS
+        self.gps_filtered_message = self.create_publisher(
+            NavSatFix, 
+            "fix/filtered",
+            10
+        )
+        self.gps_velocity_odom = self.create_publisher(
+            TwistWithCovarianceStamped, 
+            '/twist/gps_vel',
+            10
+        )
         
-        self.gps_fix_sub = self.create_subscription(NavSatFix, "/fix/offset", self.update_gps_fix_covariance,10)
-        self.gps_vel_sub = self.create_subscription(TwistStamped, "/vel", self.generate_gps_vel,10)
+        # SUBSCRIBERS
+        self.gps_fix_sub = self.create_subscription(
+            NavSatFix, 
+            "/fix", 
+            self.update_gps_fix_covariance,
+            10
+        )
+        self.last_gps_fix :NavSatFix = NavSatFix()
+        self.gps_vel_sub = self.create_subscription(
+            TwistStamped, 
+            "/vel", 
+            self.generate_gps_vel,
+            10
+        )
+        self.last_gps_twist : TwistStamped = TwistStamped()
+
         # timer_period = 0.1  # seconds
         # self.timer = self.create_timer(timer_period, self.message_filter_callback)
         # self.i = 0
         
-        self.last_gps_fix :NavSatFix = NavSatFix()
-        self.last_gps_twist : TwistStamped = TwistStamped()
         
         
     def update_gps_fix_covariance(self, message:NavSatFix):

@@ -57,7 +57,7 @@ def generate_launch_description():
             parameters=[ekf_navsat_config],
             remappings=[
                 #('imu', 'imu/data_raw'),
-                ('gps/fix', 'fix/filtered'),
+                ('gps/fix', 'fix/offset'),
                 ('gps/filtered', 'gps/filtered'),
                 ('odometry/gps', 'odometry/gps'),
                 ('odometry/filtered', 'odometry/global'),

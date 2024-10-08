@@ -29,7 +29,7 @@ OLD_WAYPOINTS = [
 ]
 WAYPOINTS = [
     (34.841384, -82.411669),    # front-left corner
-    (34.841254, -82.411731),    # back-left corner
+    # (34.841254, -82.411731),    # back-left corner
     # (34.841327, -82.411853),    # back-right corner
     # (34.841434, -82.411776),    # front-right corner
     # (34.841384, -82.411669),    # front-left corner (return to #1)
@@ -241,7 +241,7 @@ class PhaseOneDemo(Node):
     def odom_callback(self, odom: Odometry):
         """Update global odometry."""
         self.current_odom = odom
-        
+
     def gps_callback(self, msg: NavSatFix):
         """Update initial and current GPS."""
         # Wait for autonous mode -> then get initial gps
