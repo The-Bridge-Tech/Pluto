@@ -309,8 +309,8 @@ class LocalPlanner(Node):
 
         def is_autonomous_mode_callback(self, msg: Bool):
                 # if autonomous to manual or manual to autonomous -> set servos to neutral
-                if self.is_autonomous_mode ^ msg.data:
-                        self.stop()
+                # if self.is_autonomous_mode ^ msg.data:
+                self.stop()
                 self.is_autonomous_mode = msg.data
 
         def local_plan_callback(self, msg: Path):

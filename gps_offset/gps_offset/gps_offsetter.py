@@ -118,7 +118,7 @@ class GPSOffsetter(Node):
         # SUBSCRIBER CALLBACKS
 
         def gps_callback(self, msg: NavSatFix):
-                """Update initial and current GPS."""
+                """For initial gps message, calculate offset. Apply offset and publish corrected gps message."""
                 # Wait for autonous mode -> then get initial gps
                 if self.is_autonomous_mode:
                         if not self.initialGPS:
