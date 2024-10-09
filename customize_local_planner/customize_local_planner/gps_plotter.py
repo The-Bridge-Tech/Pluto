@@ -299,11 +299,25 @@ class GPSPlotter(Node):
         # CALLBACKS
 
         def gps_callback(self, msg: NavSatFix):
-                """Update current GPS."""
+                """Update current GPS point"""
+                # if new gps point is not an outlier
+                if not self.isOutlier(msg.latitude, msg.longitude):
+                        # update latitudes and longitudes with current gps for plot
+                        self.original_gps.append(
+                                lat = msg.latitude,
+                                lon = msg.longitude
+                        )
                 self.currentGPS = msg
 
         def offset_gps_callback(self, msg: NavSatFix):
-                """Update current GPS with offset"""
+                """Update current GPS point with correction offset"""
+                # if new gps point is not an outlier
+                if not self.isOutlier(msg.latitude, msg.longitude):
+                        # update offset latitudes and longitudes with current offset gps for plot
+                        self.offset_gps.append(
+                                lat = msg.latitude,
+                                lon = msg.longitude
+                        )
                 self.currentOffsetGPS = msg
 
         def odom_callback(self, msg: Odometry):
@@ -370,7 +384,6 @@ class GPSPlotter(Node):
                 return self.original_scatter,
 
         def process(self):
-                """Process on an interval (timer) rather than every time data is received (when the subscriber callbacks are called)."""
                 # Wait until gps and odom data have been received
                 if self.currentGPS is None or self.currentOdom is None:
                         self.get_logger().info("Waiting for odom and gps data to be initalized.")
@@ -379,22 +392,6 @@ class GPSPlotter(Node):
                 self.updateDistance()
                 # (gps and odom data are available)
                 self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {round(self.currentDistance, 4)}\t Waypoint #{self.currentWaypointNumber}')
-               
-                # if new gps point is not an outlier
-                if not self.isOutlier(self.currentGPS.latitude, self.currentGPS.longitude):
-                        # update latitudes and longitudes with current gps for plot
-                        self.original_gps.append(
-                                lat = self.currentGPS.latitude,
-                                lon = self.currentGPS.longitude
-                        )
-                
-                # if offset data has been received and is not an outlier
-                if self.currentOffsetGPS and not self.isOutlier(self.currentOffsetGPS.latitude, self.currentOffsetGPS.longitude):
-                        # update offset latitudes and longitudes with current offset gps for plot
-                        self.offset_gps.append(
-                                lat = self.currentOffsetGPS.latitude,
-                                lon = self.currentOffsetGPS.longitude
-                        )
 
 
 # MAIN
