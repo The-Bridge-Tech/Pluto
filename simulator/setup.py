@@ -13,13 +13,15 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='root',
-    maintainer_email='developer@thebridgetech.org',
-    description='TODO: Package description',
+    maintainer='Matthew Lauriault',
+    maintainer_email='mlauriault03@gmail.com',
+    description='Test Simulator and Analyzer',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+                'logic_tester = simulator.logic_tester:main',
+                'analyzer = simulator.analyzer:main'
         ],
     },
 )

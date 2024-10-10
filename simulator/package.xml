@@ -3,8 +3,8 @@
 <package format="3">
   <name>simulator</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="developer@thebridgetech.org">root</maintainer>
+  <description>Test Simulator and Analyzer</description>
+  <maintainer email="mlauriault03@gmail.com">Matthew Lauriault</maintainer>
   <license>TODO: License declaration</license>
 
   <test_depend>ament_copyright</test_depend>
