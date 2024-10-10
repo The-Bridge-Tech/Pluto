@@ -6,12 +6,10 @@ Created: 10/9/24
 
 
 # ROS MODULES
-from sensor_msgs.msg import NavSatFix
 from nav_msgs.msg import Odometry
 import tf_transformations
 
 # CALCULATION MODULES
-import numpy as np
 import math
 
 # CONSTANTS
@@ -21,11 +19,25 @@ PWM_MAX = 1765
 
 
 def euler_to_quaternion(roll, pitch, yaw):
-        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        return [qx, qy, qz, qw]
+        roll /= 2.0
+        pitch /= 2.0
+        yaw /= 2.0
+        ci = math.cos(roll)
+        si = math.sin(roll)
+        cj = math.cos(pitch)
+        sj = math.sin(pitch)
+        ck = math.cos(yaw)
+        sk = math.sin(yaw)
+        cc = ci * ck
+        cs = ci * sk
+        sc = si * ck
+        ss = si * sk
+        return [
+                cj*sc - sj*cs, # x
+                cj*ss + sj*cc, # y
+                cj*cs - sj*sc, # z
+                cj*cc + sj*ss  # w
+        ]
 
 def pwm_value_to_percentage(pwm: int) -> float:
         if pwm == PWM_NEUTRAL:

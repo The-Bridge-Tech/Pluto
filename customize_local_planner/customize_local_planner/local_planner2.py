@@ -34,7 +34,7 @@ DEFAULT_PARAMS = {
         "straight_distance_tolerance": 1.0, # meters - will stop once within this distance of the waypoint
 
         # STATE: TURN
-        "turn_initial_pwm": 10.0, # percent
+        "turn_initial_pwm": 15.0, # percent
         "turn_angle_tolerance": 5.0, # will begin straight state once angle difference is within this tolerance
 
         # OTHER

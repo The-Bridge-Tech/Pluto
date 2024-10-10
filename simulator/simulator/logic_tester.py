@@ -25,7 +25,7 @@ BASE_GPS = (34.841400, -82.411743)
 # PARAMETERS
 PUBLISH_RATE = 10 # Hz (publishes / second)
 INITIAL_HEADING = 127.0 # degrees (-180 to 180)
-ANG_VEL_PER_PWM_PERCENT = 1 # (degrees / second) / pwm difference %
+ANG_VEL_PER_PWM_PERCENT = 0.5 # (degrees / second) / pwm difference %
 
 
 
@@ -43,7 +43,7 @@ class LogicTester(Node):
                 # PUBLISHERS - SENSOR DATA
                 self.gps_pub = self.create_publisher(
                         NavSatFix,
-                        "/fix",
+                        "/fix/filtered",
                         10
                 )
                 self.imu_pub = self.create_publisher(
@@ -66,15 +66,20 @@ class LogicTester(Node):
                         self.left_pwm_callback,
                         10
                 )
+                self.left_pwm = 0
                 self.right_pwm_sub = self.create_subscription(
                         UInt32,
                         "/steering_right",
                         self.right_pwm_callback,
                         10
                 )
+                self.right_pwm = 0
 
                 # VARIABLES
                 self.counter = 0
+                self.heading = 0
+                self.x = 0
+                self.y = 0
 
 
         # TIMER CALLBACKS
@@ -88,12 +93,23 @@ class LogicTester(Node):
                 # start autonomous mode (Stop -> Turn)
                 elif self.counter == self.seconds_to_counts(1):
                         self.publish_autonomous_mode(True)
+ 
+                # publish gps & heading dynamically based on pwm values
+                elif self.counter > self.seconds_to_counts(1):
+                        # HEADING
+                        # convert pwm difference to angular displacement 
+                        rotation_pwm = self.right_pwm - self.left_pwm  # (positive = counter-clockwise, negative = clockwise)
+                        angular_vel = ANG_VEL_PER_PWM_PERCENT * rotation_pwm
+                        time_interval = 1 / PUBLISH_RATE
+                        angular_displacement = angular_vel * time_interval
+                        # update heading
+                        self.heading += angular_displacement
+                        # publish new heading
+                        self.publish_heading(self.heading)
 
-                # pwm difference -> angular acceleration
-                        
-                # gradually change heading to the goal angle (Turn -> Straight)
+                        # GPS
+                        # TODO
 
-                # gradually change gps to the goal gps (Straight -> Stop)
 
                 # update counter
                 self.counter += 1
