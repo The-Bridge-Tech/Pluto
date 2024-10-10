@@ -9,7 +9,7 @@ Created: 10/9/24
 import rclpy
 from rclpy.node import Node
 import rclpy.time_source
-from std_msgs.msg import Header, Bool
+from std_msgs.msg import Header, Bool, UInt32
 from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import Quaternion, Vector3
 
@@ -25,6 +25,8 @@ BASE_GPS = (34.841400, -82.411743)
 # PARAMETERS
 PUBLISH_RATE = 10 # Hz (publishes / second)
 INITIAL_HEADING = 127.0 # degrees (-180 to 180)
+ANG_VEL_PER_PWM_PERCENT = 1 # (degrees / second) / pwm difference %
+
 
 
 class LogicTester(Node):
@@ -57,6 +59,20 @@ class LogicTester(Node):
                         10
                 )
 
+                # SUBSCRIBERS
+                self.left_pwm_sub = self.create_subscription(
+                        UInt32,
+                        "/steering_left",
+                        self.left_pwm_callback,
+                        10
+                )
+                self.right_pwm_sub = self.create_subscription(
+                        UInt32,
+                        "/steering_right",
+                        self.right_pwm_callback,
+                        10
+                )
+
                 # VARIABLES
                 self.counter = 0
 
@@ -66,12 +82,14 @@ class LogicTester(Node):
         def publish_sensor_data(self):
                 """Simulate sensor data to observe logic in other nodes"""
                 # initial gps & heading (None -> Stop)
-                if self.at_seconds(0):
+                if self.counter == self.seconds_to_counts(0):
                         self.publish_gps(*BASE_GPS)
                         self.publish_heading(INITIAL_HEADING)
                 # start autonomous mode (Stop -> Turn)
-                elif self.at_seconds(1):
+                elif self.counter == self.seconds_to_counts(1):
                         self.publish_autonomous_mode(True)
+
+                # pwm difference -> angular acceleration
                         
                 # gradually change heading to the goal angle (Turn -> Straight)
 
@@ -157,15 +175,21 @@ class LogicTester(Node):
                 )
                 self.is_autonomous_mode_pub.publish(msg)
 
+
         # HELPERS - TIMING
 
         def seconds_to_counts(self, seconds: int | float) -> int:
                 # publish_rate = counts / second
                 return round(PUBLISH_RATE * seconds)
         
-        def at_seconds(self, seconds: int | float) -> bool:
-                return self.counter == self.seconds_to_counts(seconds)
 
+        # SUBSCRIBER CALLBACKS
+
+        def left_pwm_callback(self, msg: UInt32):
+                self.left_pwm = pwm_value_to_percentage(msg.data)
+
+        def right_pwm_callback(self, msg: UInt32):
+                self.right_pwm = pwm_value_to_percentage(msg.data)
 
 # MAIN
 

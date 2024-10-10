@@ -12,14 +12,19 @@ from std_msgs.msg import UInt32
 from nav_msgs.msg import Odometry
 
 # FILE WRITING
+import os
 import csv
 
 # HELPER MODULES
 from .conversions import *
 
 # CONSTANTS
-PROCESS_RATE = 10 # Hz (times / second)
-CSV_FILE = "analysis.csv"
+PROCESS_RATE = 5 # Hz (times / second)
+CSV_FILE = os.path.join(
+        "simulator",
+        "simulator",
+        "analysis.csv"
+)
 
 
 class Analyzer(Node):
