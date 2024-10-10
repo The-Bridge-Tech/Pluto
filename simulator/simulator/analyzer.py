@@ -23,7 +23,7 @@ PROCESS_RATE = 5 # Hz (times / second)
 CSV_FILE = os.path.join(
         "simulator",
         "simulator",
-        "analysis.csv"
+        "analysis2.csv"
 )
 
 
@@ -95,10 +95,10 @@ class Analyzer(Node):
                         self.heading
                 ]
                 # save current data as a row in csv file
-                with open(CSV_FILE, mode='a', newline='') as f:
-                        writer = csv.writer(f)
-                        writer.writerow(data)
-                        self.get_logger().info(f"p_L: {self.left_pwm}% p_R: {self.right_pwm}% x: {self.x} y: {self.y} heading: {self.heading}°")
+                # with open(CSV_FILE, mode='a', newline='') as f:
+                #         writer = csv.writer(f)
+                #         writer.writerow(data)
+                self.get_logger().info(f"p_L: {self.left_pwm}% p_R: {self.right_pwm}% x: {self.x} y: {self.y} heading: {self.heading}°")
 
 
 # MAIN
