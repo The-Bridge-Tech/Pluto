@@ -15,12 +15,13 @@ class PWM:
 
         """Struct controller class for servo pwm"""
 
-        def __init__(self, neutral: int, min: int, max: int, publisher: Publisher, logger: RcutilsLogger):
+        def __init__(self, neutral: int, min: int, max: int, value_pub: Publisher, percent_pub: Publisher, logger: RcutilsLogger):
                 self._value = neutral
                 self.neutral = neutral
                 self.min = min
                 self.max = max
-                self.publisher = publisher
+                self.value_pub = value_pub
+                self.percent_pub = percent_pub
                 self.logger = logger
 
         @property
@@ -40,7 +41,8 @@ class PWM:
                 else:
                         self._value = round(value)
                 # publish new value
-                self.publisher.publish(UInt32(data=self._value))
+                self.value_pub.publish(UInt32(data=self._value))
+                self.percent_pub.publish(UInt32(data=self.percentage))
         
         @property
         def percentage(self) -> int:

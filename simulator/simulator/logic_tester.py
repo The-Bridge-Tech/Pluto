@@ -62,14 +62,14 @@ class LogicTester(Node):
                 # SUBSCRIBERS
                 self.left_pwm_sub = self.create_subscription(
                         UInt32,
-                        "/steering_left",
+                        "/steering_left/percentage",
                         self.left_pwm_callback,
                         10
                 )
                 self.left_pwm = 0
                 self.right_pwm_sub = self.create_subscription(
                         UInt32,
-                        "/steering_right",
+                        "/steering_right/percentage",
                         self.right_pwm_callback,
                         10
                 )
@@ -202,10 +202,10 @@ class LogicTester(Node):
         # SUBSCRIBER CALLBACKS
 
         def left_pwm_callback(self, msg: UInt32):
-                self.left_pwm = pwm_value_to_percentage(msg.data)
+                self.left_pwm = msg.data
 
         def right_pwm_callback(self, msg: UInt32):
-                self.right_pwm = pwm_value_to_percentage(msg.data)
+                self.right_pwm = msg.data
 
 # MAIN
 

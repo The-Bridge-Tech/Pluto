@@ -109,9 +109,14 @@ class LocalPlanner(Node):
                         neutral = self.neutral_pwm,
                         min = self.min_pwm,
                         max = self.max_pwm,
-                        publisher = self.create_publisher(
+                        value_pub = self.create_publisher(
                                 UInt32, 
                                 "/steering_left", 
+                                10
+                        ),
+                        percent_pub = self.create_publisher(
+                                UInt32,
+                                "/steering_left/percentage",
                                 10
                         ),
                         logger = self.get_logger()
@@ -120,9 +125,14 @@ class LocalPlanner(Node):
                         neutral = self.neutral_pwm,
                         min = self.min_pwm,
                         max = self.max_pwm,
-                        publisher = self.create_publisher(
+                        value_pub = self.create_publisher(
                                 UInt32, 
                                 "/steering_right", 
+                                10
+                        ),
+                        percent_pub = self.create_publisher(
+                                UInt32,
+                                "/steering_right/percentage",
                                 10
                         ),
                         logger = self.get_logger()

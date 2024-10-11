@@ -12,11 +12,6 @@ import tf_transformations
 # CALCULATION MODULES
 import math
 
-# CONSTANTS
-PWM_MIN = 992
-PWM_NEUTRAL = 1376
-PWM_MAX = 1765
-
 
 def euler_to_quaternion(roll, pitch, yaw):
         roll /= 2.0
@@ -38,14 +33,6 @@ def euler_to_quaternion(roll, pitch, yaw):
                 cj*cs - sj*sc, # z
                 cj*cc + sj*ss  # w
         ]
-
-def pwm_value_to_percentage(pwm: int) -> float:
-        if pwm == PWM_NEUTRAL:
-                return 0
-        elif pwm < PWM_NEUTRAL:
-                return ((pwm - PWM_NEUTRAL) / (PWM_NEUTRAL - PWM_MIN)) * 100
-        elif pwm > PWM_NEUTRAL:
-                return ((pwm - PWM_NEUTRAL) / (PWM_MAX - PWM_NEUTRAL)) * 100
         
 def angle_from_odometry(odom: Odometry):
         """Angle is returned in the range -180 to 180 degrees"""
