@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
                 'logic_tester = simulator.logic_tester:main',
-                'analyzer = simulator.analyzer:main'
+                'analyzer = simulator.analyzer:main',
+                'pwm_plotter = customize_local_planner.pwm_plotter:main'
         ],
     },
 )

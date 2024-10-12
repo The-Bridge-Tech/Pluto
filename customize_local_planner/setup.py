@@ -24,8 +24,7 @@ setup(
             'pidTuning = customize_local_planner.pid_tuning_tool:main',
             'phaseOne = customize_local_planner.phase_one_demo:main',
             'gps_plotter = customize_local_planner.gps_plotter:main',
-            'odom_plotter = customize_local_planner.odom_plotter:main',
-            'pwm_plotter = customize_local_planner.pwm_plotter:main'
+            'odom_plotter = customize_local_planner.odom_plotter:main'
         ],
     },
 )
