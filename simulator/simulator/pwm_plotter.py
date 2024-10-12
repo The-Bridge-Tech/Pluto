@@ -128,7 +128,7 @@ class PWMPlotter(Node):
                 self.fig.canvas.draw()
                 # Process any pending GUI events
                 self.fig.canvas.flush_events()
-                return self.left_pwm_plot,
+                return self.left_pwm_plot, self.right_pwm_plot
         
         # SUBSCRIBER CALLBACKS
 
