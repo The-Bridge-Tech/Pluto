@@ -19,12 +19,14 @@ import csv
 from .conversions import *
 
 # CONSTANTS
-PROCESS_RATE = 5 # Hz (times / second)
 CSV_FILE = os.path.join(
         "simulator",
         "simulator",
         "analysis2.csv"
 )
+
+# PARAMETERS
+PROCESS_RATE = 10 # Hz (times / second)
 
 
 class Analyzer(Node):
@@ -69,6 +71,7 @@ class Analyzer(Node):
 
 
         # SUBSCRIBER CALLBACKS
+        
         def odom_callback(self, msg: Odometry):
                 self.x = msg.pose.pose.position.x
                 self.y = msg.pose.pose.position.y

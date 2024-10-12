@@ -11,6 +11,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 from nav_msgs.msg import Odometry, Path
 from custom_msgs.msg import WaypointMsg
+
 # CALCULATION MODULES
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -54,6 +55,9 @@ MAP_IMAGE_DIR = os.path.join(
         PARENT_DIR, 
         "map3.png"
 )
+
+# PARAMETERS
+PROCESS_RATE = 10 # Hz (times / second)
 HEADING_LINE_LENGTH = 0.000025
 
 
@@ -103,10 +107,8 @@ class GPSPlotter(Node):
                 self.currentDistance = None
 
                 # TIMERS
-                # Timer to process current data (don't want to process each time data is received)
-                process_timer_period = 0.1 # seconds
                 self.process_timer = self.create_timer(
-                        process_timer_period, 
+                        1 / PROCESS_RATE, 
                         self.process
                 )
 
@@ -214,7 +216,7 @@ class GPSPlotter(Node):
                 self.animation = animation.FuncAnimation(
                         fig = self.fig, 
                         func = self.update_plot, 
-                        interval=process_timer_period*1000 # ms
+                        interval = (1 / PROCESS_RATE) * 1000 # ms
                 )
                 # Only update plot if there is new data
                 self.new_data = False

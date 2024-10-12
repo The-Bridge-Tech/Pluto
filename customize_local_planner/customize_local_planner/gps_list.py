@@ -7,10 +7,11 @@ Created: 10/8/24
 
 
 class GPSList:
+
+        """Struct class for gps plot data"""
         
         def __init__(self):
-                self.latitudes = []
-                self.longitudes = []
+                self.clear()
                 self.update()
         
         def append(self, lat: float, lon: float):
@@ -28,6 +29,10 @@ class GPSList:
 
         def update(self):
                 self.new = False
+
+        def clear(self):
+                self.latitudes = []
+                self.longitudes = []
 
         def currentLat(self) -> float:
                 return self.latitudes[-1]
