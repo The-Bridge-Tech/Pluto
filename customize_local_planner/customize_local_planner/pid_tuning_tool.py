@@ -78,7 +78,7 @@ class PidTuningPublisher(Node):
         else:
             # get a position 90 degree from the current position with positionx +=1
 
-            current_heading = calculateEulerAngleFromOdometry(self.latest_odom)
+            current_heading = angle_from_odometry(self.latest_odom)
 
             
             current_heading +=90 # move 90 degree turn

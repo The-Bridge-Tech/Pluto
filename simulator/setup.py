@@ -22,7 +22,7 @@ setup(
         'console_scripts': [
                 'logic_tester = simulator.logic_tester:main',
                 'analyzer = simulator.analyzer:main',
-                'pwm_plotter = customize_local_planner.pwm_plotter:main'
+                'pwm_plotter = simulator.pwm_plotter:main'
         ],
     },
 )

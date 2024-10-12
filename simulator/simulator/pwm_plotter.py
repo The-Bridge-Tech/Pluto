@@ -73,7 +73,7 @@ class PWMPlotter(Node):
                 self.right_ax.set_xlabel('Time (s)')
                 self.right_ax.set_ylabel('PWM (%)')
                 # Create plot for left_pwm
-                self.left_pwm_plot = self.ax.plot(
+                self.left_pwm_plot = self.left_ax.plot(
                         [], # initially empty
                         [], # initially empty
                         color='orange', 
@@ -81,7 +81,7 @@ class PWMPlotter(Node):
                         markersize=2
                 )[0] # get the first and only item in the list returned by Axes.plot()
                 # Create plot for right_pwm
-                self.right_pwm_plot = self.ax.plot(
+                self.right_pwm_plot = self.right_ax.plot(
                         [], # initially empty
                         [], # initially empty
                         color='purple', 

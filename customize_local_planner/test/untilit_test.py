@@ -19,7 +19,7 @@ def test_roundPwmValue():
     assert res == 5
     
 
-def test_calculateEulerAngleFromOdometry():
+def test_angle_from_odometry():
     odomTest = Odometry()
 
 
@@ -28,21 +28,21 @@ def test_calculateEulerAngleFromOdometry():
     odomTest.pose.pose.orientation.z = 0.0
     odomTest.pose.pose.orientation.w = 0.0
 
-    angle = calculateEulerAngleFromOdometry(odomTest)
+    angle = angle_from_odometry(odomTest)
     assert angle == 0
     # 90 degree
     odomTest.pose.pose.orientation.x = 0.0
     odomTest.pose.pose.orientation.y = 0.0
     odomTest.pose.pose.orientation.z = 0.7071068
     odomTest.pose.pose.orientation.w = 0.7071068
-    angle = calculateEulerAngleFromOdometry(odomTest)
+    angle = angle_from_odometry(odomTest)
     assert round(angle) == 90.00
 
     odomTest.pose.pose.orientation.x = 0.0
     odomTest.pose.pose.orientation.y = 0.0
     odomTest.pose.pose.orientation.z = 0.9999619
     odomTest.pose.pose.orientation.w =0.0087265
-    angle = calculateEulerAngleFromOdometry(odomTest)
+    angle = angle_from_odometry(odomTest)
     assert round(angle) == 179.0
 
 
@@ -50,7 +50,7 @@ def test_calculateEulerAngleFromOdometry():
     odomTest.pose.pose.orientation.y = 0.0
     odomTest.pose.pose.orientation.z = 0.9999619
     odomTest.pose.pose.orientation.w =-0.0087265
-    angle = calculateEulerAngleFromOdometry(odomTest)
+    angle = angle_from_odometry(odomTest)
     assert round(angle) == -179.0
 
 def test_calculateEulerAngleFromPoseStamped():

@@ -177,7 +177,7 @@ class LocalPlanner(Node):
         def update_conditions(self):
                 """Update conditions that will determine the next state."""
                 # update current direction
-                self.heading = calculateEulerAngleFromOdometry(self.current_odom)
+                self.heading = angle_from_odometry(self.current_odom)
                 # update current position
                 self.current_x = self.current_odom.pose.pose.position.x
                 self.current_y = self.current_odom.pose.pose.position.y

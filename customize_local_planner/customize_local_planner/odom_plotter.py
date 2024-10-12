@@ -16,7 +16,7 @@ from threading import Thread
 import math
 
 # HELPER MODULES
-from .untilit import calculateEulerAngleFromOdometry
+from .untilit import angle_from_odometry
 
 
 HEADING_LINE_LENGTH = 0.1
@@ -90,7 +90,7 @@ class OdomPlotter(Node):
         # HELPERS
 
         def getCurrentHeading(self) -> float:
-                return calculateEulerAngleFromOdometry(self.currentOdom)
+                return angle_from_odometry(self.currentOdom)
         
         def drawHeadingLine(self):
                 # Remove previous heading line

@@ -178,7 +178,7 @@ class LocalPlanner(Node):
         Then set the controller based on the strategy with set_controller_strategy()"""
         
         # get robot's current heading
-        current_robot_heading = calculateEulerAngleFromOdometry(self.current_odom)
+        current_robot_heading = angle_from_odometry(self.current_odom)
         
         # get robot's current position
         start_pose_x = self.current_odom.pose.pose.position.x

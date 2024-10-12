@@ -3,6 +3,7 @@ import math
 from math import atan2
 import numpy as np
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
 from geometry_msgs.msg import PoseStamped
 import tf_transformations
 from geodesy.utm import *
@@ -16,16 +17,18 @@ def roundPwmValue(max_pwm, min_pwm,  pwm_value) -> float:
     else:
         return int(pwm_value)
 
-def calculateEulerAngleFromOdometry(odom: Odometry):
-    # angle are returned in -180 to 180 degree
-    
-    q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
-    rpy = tf_transformations.euler_from_quaternion(q)
-    # angle = rpy[2]*(180/pi)
-    # if(angle < 0):
-    #     angle +=360
-    return math.degrees(rpy[2]) # rpy[2] = yaw (orientation around the vertical axis)
-    return angle
+def angle_from_odometry(odom: Odometry):
+        """Angle is returned in the range -180 to 180 degrees"""
+        q = [
+                odom.pose.pose.orientation.x, 
+                odom.pose.pose.orientation.y, 
+                odom.pose.pose.orientation.z, 
+                odom.pose.pose.orientation.w
+        ]
+        # rpy = [roll, pitch, yaw]
+        rpy = tf_transformations.euler_from_quaternion(q)
+        # rpy[2] = yaw (orientation around the vertical axis)
+        return math.degrees(rpy[2])
 
 def calculateEulerAngleFromPoseStamped(pose: PoseStamped):
     q = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
@@ -35,6 +38,19 @@ def calculateEulerAngleFromPoseStamped(pose: PoseStamped):
     # # if(angle < 0):
     # #     angle +=360
     # return angle
+
+def angle_from_imu(msg: Imu):
+        """Angle is returned in the range -180 to 180 degrees"""
+        q = [
+            msg.orientation.x, 
+            msg.orientation.y, 
+            msg.orientation.z, 
+            msg.orientation.w
+        ]
+        # rpy = [roll, pitch, yaw]
+        rpy = tf_transformations.euler_from_quaternion(q)
+        # rpy[2] = yaw (orientation around the vertical axis)
+        return math.degrees(rpy[2])
 
 def quaternion_from_euler(ai, aj, ak):
     ai /= 2.0
