@@ -202,17 +202,25 @@ def generate_launch_description():
         # # #yolo_mode_launch,
 
         # # #https://answers.ros.org/question/371458/should-i-manually-pass-use_sim_time-to-all-nodes-in-a-ros-2-launchfile/
-        joystick_interpreter,
+        
+        # SENSOR - IMU
         imu_launch,
         imu_filter_launch,
-        controller_launch,
+        # SENSOR - GPS
         gps_launch,
-        static_transform_launch,
-        maestro_launch,
         gps_filter_launch,
         gps_velocity_launch,
-        ekf_filter, 
-        camera_launch,
-        splunk_logger_launch,
         gps_offset_launch,
+        # ODOMETRY
+        ekf_filter, 
+        # STATIC TRANSFORM
+        static_transform_launch,
+        # CONTROLLER
+        joystick_interpreter,
+        controller_launch,
+        # HARDWARE
+        maestro_launch, # (servos)
+        # camera_launch,
+        # LOGGER
+        # splunk_logger_launch,
     ])
