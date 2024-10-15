@@ -298,7 +298,7 @@ class GPSPlotter(Node):
                 )
 
 
-        # CALLBACKS
+        # SUBSCRIBER CALLBACKS
 
         def gps_callback(self, msg: NavSatFix):
                 """Update current GPS point"""
@@ -332,7 +332,7 @@ class GPSPlotter(Node):
                         self.currentWaypointNumber = msg.waypoint_number
 
 
-        # INTERVAL UPDATES
+        # TIMER CALLBACKS
 
         def update_plot(self, frame):
                 """Update scatter plot with gps points."""

@@ -116,7 +116,9 @@ class LogicTester(Node):
                         self.publish_heading(self.heading)
 
                         # GPS
-                        # TODO
+                        # only publish every second
+                        if self.counter % PUBLISH_RATE == 0:
+                                self.publish_gps(*BASE_GPS)
 
 
                 # update counter

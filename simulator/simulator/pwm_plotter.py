@@ -1,7 +1,7 @@
 """
-Dynamically Plot PWM (Pulse-Width-Modulation) control values in real-time
+Dynamically Plot Servo PWM (Pulse-Width-Modulation) control values in real-time
 Author: Matthew Lauriault
-Created: 8/2/24
+Created: 10/11/24
 """
 
 # ROS2 MODULES
