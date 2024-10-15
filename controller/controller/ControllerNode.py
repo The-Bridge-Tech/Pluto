@@ -92,7 +92,7 @@ class ControllerNode(Node):
             Bool, 
             "is_autonomous_mode", 
             self.is_autonomous_mode_callback, 
-            10
+            1
         )
         self.is_autonomous_mode = False
     

@@ -44,7 +44,7 @@ class AutonomousNodeController(Node):
         super().__init__('autonomous_node_controller')
 
         self.autonomous_state_subscription = self.create_subscription(
-            Bool, 'is_autonomous_mode', self.is_autonomous_state_listener, 10)
+            Bool, 'is_autonomous_mode', self.is_autonomous_state_listener, 1)
         self.is_autonomous_state_last_time = Bool()
         self.is_autonomous_state_last_time.data = False
         

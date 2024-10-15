@@ -33,7 +33,7 @@ class PidTuningPublisher(Node):
         self.tuning_is_autonomous_mode_publisher = self.create_publisher(
             Bool, 
             "is_autonomous_mode", 
-            10
+            1
         )
         # Subscribers
         self.odom_sub = self.create_subscription(

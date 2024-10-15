@@ -101,7 +101,7 @@ class JoystickInterpreter(Node):
         self.is_autonomous_mode_publisher = self.create_publisher(
             Bool, 
             'is_autonomous_mode', 
-            10
+            1
         )
         self.is_autonomous_mode = False
         self.button_states = [0] * len(BUTTONS)

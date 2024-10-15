@@ -93,7 +93,7 @@ class LocalPlanner(Node):
                         Bool, 
                         "is_autonomous_mode", 
                         self.is_autonomous_mode_callback, 
-                        10
+                        1
                 )
                 self.is_autonomous_mode = False
                 self.local_plan = self.create_subscription(

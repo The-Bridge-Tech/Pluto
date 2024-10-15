@@ -56,7 +56,7 @@ class LogicTester(Node):
                 self.is_autonomous_mode_pub = self.create_publisher(
                         Bool, 
                         "is_autonomous_mode", 
-                        10
+                        1
                 )
 
                 # SUBSCRIBERS
