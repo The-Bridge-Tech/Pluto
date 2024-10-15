@@ -8,7 +8,7 @@ Created: 10/9/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt32, Float64
+from std_msgs.msg import Float64
 from nav_msgs.msg import Odometry
 
 # FILE WRITING
@@ -77,10 +77,10 @@ class Analyzer(Node):
                 self.y = msg.pose.pose.position.y
                 self.heading = angle_from_odometry(msg)
 
-        def left_pwm_callback(self, msg: UInt32):
+        def left_pwm_callback(self, msg: Float64):
                 self.left_pwm = msg.data
 
-        def right_pwm_callback(self, msg: UInt32):
+        def right_pwm_callback(self, msg: Float64):
                 self.right_pwm = msg.data
 
 

@@ -9,7 +9,7 @@ Created: 10/9/24
 import rclpy
 from rclpy.node import Node
 import rclpy.time_source
-from std_msgs.msg import Header, Bool, UInt32, Float64
+from std_msgs.msg import Header, Bool, Float64
 from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import Quaternion, Vector3
 
@@ -222,10 +222,10 @@ class LogicTester(Node):
 
         # SUBSCRIBER CALLBACKS
 
-        def left_pwm_callback(self, msg: UInt32):
+        def left_pwm_callback(self, msg: Float64):
                 self.left_pwm = msg.data
 
-        def right_pwm_callback(self, msg: UInt32):
+        def right_pwm_callback(self, msg: Float64):
                 self.right_pwm = msg.data
 
 # MAIN

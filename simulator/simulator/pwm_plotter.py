@@ -7,7 +7,7 @@ Created: 8/2/24
 # ROS2 MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt32, Float64
+from std_msgs.msg import Float64
 
 # CALCULATION MODULES
 import matplotlib.pyplot as plt
@@ -132,10 +132,10 @@ class PWMPlotter(Node):
         
         # SUBSCRIBER CALLBACKS
 
-        def left_pwm_callback(self, msg: UInt32):
+        def left_pwm_callback(self, msg: Float64):
                 self.left_pwm_data.append(msg.data)
 
-        def right_pwm_callback(self, msg: UInt32):
+        def right_pwm_callback(self, msg: Float64):
                 self.right_pwm_data.append(msg.data)
 
 # MAIN
