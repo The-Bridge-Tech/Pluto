@@ -11,6 +11,9 @@ local_planner:
     straight_adjustment_pwm: 2.0 # percent
     straight_angle_tolerance: 5.0 # degrees - will only correct angle difference if outside this tolerance
     straight_distance_tolerance: 1.0 # meters - will stop once within this distance of the waypoint
+    straight_kp: 1.0  # Proportional coefficient of PID equation
+    straight_ki: 0.01 # Integral coefficient of PID equation
+    straight_kd: 0.1  # Derivitive coefficient of PID equation
 
     # STATE: TURN
     turn_initial_pwm: 10.0 # percent

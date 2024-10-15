@@ -58,7 +58,7 @@ MAP_IMAGE_DIR = os.path.join(
 
 # PARAMETERS
 PROCESS_RATE = 10 # Hz (times / second)
-HEADING_LINE_LENGTH = 0.000025
+HEADING_LINE_LENGTH = 0.000025 * 3
 
 
 class GPSPlotter(Node):
