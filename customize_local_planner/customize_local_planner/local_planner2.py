@@ -297,13 +297,13 @@ class LocalPlanner(Node):
                 if self.angle_diff < -(self.straight_angle_tolerance / 2):
                         # to turn right (clockwise) -> left forward, right backward
                         # self.left_pwm.percentage += 1
-                        self.right_pwm.percentage = -self.straight_adjustment_pwm
+                        self.right_pwm.percentage = self.straight_initial_pwm - self.straight_adjustment_pwm
                         # TODO Use Joel's PID error calc here
                 # positive angle difference -> goal angle > current angle -> turn left (counter-clockwise)
                 elif self.angle_diff > (self.straight_angle_tolerance / 2):
                         # to turn left (counter-clockwise) -> left backward, right forward
                         # self.left_pwm.percentage -= 1
-                        self.right_pwm.percentage = self.straight_adjustment_pwm
+                        self.right_pwm.percentage = self.straight_initial_pwm + self.straight_adjustment_pwm
                         # TODO Use Joel's PID error calc here
                 # no angle difference -> goal angle = current angle -> reset to initial pwm
                 else:
