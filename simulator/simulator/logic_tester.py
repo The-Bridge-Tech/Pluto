@@ -77,7 +77,7 @@ class LogicTester(Node):
 
                 # VARIABLES
                 self.counter = 0
-                self.heading = 0
+                self.heading = INITIAL_HEADING
                 self.x = 0
                 self.y = 0
 
@@ -86,17 +86,21 @@ class LogicTester(Node):
 
         def publish_sensor_data(self):
                 """Simulate sensor data to observe logic in other nodes"""
-                # publish initial gps & heading (None -> Stop)
+                # publish initial gps
                 if self.counter == self.seconds_to_counts(0):
                         self.publish_gps(*BASE_GPS)
+                # publish initial heading (Stop -> Turn)
+                elif self.counter == self.seconds_to_counts(0.5):
                         self.publish_heading(INITIAL_HEADING)
-                # re-publish initial gps & heading
-                elif self.counter == self.seconds_to_counts(1):
-                        self.publish_gps(*BASE_GPS)
-                        self.publish_heading(INITIAL_HEADING)
-                # start autonomous mode (Stop -> Turn)
-                elif self.counter == self.seconds_to_counts(2):
+                # start autonomous mode (to allow some nodes to start subscribing)
+                elif self.counter == self.seconds_to_counts(1.0):
                         self.publish_autonomous_mode(True)
+                # re-publish initial gps
+                elif self.counter == self.seconds_to_counts(1.5):
+                        self.publish_gps(*BASE_GPS)
+                # re-publish initial heading
+                elif self.counter == self.seconds_to_counts(2):
+                        self.publish_heading(INITIAL_HEADING)
  
                 # publish gps & heading dynamically based on pwm values
                 elif self.counter > self.seconds_to_counts(2):
