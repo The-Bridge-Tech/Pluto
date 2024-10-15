@@ -8,7 +8,7 @@ Created: 10/1/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt32, Bool, String
+from std_msgs.msg import UInt32, Bool, String, Float64
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
 
@@ -115,7 +115,7 @@ class LocalPlanner(Node):
                                 10
                         ),
                         percent_pub = self.create_publisher(
-                                UInt32,
+                                Float64,
                                 "/steering_left/percentage",
                                 10
                         ),
@@ -131,7 +131,7 @@ class LocalPlanner(Node):
                                 10
                         ),
                         percent_pub = self.create_publisher(
-                                UInt32,
+                                Float64,
                                 "/steering_right/percentage",
                                 10
                         ),
@@ -270,8 +270,8 @@ class LocalPlanner(Node):
         def straight(self):
                 """Start moving straight towards the next waypoint."""
                 self.set_state("Straight")
-                self.left_pwm.value = self.straight_initial_pwm
-                self.right_pwm.value = self.straight_initial_pwm
+                self.left_pwm.percentage = self.straight_initial_pwm
+                self.right_pwm.percentage = self.straight_initial_pwm
 
         # STATE MAINTENANCE
 

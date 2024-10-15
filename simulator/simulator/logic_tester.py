@@ -9,7 +9,7 @@ Created: 10/9/24
 import rclpy
 from rclpy.node import Node
 import rclpy.time_source
-from std_msgs.msg import Header, Bool, UInt32
+from std_msgs.msg import Header, Bool, UInt32, Float64
 from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import Quaternion, Vector3
 
@@ -43,7 +43,7 @@ class LogicTester(Node):
                 # PUBLISHERS - SENSOR DATA
                 self.gps_pub = self.create_publisher(
                         NavSatFix,
-                        "/fix/filtered",
+                        "/fix",
                         10
                 )
                 self.imu_pub = self.create_publisher(
@@ -61,14 +61,14 @@ class LogicTester(Node):
 
                 # SUBSCRIBERS
                 self.left_pwm_sub = self.create_subscription(
-                        UInt32,
+                        Float64,
                         "/steering_left/percentage",
                         self.left_pwm_callback,
                         10
                 )
                 self.left_pwm = 0
                 self.right_pwm_sub = self.create_subscription(
-                        UInt32,
+                        Float64,
                         "/steering_right/percentage",
                         self.right_pwm_callback,
                         10
@@ -86,16 +86,20 @@ class LogicTester(Node):
 
         def publish_sensor_data(self):
                 """Simulate sensor data to observe logic in other nodes"""
-                # initial gps & heading (None -> Stop)
+                # publish initial gps & heading (None -> Stop)
                 if self.counter == self.seconds_to_counts(0):
                         self.publish_gps(*BASE_GPS)
                         self.publish_heading(INITIAL_HEADING)
-                # start autonomous mode (Stop -> Turn)
+                # re-publish initial gps & heading
                 elif self.counter == self.seconds_to_counts(1):
+                        self.publish_gps(*BASE_GPS)
+                        self.publish_heading(INITIAL_HEADING)
+                # start autonomous mode (Stop -> Turn)
+                elif self.counter == self.seconds_to_counts(2):
                         self.publish_autonomous_mode(True)
  
                 # publish gps & heading dynamically based on pwm values
-                elif self.counter > self.seconds_to_counts(1):
+                elif self.counter > self.seconds_to_counts(2):
                         # HEADING
                         # convert pwm difference to angular displacement 
                         rotation_pwm = self.right_pwm - self.left_pwm  # (positive = counter-clockwise, negative = clockwise)
@@ -118,26 +122,41 @@ class LogicTester(Node):
         # HELPERS - PUBLISHING
 
         def publish_gps(self, lat: float, lon: float):
-                msg = NavSatFix(
-                        header = Header(
-                                stamp = self.get_clock().now().to_msg(),
-                                frame_id = "gps_link"
-                        ),
-                        status = NavSatStatus(
-                                status = 0,
-                                service = 1
-                        ),
-                        latitude = lat,
-                        longitude = lon,
-                        altitude = 278.299,
-                        position_covariance = [
-                                0.0169, 0.0,    0.0,
-                                0.0,    0.0169, 0.0,
-                                0.0,    0.0,    0.270
-                        ],
-                        position_covariance_type = 1
-                )
+                # msg = NavSatFix(
+                #         header = Header(
+                #                 stamp = self.get_clock().now().to_msg(),
+                #                 frame_id = "gps_link"
+                #         ),
+                #         status = NavSatStatus(
+                #                 status = 0,
+                #                 service = 1
+                #         ),
+                #         latitude = lat,
+                #         longitude = lon,
+                #         altitude = 278.299,
+                #         position_covariance = [
+                #                 0.0169, 0.0,    0.0,
+                #                 0.0,    0.0169, 0.0,
+                #                 0.0,    0.0,    0.270
+                #         ],
+                #         position_covariance_type = 1
+                # )
+                msg = NavSatFix()
+                msg.header.stamp = self.get_clock().now().to_msg()
+                msg.header.frame_id = "gps_link"
+                msg.status.status = 0
+                msg.status.service = 1
+                msg.latitude = lat
+                msg.longitude = lon
+                msg.altitude = 278.299
+                msg.position_covariance = [
+                        0.0169, 0.0,    0.0,
+                        0.0,    0.0169, 0.0,
+                        0.0,    0.0,    0.270
+                ]
+                msg.position_covariance_type = 1
                 self.gps_pub.publish(msg)
+                self.get_logger().info(f"Published GPS: lat={lat}, lon={lon}")
 
         def publish_heading(self, angle: float):
                 """Angle in degrees from -180 to 180"""
@@ -184,12 +203,14 @@ class LogicTester(Node):
                         ]
                 )
                 self.imu_pub.publish(msg)
+                self.get_logger().info(f"Published Heading: angle={angle}")
 
         def publish_autonomous_mode(self, is_autonomous_mode: bool):
                 msg = Bool(
                         data = is_autonomous_mode
                 )
                 self.is_autonomous_mode_pub.publish(msg)
+                self.get_logger().info(f"Published is_autonomous_mode: {is_autonomous_mode}")
 
 
         # HELPERS - TIMING

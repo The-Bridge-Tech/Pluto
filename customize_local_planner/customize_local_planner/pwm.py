@@ -8,7 +8,7 @@ Created: 10/2/24
 # ROS MODULES
 from rclpy.node import Publisher
 from rclpy.impl.rcutils_logger import RcutilsLogger
-from std_msgs.msg import UInt32
+from std_msgs.msg import UInt32, Float64
 
 
 class PWM:
@@ -42,16 +42,16 @@ class PWM:
                         self._value = round(value)
                 # publish new value
                 self.value_pub.publish(UInt32(data=self._value))
-                self.percent_pub.publish(UInt32(data=self.percentage))
+                self.percent_pub.publish(Float64(data=self.percentage))
         
         @property
-        def percentage(self) -> int:
+        def percentage(self) -> float:
                 if self.value == self.neutral:
-                        return 0
+                        return 0.0
                 elif self.value < self.neutral:
-                        return ((self.value - self.neutral) / (self.neutral - self.min)) * 100
+                        return ((self.value - self.neutral) / (self.neutral - self.min)) * 100.0
                 elif self.value > self.neutral:
-                        return ((self.value - self.neutral) / (self.max - self.neutral)) * 100
+                        return ((self.value - self.neutral) / (self.max - self.neutral)) * 100.0
         @percentage.setter
         def percentage(self, value: int|float):
                 if value == 0:
