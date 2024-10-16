@@ -128,39 +128,25 @@ class LogicTester(Node):
         # HELPERS - PUBLISHING
 
         def publish_gps(self, lat: float, lon: float):
-                # msg = NavSatFix(
-                #         header = Header(
-                #                 stamp = self.get_clock().now().to_msg(),
-                #                 frame_id = "gps_link"
-                #         ),
-                #         status = NavSatStatus(
-                #                 status = 0,
-                #                 service = 1
-                #         ),
-                #         latitude = lat,
-                #         longitude = lon,
-                #         altitude = 278.299,
-                #         position_covariance = [
-                #                 0.0169, 0.0,    0.0,
-                #                 0.0,    0.0169, 0.0,
-                #                 0.0,    0.0,    0.270
-                #         ],
-                #         position_covariance_type = 1
-                # )
-                msg = NavSatFix()
-                msg.header.stamp = self.get_clock().now().to_msg()
-                msg.header.frame_id = "gps_link"
-                msg.status.status = 0
-                msg.status.service = 1
-                msg.latitude = lat
-                msg.longitude = lon
-                msg.altitude = 278.299
-                msg.position_covariance = [
-                        0.0169, 0.0,    0.0,
-                        0.0,    0.0169, 0.0,
-                        0.0,    0.0,    0.270
-                ]
-                msg.position_covariance_type = 1
+                msg = NavSatFix(
+                        header = Header(
+                                stamp = self.get_clock().now().to_msg(),
+                                frame_id = "gps_link"
+                        ),
+                        status = NavSatStatus(
+                                status = 0,
+                                service = 1
+                        ),
+                        latitude = lat,
+                        longitude = lon,
+                        altitude = 278.299,
+                        position_covariance = [
+                                0.0169, 0.0,    0.0,
+                                0.0,    0.0169, 0.0,
+                                0.0,    0.0,    0.270
+                        ],
+                        position_covariance_type = 1
+                )
                 self.gps_pub.publish(msg)
                 self.get_logger().info(f"Published GPS: lat={lat}, lon={lon}")
 
