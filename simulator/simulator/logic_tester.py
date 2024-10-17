@@ -24,9 +24,30 @@ BASE_GPS = (34.841400, -82.411743)
 
 # PARAMETERS
 PUBLISH_RATE = 10 # Hz (publishes / second)
-INITIAL_HEADING = 127.0 # degrees (-180 to 180)
-ANG_VEL_PER_PWM_PERCENT = 0.5 # (degrees / second) / pwm difference %
+INITIAL_HEADING = 127.0 # ° (-180° to 180°)
+ANG_ACC_PER_PWM_PERCENT = 0.2 # (°/s^2) / pwm difference %
+LINEAR_ACC_PER_PWM_PERCENT = 0.05 # (m/s^2) / pwm average %
+FRICTION_COEFF = 0.05  # m/s^2 per m/s of velocity
 
+# MOWER PROPERTIES (Husqvarna Z246)
+MASS = 242.672 # kg (535 lbs)
+TRACK_WIDTH = 0.9906 # m (39 in)
+WIDTH = 1.11125 # m (43.75 in)
+LENGTH = 1.905 # m (75 in)
+MAX_ENGINE_POWER = 16032.55 # Watts (21.5 hp)
+MAX_ENGINE_RPM = 3300 # ± 100 rpm
+MAX_ENGINE_ANG_VEL = MAX_ENGINE_RPM * ((2*math.pi)/60)
+MAX_LINEAR_VELOCITY = 2.90576 # m/s (6.5 mph)
+MAX_TORQUE = 53.2 # Nm at 2200 rpm
+MAX_TORQUE_RPM = 2200 # rpm
+
+# PHYSICS QUANTITIES
+RADIUS = TRACK_WIDTH / 2
+MOMENT_OF_INERTIA = (1/12) * MASS * (LENGTH**2 + WIDTH**2)
+COEFF_OF_FRICTION = 0.40 # 0.35 to 0.55 for dry grass
+DRAG_COEFF = 0.9 # 0.7 to 1.1 for non-streamlined vehicles
+GRAVITY = 9.81 # m/s^2
+FRICTION_FORCE = COEFF_OF_FRICTION * MASS * GRAVITY # N
 
 
 class LogicTester(Node):
@@ -78,8 +99,12 @@ class LogicTester(Node):
                 # VARIABLES
                 self.counter = 0
                 self.heading = INITIAL_HEADING
-                self.x = 0
-                self.y = 0
+                self.x, self.y = lat_lon_to_utm(*BASE_GPS)
+                self.angular_vel = 0.0
+                self.linear_vel = 0.0
+
+                self.vel_left = 0.0
+                self.vel_right = 0.0
 
 
         # TIMER CALLBACKS
@@ -105,21 +130,47 @@ class LogicTester(Node):
                 # publish gps & heading dynamically based on pwm values
                 elif self.counter > self.seconds_to_counts(2):
                         # HEADING
-                        # convert pwm difference to angular displacement 
-                        rotation_pwm = self.right_pwm - self.left_pwm  # (positive = counter-clockwise, negative = clockwise)
-                        angular_vel = ANG_VEL_PER_PWM_PERCENT * rotation_pwm
-                        time_interval = 1 / PUBLISH_RATE
-                        angular_displacement = angular_vel * time_interval
+                        # # convert pwm difference to angular displacement 
+                        # rotation_pwm = self.right_pwm - self.left_pwm  # (positive = counter-clockwise, negative = clockwise)
+                        # time_interval = 1 / PUBLISH_RATE                                        # t = 1/f
+                        # angular_acc = ANG_ACC_PER_PWM_PERCENT * rotation_pwm                    # α = (α/pwm) * pwm
+                        # angular_dec = FRICTION_COEFF * self.angular_vel                        # drag = bω
+                        # self.angular_vel += (angular_acc - angular_dec) * time_interval        # Δω = αt
+                        # angular_displacement = self.angular_vel * time_interval                 # θ = ωt
+                        # # update heading
+                        # self.heading += angular_displacement
+                        # # publish new heading
+
+                        # map PWM % to velocity of each wheel
+                        self.vel_left = (self.left_pwm / 100.0) * MAX_LINEAR_VELOCITY
+                        self.vel_right = (self.right_pwm / 100.0) * MAX_LINEAR_VELOCITY
+                        # calculate linear and angular velocity of the mower
+                        self.linear_vel = (self.vel_left + self.vel_right) / 2 # average
+                        self.angular_vel = (self.vel_right - self.vel_left) / TRACK_WIDTH # difference / 2*radius
+                        # calculate change in heading
+                        delta_time = 1 / PUBLISH_RATE # t = 1/f
+                        delta_theta = self.angular_vel * delta_time # Δθ = ωΔt
                         # update heading
-                        self.heading += angular_displacement
-                        # publish new heading
+                        self.heading += delta_theta
                         self.publish_heading(self.heading)
 
                         # GPS
+                        # convert pwm average to linear displacement
+                        # linear_pwm = (self.left_pwm + self.right_pwm) / 2       # (average of left and right)
+                        # linear_acc = LINEAR_ACC_PER_PWM_PERCENT * linear_pwm    # a = (a/pwm) * pwm
+                        # self.linear_vel += linear_acc * time_interval           # Δv = at
+                        # theta = math.radians(self.heading)
+                        # dx = self.linear_vel * time_interval * math.cos(theta)  # Δx = v*cos(θ)*t
+                        # dy = self.linear_vel * time_interval * math.sin(theta)  # Δy = v*sin(θ)*t
+                        # self.x += dx
+                        # self.y += dy
                         # only publish every second
                         if self.counter % PUBLISH_RATE == 0:
+                                # lat, lon = utm_to_lat_lon(self.x, self.y)
+                                # self.publish_gps(lat, lon)
                                 self.publish_gps(*BASE_GPS)
-
+                        
+                        # self.get_logger().info(f"alpha: {angular_acc} w: {self.angular_vel}") # a: {linear_acc} v: {self.linear_vel}")
 
                 # update counter
                 self.counter += 1
@@ -176,7 +227,7 @@ class LogicTester(Node):
                         angular_velocity = Vector3(
                                 x = 0.0,
                                 y = 0.0,
-                                z = 0.0
+                                z = math.radians(self.angular_vel)
                         ),
                         angular_velocity_covariance = [
                                 0.04000000000000001,    0.0,                    0.0,

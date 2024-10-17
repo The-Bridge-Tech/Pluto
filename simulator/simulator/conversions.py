@@ -11,6 +11,12 @@ import tf_transformations
 
 # CALCULATION MODULES
 import math
+from pyproj import Proj, transform
+
+
+# Projection setup: WGS84 to UTM
+PROJ_WGS84 = Proj(proj='latlong', datum='WGS84')
+PROJ_UTM = Proj(proj='utm', zone=17, datum='WGS84')  # Update zone as per your location
 
 
 def euler_to_quaternion(roll, pitch, yaw):
@@ -46,3 +52,19 @@ def angle_from_odometry(odom: Odometry):
         rpy = tf_transformations.euler_from_quaternion(q)
         # rpy[2] = yaw (orientation around the vertical axis)
         return math.degrees(rpy[2])
+
+def utm_to_lat_lon(easting: float, northing: float) -> tuple:
+        return transform(
+                PROJ_UTM,
+                PROJ_WGS84,
+                easting,
+                northing
+        )
+
+def lat_lon_to_utm(lat: float, lon: float) -> tuple:
+        return transform(
+                PROJ_WGS84, 
+                PROJ_UTM, 
+                lon,
+                lat
+        )
