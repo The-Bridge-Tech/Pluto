@@ -31,16 +31,16 @@ DEFAULT_PARAMS = {
         # STATE: STRAIGHT
         "straight_initial_pwm": 30.0, # percent - forward speed of mower
         "straight_distance_tolerance": 1.0, # meters - will stop once within this distance of the waypoint
-        "straight_kp": 1.0,  # Proportional coefficient of PID equation
-        "straight_ki": 0.01, # Integral coefficient of PID equation
-        "straight_kd": 0.1,  # Derivitive coefficient of PID equation
+        "straight_kp": 2.0,  # Proportional coefficient of PID equation
+        "straight_ki": 0.0,  # Integral coefficient of PID equation
+        "straight_kd": 0.0,  # Derivitive coefficient of PID equation
 
         # STATE: TURN
         "turn_max_pwm": 15.0, # percent
         "turn_angle_tolerance": 5.0, # will begin straight state once angle difference is within this tolerance
-        "turn_kp": 1.0,  # Proportional coefficient of PID equation
-        "turn_ki": 0.01, # Integral coefficient of PID equation
-        "turn_kd": 0.1,  # Derivitive coefficient of PID equation
+        "turn_kp": 3.0,  # Proportional coefficient of PID equation
+        "turn_ki": 0.5,  # Integral coefficient of PID equation
+        "turn_kd": 0.7,  # Derivitive coefficient of PID equation
 
         # OTHER
         "process_frequency": 10, # Hz (times / second)
