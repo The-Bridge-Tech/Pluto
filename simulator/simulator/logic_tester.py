@@ -34,6 +34,7 @@ MASS = 242.672 # kg (535 lbs)
 TRACK_WIDTH = 0.9906 # m (39 in)
 WIDTH = 1.11125 # m (43.75 in)
 LENGTH = 1.905 # m (75 in)
+HEIGHT = 1.016 # m (40 in)
 MAX_ENGINE_POWER = 16032.55 # Watts (21.5 hp)
 MAX_ENGINE_RPM = 3300 # ± 100 rpm
 MAX_ENGINE_ANG_VEL = MAX_ENGINE_RPM * ((2*math.pi)/60)
@@ -41,13 +42,19 @@ MAX_LINEAR_VELOCITY = 2.90576 # m/s (6.5 mph)
 MAX_TORQUE = 53.2 # Nm at 2200 rpm
 MAX_TORQUE_RPM = 2200 # rpm
 
-# PHYSICS QUANTITIES
-RADIUS = TRACK_WIDTH / 2
-MOMENT_OF_INERTIA = (1/12) * MASS * (LENGTH**2 + WIDTH**2)
+# PHYSICS PARAMETERS
+GRAVITY = 9.81 # m/s^2
 COEFF_OF_FRICTION = 0.40 # 0.35 to 0.55 for dry grass
 DRAG_COEFF = 0.9 # 0.7 to 1.1 for non-streamlined vehicles
-GRAVITY = 9.81 # m/s^2
+AIR_DENSITY = 1.225  # kg/m^3 (standard air density at sea level)
+
+# PHYSICS CALCULATIONS
+MOMENT_OF_INERTIA = (1/12) * MASS * (LENGTH**2 + WIDTH**2) # kg*m^2
 FRICTION_FORCE = COEFF_OF_FRICTION * MASS * GRAVITY # N
+FRONTAL_AREA = WIDTH * HEIGHT # m^2
+DRAG_FORCE = lambda linear_vel: 0.5 * DRAG_COEFF * AIR_DENSITY * FRONTAL_AREA * linear_vel**2 # N
+
+
 
 
 class LogicTester(Node):
@@ -150,24 +157,32 @@ class LogicTester(Node):
         # HELPERS - PHYSICS
 
         def update_physics(self):
-                # DIRECTION (HEADING)
+                # VELOCITY
                 # map PWM % to velocity of each wheel
                 self.left_vel = (self.left_pwm / 100.0) * MAX_LINEAR_VELOCITY
                 self.right_vel = (self.right_pwm / 100.0) * MAX_LINEAR_VELOCITY
                 # calculate linear and angular velocity of the mower
                 self.linear_vel = (self.left_vel + self.right_vel) / 2                  # average
-                self.angular_vel = (self.right_vel - self.left_vel) / TRACK_WIDTH      # difference / 2*radius
+                self.angular_vel = (self.right_vel - self.left_vel) / TRACK_WIDTH       # difference / 2*radius
+                # calculate deceleration due to drag
+                deceleration = DRAG_FORCE(self.linear_vel) / MASS       # a = F/m
+                # apply deceleration to linear velocity
+                delta_time = 1 / PUBLISH_RATE                   # Δt = 1/f
+                self.linear_vel -= deceleration * delta_time    # Δv = aΔt
+                # DIRECTION (HEADING)
                 # calculate change in heading
-                delta_time = 1 / PUBLISH_RATE                   # t = 1/f
                 delta_theta = self.angular_vel * delta_time     # Δθ = ωΔt
                 # update heading
                 self.heading += math.degrees(delta_theta)
                 # POSITION (GPS)
+                # calculate velocity x & y components
                 theta = math.radians(self.heading)
                 vx = self.linear_vel * math.cos(theta)          # v_x = v*cos(θ)
                 vy = self.linear_vel * math.sin(theta)          # v_y = v*sin(θ)
+                # calculate displacement x & y components
                 dx = vx * delta_time                            # Δx = v_x*t
                 dy = vy * delta_time                            # Δy = v_y*t
+                # update total displacement
                 self.x += dx
                 self.y += dy
                 self.get_logger().info(f"x: {round(self.x, 3)}\t y: {round(self.y, 3)}\t v: {round(self.linear_vel, 3)}")
