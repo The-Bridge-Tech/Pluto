@@ -99,7 +99,8 @@ class LogicTester(Node):
                 # VARIABLES
                 self.counter = 0
                 self.heading = INITIAL_HEADING  # ° (-180° to 180°)
-                self.x, self.y = lat_lon_to_utm(*BASE_GPS) # m
+                self.x0, self.y0 = lat_lon_to_utm(*BASE_GPS) # m
+                self.x, self.y = 0.0, 0.0 # m
                 self.angular_vel = 0.0 # rad/s
                 self.linear_vel = 0.0 # m/s
                 self.left_vel = 0.0 # m/s
@@ -134,7 +135,10 @@ class LogicTester(Node):
                         self.publish_heading(self.heading)
                         # only publish gps every second
                         if self.counter % PUBLISH_RATE == 0:
-                                lat, lon = utm_to_lat_lon(self.x, self.y)
+                                lon, lat = utm_to_lat_lon(
+                                        self.x0 + self.x, 
+                                        self.y0 + self.y
+                                )
                                 self.publish_gps(lat, lon)
                                 # self.publish_gps(*BASE_GPS)
                         # self.get_logger().info(f"alpha: {angular_acc} w: {self.angular_vel}") # a: {linear_acc} v: {self.linear_vel}")
@@ -152,7 +156,7 @@ class LogicTester(Node):
                 self.right_vel = (self.right_pwm / 100.0) * MAX_LINEAR_VELOCITY
                 # calculate linear and angular velocity of the mower
                 self.linear_vel = (self.left_vel + self.right_vel) / 2                  # average
-                self.angular_vel = (self.right_vel - self.left_vel) / TRACK_WIDTH       # difference / 2*radius
+                self.angular_vel = (self.right_vel - self.left_vel) / TRACK_WIDTH      # difference / 2*radius
                 # calculate change in heading
                 delta_time = 1 / PUBLISH_RATE                   # t = 1/f
                 delta_theta = self.angular_vel * delta_time     # Δθ = ωΔt
@@ -160,10 +164,13 @@ class LogicTester(Node):
                 self.heading += math.degrees(delta_theta)
                 # POSITION (GPS)
                 theta = math.radians(self.heading)
-                dx = self.linear_vel * math.cos(theta) * delta_time  # Δx = v*cos(θ)*t
-                dy = self.linear_vel * math.sin(theta) * delta_time  # Δy = v*sin(θ)*t
+                vx = self.linear_vel * math.cos(theta)          # v_x = v*cos(θ)
+                vy = self.linear_vel * math.sin(theta)          # v_y = v*sin(θ)
+                dx = vx * delta_time                            # Δx = v_x*t
+                dy = vy * delta_time                            # Δy = v_y*t
                 self.x += dx
                 self.y += dy
+                self.get_logger().info(f"x: {round(self.x, 3)}\t y: {round(self.y, 3)}\t v: {round(self.linear_vel, 3)}")
 
 
 
