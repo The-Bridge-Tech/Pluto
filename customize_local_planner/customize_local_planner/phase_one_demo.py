@@ -166,9 +166,9 @@ class PhaseOneDemo(Node):
 
     def publish_local_plan(self):
         """Publish path based on the current goal pose to local_planner node."""
-        # Wait for odom and gps data
-        if self.current_odom is None or self.initial_gps is None:
-            self.get_logger().info("Waiting for odom and gps data to be initalized.")
+        # Wait for odom and initial gps data
+        if not self.current_odom or not self.initial_gps:
+            self.get_logger().info("Waiting for odometry and initial gps.")
             return
         # Wait for autonomous mode to be True
         if not self.is_autonomous_mode:
@@ -186,31 +186,31 @@ class PhaseOneDemo(Node):
         self.calculate_distance_from_goal()
 
         # CREATE PATH
-        currentPoseStamp = PoseStamped(pose=self.current_odom.pose.pose)
-        goalPose = Pose()
+        current_pose_stamp = PoseStamped(pose=self.current_odom.pose.pose)
+        goal_pose = Pose()
 
         # if(tuningStraight):
-        #     goalPose.position.x = 5.0
+        #     goal_pose.position.x = 5.0
         # else:
         #     # means turning pid
         #     # move 90 degree to north
-        #     goalPose.orientation.x = 0.0
-        #     goalPose.orientation.y = 0.0
-        #     goalPose.orientation.z = 0.7071068
-        #     goalPose.orientation.w = 0.7071068
+        #     goal_pose.orientation.x = 0.0
+        #     goal_pose.orientation.y = 0.0
+        #     goal_pose.orientation.z = 0.7071068
+        #     goal_pose.orientation.w = 0.7071068
 
         # Update goal pose
         self.update_goal_pose()
         # Configure goal pose stamp
-        goalPose.position.x, goalPose.position.y = self.get_goal_pose()
-        goalPoseStamp = PoseStamped(pose=goalPose)
+        goal_pose.position.x, goal_pose.position.y = self.get_goal_pose()
+        goal_pose_stamp = PoseStamped(pose=goal_pose)
         # Create path from poses
         path = Path(
-            poses =  [
-                currentPoseStamp,
-                goalPoseStamp, # Why do we need 3 of the same goal poses in the path?
-                # goalPoseStamp,
-                # goalPoseStamp
+            poses = [
+                # current_pose_stamp,
+                goal_pose_stamp, # Why do we need 3 of the same goal poses in the path?
+                # goal_pose_stamp,
+                # goal_pose_stamp
             ]
         )
         # PUBLISH PATH TO LOCAL_PLANNER

@@ -9,7 +9,6 @@ Created: 10/1/24
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import UInt32, Bool, String, Float64
-from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path
 
 # CALCULATION MODULES
@@ -17,6 +16,7 @@ import math
 import time
 
 # HELPER MODULES
+from .local_plan import LocalPlan
 from .pwm import PWM
 from .untilit import *
 
@@ -100,18 +100,18 @@ class LocalPlanner(Node):
                 self.current_odom: Odometry = None
                 self.is_autonomous_mode_sub = self.create_subscription(
                         Bool, 
-                        "is_autonomous_mode", 
+                        "/is_autonomous_mode", 
                         self.is_autonomous_mode_callback, 
                         1
                 )
                 self.is_autonomous_mode = False
-                self.local_plan = self.create_subscription(
+                self.local_plan_sub = self.create_subscription(
                         Path, 
-                        "local_plan", 
+                        "/local_plan", 
                         self.local_plan_callback, 
                         10
                 )
-                self.goal_pose: PoseStamped = None
+                self.local_plan = LocalPlan()
 
                 # PWM CONTROLLERS
                 self.left_pwm = PWM(
@@ -154,8 +154,6 @@ class LocalPlanner(Node):
                 self.heading = None
                 self.current_x = None
                 self.current_y = None
-                self.goal_x = None
-                self.goal_y = None
                 self.angle_diff = None
                 self.distance_diff = None
 
@@ -176,13 +174,13 @@ class LocalPlanner(Node):
         # TIMER CALLBACKS
         
         def process(self):
-                # wait until /odometry/global and /local_plan have been subscribed
-                if self.current_odom is None or self.goal_pose is None:
-                        self.get_logger().info("Waiting for odom and local_plan data to be initialized.")
+                # wait for odometry data
+                if not self.current_odom:
+                        self.get_logger().info("Waiting for odometry from /odometry/global")
                         return
-                # wait for autonomous mode to be True
-                if not self.is_autonomous_mode:
-                        self.get_logger().info("Waiting for autonomous mode.")
+                # wait for first path
+                if not self.local_plan.has_path():
+                        self.get_logger().info("Waiting for first path from /local_plan")
                         return
                 # update current conditions
                 self.update_conditions()
@@ -201,28 +199,37 @@ class LocalPlanner(Node):
                 # update current position
                 self.current_x = self.current_odom.pose.pose.position.x
                 self.current_y = self.current_odom.pose.pose.position.y
-                # update current goal position
-                self.goal_x = self.goal_pose.pose.position.x
-                self.goal_y = self.goal_pose.pose.position.y
-                # calculate current angle difference (between current angle and goal angle)
-                self.angle_diff = angle_difference_in_degree(
-                        current_angle_in_degree = self.heading,
-                        goal_position_x = self.goal_x, 
-                        goal_position_y = self.goal_y
-                )
-                # calculate current distance between current position and goal position
-                self.distance_diff  = math.dist( 
-                        [self.current_x, self.current_y], 
-                        [self.goal_x, self.goal_y]
-                )
+                # if path hasn't been fully navigated yet -> there is still a goal pose
+                if not self.local_plan.is_path_navigated():
+                        # update current goal position
+                        goal_x, goal_y = self.local_plan.get_goal_xy()
+                        # calculate current angle difference (between current angle and goal angle)
+                        self.angle_diff = angle_difference_in_degree(
+                                current_angle_in_degree = self.heading,
+                                goal_position_x = goal_x, 
+                                goal_position_y = goal_y
+                        )
+                        # calculate current distance between current position and goal position
+                        self.distance_diff  = math.dist( 
+                                [self.current_x, self.current_y], 
+                                [goal_x, goal_y]
+                        )
 
         def update_state(self):
                 """Update state based on current conditions."""
                 if self.state == "Stop":
-                        # If in autonomous mode -> Turn
-                        if self.is_autonomous_mode:
+                        # wait for autonomous mode to be True
+                        if not self.is_autonomous_mode:
+                                self.get_logger().info("Waiting for autonomous mode.")
+                                return
+                        # path has been fully navigated -> wait for new path
+                        if self.local_plan.is_path_navigated():
+                                self.get_logger().info("Waiting for new path from /local_plan")
+                                return
+                        # path has poses to navigate -> Turn
+                        else:
+                                self.get_logger().info("Navigating to current goal pose.")
                                 self.turn()
-                        # TODO check if at last waypoint
                 elif self.state == "Turn":
                         # If angle difference is within tolerance -> Straight
                         if abs(self.angle_diff) < self.turn_angle_tolerance:
@@ -232,6 +239,8 @@ class LocalPlanner(Node):
                 elif self.state == "Straight":
                         # If within distance tolerance of goal position -> Stop
                         if self.distance_diff < self.straight_distance_tolerance:
+                                self.get_logger().info("Reached goal pose.")
+                                self.local_plan.complete_goal_pose()
                                 self.stop()
                         else:
                                 self.get_logger().info(f"distance_diff = {self.distance_diff}")
@@ -264,16 +273,19 @@ class LocalPlanner(Node):
                 self.state = state
 
         def stop(self):
-                """Set left and right pwm values to neutral"""
+                """Set left and right pwm values to neutral."""
                 self.set_state("Stop")
                 self.left_pwm.set_neutral()
                 self.right_pwm.set_neutral()
 
         def turn(self):
-                """Start turning in place towards the next waypoint"""
+                """Start turning in place towards the next waypoint."""
                 self.set_state("Turn")
                 # reset PID variables
                 self.reset_PID()
+                # set initial pwm's
+                self.left_pwm.set_neutral()
+                self.right_pwm.set_neutral()
 
         def straight(self):
                 """Start moving straight towards the next waypoint."""
@@ -288,6 +300,8 @@ class LocalPlanner(Node):
         # STATE MAINTENANCE
 
         def maintain_turn(self):
+                """Adjust left and right servo pwm's from neutral using PID controller
+                to correct the mower's direction in place (no linear movement)."""
                 # update PID controller error terms
                 t = time.time()
                 dt = t - self.prev_t
@@ -317,8 +331,8 @@ class LocalPlanner(Node):
                 self.right_pwm.percentage = correction
 
         def maintain_straight(self):
-                """Adjust right servo pwm by a small amount calculated using PID equation 
-                to correct the mower's direction."""
+                """Adjust right servo pwm from initial straight pwm using PID controller 
+                to correct the mower's direction (maintaining linear movement)."""
                 # update PID controller error terms
                 t = time.time()
                 dt = t - self.prev_t
@@ -340,7 +354,7 @@ class LocalPlanner(Node):
                 self.prev_time = t
                 # apply PID error correction
                 self.right_pwm.percentage = self.straight_initial_pwm + correction
-
+                        
 
         # SUBSCRIBER CALLBACKS
 
@@ -348,20 +362,28 @@ class LocalPlanner(Node):
               self.current_odom = msg
 
         def is_autonomous_mode_callback(self, msg: Bool):
-                # if autonomous to manual or manual to autonomous -> set servos to neutral
-                # if self.is_autonomous_mode ^ msg.data:
+                # force into stop state
                 self.stop()
+                # if autonomous to manual -> reset local plan
+                if self.is_autonomous_mode and not msg.data:
+                        self.local_plan = LocalPlan()
                 self.is_autonomous_mode = msg.data
 
-        def local_plan_callback(self, msg: Path):
+        def local_plan_callback(self, path: Path):
                 """Sets the goal pose to the middle pose in the path"""
-                if len(msg.poses) == 0:
-                        self.get_logger().warn("local plan path has no poses.")
-                else:
-                        self.goal_pose = msg.poses[1]
-                        # # right now, get the mid point of the path
-                        # mid_point = int(len(msg.poses)/2) # middle index
-                        # self.goal_pose = msg.poses[mid_point] # this will always be the middle pose in the path
+                # if path is empty
+                if len(path.poses) == 0:
+                        self.get_logger().warn("empty path from /local_plan")
+                # if first path
+                if not self.local_plan.has_path():
+                        self.get_logger().info("first path from /local_plan")
+                        # set path as the first local plan
+                        self.local_plan.set_path(path)
+                # if new path
+                elif self.local_plan != path:
+                        self.get_logger().info("new path from /local_plan")
+                        # set path as the new local plan
+                        self.local_plan.set_path(path)
 
 
 # MAIN
