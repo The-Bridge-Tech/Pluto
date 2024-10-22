@@ -24,33 +24,33 @@ from .conversions import *
 # PARAMETERS (must be declared even when using a YAML file)
 DEFAULT_PARAMS = {
         # PWM
-        "min_pwm": 992,
-        "neutral_pwm": 1376,
-        "max_pwm": 1765,
+        "min_pwm": 0,
+        "neutral_pwm": 0,
+        "max_pwm": 0,
 
         # STATE: STRAIGHT
-        "straight_initial_pwm": 30.0, # percent - forward speed of mower
-        "straight_distance_tolerance": 1.0, # meters - will stop once within this distance of the waypoint
-        "straight_kp": 2.0,  # Proportional coefficient of PID equation
-        "straight_ki": 0.0,  # Integral coefficient of PID equation
-        "straight_kd": 0.0,  # Derivitive coefficient of PID equation
+        "straight_initial_pwm": 0.0,
+        "straight_distance_tolerance": 0.0,
+        "straight_kp": 0.0,
+        "straight_ki": 0.0,
+        "straight_kd": 0.0,
 
         # STATE: TURN
-        "turn_max_pwm": 15.0, # percent
-        "turn_angle_tolerance": 5.0, # will begin straight state once angle difference is within this tolerance
-        "turn_kp": 3.0,  # Proportional coefficient of PID equation
-        "turn_ki": 0.5,  # Integral coefficient of PID equation
-        "turn_kd": 0.7,  # Derivitive coefficient of PID equation
+        "turn_max_pwm": 0.0,
+        "turn_angle_tolerance": 0.0,
+        "turn_kp": 0.0,
+        "turn_ki": 0.0,
+        "turn_kd": 0.0,
 
         # OTHER
-        "process_frequency": 10, # Hz (times / second)
+        "process_frequency": 0,
 }
 
 
 class LocalPlanner(Node):
 
         def __init__(self):
-                super().__init__("local_planner", allow_undeclared_parameters=True)
+                super().__init__("local_planner")
 
                 # PARAMETERS
                 # declare all parameters with default values
