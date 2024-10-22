@@ -8,7 +8,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
 from sensor_msgs.msg import NavSatFix
-from geometry_msgs.msg import Pose, PoseStamped, PointStamped
+from geometry_msgs.msg import Pose, PoseStamped, Point
 from nav_msgs.msg import Odometry, Path
 from custom_msgs.msg import WaypointMsg
 
@@ -34,7 +34,7 @@ WAYPOINTS = [
     # (34.841434, -82.411776),    # front-right corner
     # (34.841384, -82.411669),    # front-left corner (return to #1)
 ]
-WAYPOINT_RADIUS = 1.0           # should match local_planner's 'distance_error_tolerance' parameter
+WAYPOINT_RADIUS = 0.5           # should match local_planner's 'distance_error_tolerance' parameter
 
 class PhaseOneDemo(Node):
 
@@ -207,6 +207,16 @@ class PhaseOneDemo(Node):
         # Create path from poses
         path = Path(
             poses = [
+            #     PoseStamped(
+            #         pose = Pose(
+            #             position = Point(
+            #                 x = goal_pose[0], 
+            #                 y = goal_pose[1]
+            #             )
+            #         )
+            #     ) for goal_pose in self.goal_poses
+            # ]
+            # [
                 # current_pose_stamp,
                 goal_pose_stamp, # Why do we need 3 of the same goal poses in the path?
                 # goal_pose_stamp,

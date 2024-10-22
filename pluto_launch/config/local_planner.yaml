@@ -22,5 +22,5 @@ local_planner:
 
     # OTHER
     autonomous_controller_frequency: 10
-    distance_error_tolerance: 1.0
+    distance_error_tolerance: 0.5
     local_plan_step_size: 1
