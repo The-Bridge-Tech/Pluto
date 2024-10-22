@@ -1,5 +1,6 @@
 """
 Publishes path with goal poses to local_planner node
+Authors: Joel Du Shouyu & Matthew Lauriault
 """
 
 
@@ -162,7 +163,7 @@ class PhaseOneDemo(Node):
         self.get_logger().info("Reset.")
 
 
-    # PUBLISHER CALLBACKS
+    # TIMER CALLBACKS
 
     def publish_local_plan(self):
         """Publish path based on the current goal pose to local_planner node."""
