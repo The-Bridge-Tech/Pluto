@@ -83,7 +83,7 @@ class PWMPlotter(Node):
                 # Create figure and axes
                 self.left_ax: plt.Axes = None
                 self.right_ax: plt.Axes = None
-                self.fig, (self.left_ax, self.right_ax) = plt.subplots(2, 1, figsize=(10, 8))
+                self.fig, (self.left_ax, self.right_ax) = plt.subplots(2, 1, figsize=(5, 9))
                 # Configure left_pwm plot
                 self.left_ax.set_title('Left PWM')
                 self.left_ax.set_xlabel('Time (s)')
@@ -91,6 +91,7 @@ class PWMPlotter(Node):
                 self.left_ax.set_xlim(0, PLOT_X_LIM)
                 self.left_ax.set_ylim(-100, 100)
                 self.left_ax.grid(True)
+                self.left_ax.axhline(y=0, color='black', linestyle='-', linewidth=1.5)
                 # Configure right_pwm plot
                 self.right_ax.set_title('Right PWM')
                 self.right_ax.set_xlabel('Time (s)')
@@ -98,6 +99,7 @@ class PWMPlotter(Node):
                 self.right_ax.set_xlim(0, PLOT_X_LIM)
                 self.right_ax.set_ylim(-100, 100)
                 self.right_ax.grid(True)
+                self.right_ax.axhline(y=0, color='black', linestyle='-', linewidth=1.5)
                 # Create plot for left_pwm
                 self.left_pwm_plot = self.left_ax.plot(
                         [], # initially empty
