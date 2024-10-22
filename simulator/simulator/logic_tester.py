@@ -133,7 +133,7 @@ class LogicTester(Node):
                 # re-publish initial heading
                 elif self.counter == self.seconds_to_counts(2):
                         self.publish_heading(INITIAL_HEADING)
- 
+
                 # publish gps & heading dynamically based on pwm values
                 elif self.counter > self.seconds_to_counts(2):
                         # update physics quantities
@@ -147,9 +147,7 @@ class LogicTester(Node):
                                         self.y0 + self.y
                                 )
                                 self.publish_gps(lat, lon)
-                                # self.publish_gps(*BASE_GPS)
-                        # self.get_logger().info(f"alpha: {angular_acc} w: {self.angular_vel}") # a: {linear_acc} v: {self.linear_vel}")
-
+                        # self.get_logger().info(f"w: {self.angular_vel} v: {self.linear_vel}")
                 # update counter
                 self.counter += 1
 
@@ -188,7 +186,6 @@ class LogicTester(Node):
                 self.get_logger().info(f"x: {round(self.x, 3)}\t y: {round(self.y, 3)}\t v: {round(self.linear_vel, 3)}")
 
 
-
         # HELPERS - PUBLISHING
 
         def publish_gps(self, lat: float, lon: float):
@@ -215,7 +212,6 @@ class LogicTester(Node):
                 self.get_logger().info(f"Published GPS: lat={lat}, lon={lon}")
 
         def publish_heading(self, angle: float):
-                """Angle in degrees from -180 to 180"""
                 quaternion = euler_to_quaternion(
                         roll = 0,
                         pitch = 0,
