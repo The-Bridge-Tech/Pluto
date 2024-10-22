@@ -204,11 +204,11 @@ class LocalPlanner(Node):
                         # update current goal position
                         goal_x, goal_y = self.local_plan.get_goal_xy()
                         # calculate current angle difference (between current angle and goal angle)
-                        self.angle_diff = angle_difference_in_degree(
-                                current_angle_in_degree = self.heading,
-                                goal_position_x = goal_x, 
-                                goal_position_y = goal_y
-                        )
+                        self.goal_heading = math.degrees(math.atan2(
+                                goal_y - self.current_y, 
+                                goal_x - self.current_x
+                        ))
+                        self.angle_diff = self.goal_heading - self.heading
                         # calculate current distance between current position and goal position
                         self.distance_diff  = math.dist( 
                                 [self.current_x, self.current_y], 
@@ -243,7 +243,9 @@ class LocalPlanner(Node):
                                 self.local_plan.complete_goal_pose()
                                 self.stop()
                         else:
-                                self.get_logger().info(f"distance_diff = {self.distance_diff}")
+                                # self.get_logger().info(f"distance_diff = {self.distance_diff}")
+                                # self.get_logger().info(f"current = {(self.current_x, self.current_y)} \tgoal = {self.local_plan.get_goal_xy()}")
+                                self.get_logger().info(f"current = {self.heading}° \tgoal = {self.goal_heading}°")
                 else:
                         self.get_logger().error(f"Invalid state: '{self.state}'.")
                         self.stop() # default
@@ -327,8 +329,8 @@ class LocalPlanner(Node):
                 self.prev_error = error
                 self.prev_time = t
                 # apply PID error correction
-                self.left_pwm.percentage = -correction
-                self.right_pwm.percentage = correction
+                self.left_pwm.percentage = -correction / 2
+                self.right_pwm.percentage = correction / 2
 
         def maintain_straight(self):
                 """Adjust right servo pwm from initial straight pwm using PID controller 
@@ -348,7 +350,7 @@ class LocalPlanner(Node):
                         # D = Derivative error (future)
                         self.straight_kd * derivative_error
                 )
-                self.get_logger().info(f"error: {error}\t P: {self.straight_kp * error} I: {self.straight_ki * self.integral_error} D: {self.straight_kd * derivative_error}")
+                # self.get_logger().info(f"error: {error}\t P: {self.straight_kp * error} I: {self.straight_ki * self.integral_error} D: {self.straight_kd * derivative_error}")
                 # update PID previous values
                 self.prev_error = error
                 self.prev_time = t
