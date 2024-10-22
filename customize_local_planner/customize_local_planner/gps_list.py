@@ -5,7 +5,6 @@ Created: 10/8/24
 """
 
 
-
 class GPSList:
 
         """Struct class for gps plot data"""

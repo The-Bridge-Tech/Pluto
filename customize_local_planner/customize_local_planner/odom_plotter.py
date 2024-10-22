@@ -16,7 +16,7 @@ from threading import Thread
 import math
 
 # HELPER MODULES
-from .untilit import angle_from_odometry
+from .conversions import angle_from_odometry
 
 
 HEADING_LINE_LENGTH = 0.1

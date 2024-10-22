@@ -11,9 +11,8 @@ from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Bool
 
-# CALCULATION MODULES
-from pyproj import Proj, transform
-
+# HELPER MODULES
+from customize_local_planner.conversions import *
 
 # CONSTANTS
 BASE_GPS = (34.841400, -82.411743)
@@ -22,7 +21,6 @@ BASE_GPS = (34.841400, -82.411743)
 class GPSOffsetter(Node):
 
         def __init__(self):
-
                 super().__init__('gps_offsetter')
 
                 # SUBSCRIBERS
@@ -56,35 +54,16 @@ class GPSOffsetter(Node):
                 self.easting_offset = None
                 self.northing_offset = None
 
-                # Projection setup: WGS84 to UTM
-                self.proj_wgs84 = Proj(proj='latlong', datum='WGS84')
-                self.proj_utm = Proj(proj='utm', zone=17, datum='WGS84')  # Update zone as per your location
                 # Convert base point to UTM coordinates
-                self.base_easting, self.base_northing = self.getUTM(*BASE_GPS)
+                self.base_easting, self.base_northing = lat_lon_to_utm(*BASE_GPS)
 
         
         # HELPERS
-
-        def getUTM(self, lat: float, lon: float) -> tuple:
-                return transform(
-                        self.proj_wgs84, 
-                        self.proj_utm, 
-                        lon,
-                        lat
-                )
-        
-        def getLatLon(self, easting: float, northing: float) -> tuple:
-                return transform(
-                        self.proj_utm,
-                        self.proj_wgs84,
-                        easting,
-                        northing
-                )
         
         def calculateOffset(self):
                 """Calculate offset error in initial GPS reading."""
                 # Convert initial GPS reading to UTM coordinates
-                initial_easting, initial_northing = self.getUTM(
+                initial_easting, initial_northing = lat_lon_to_utm(
                         lat = self.initialGPS.latitude,
                         lon = self.initialGPS.longitude
                 )
@@ -97,7 +76,7 @@ class GPSOffsetter(Node):
         def applyOffset(self):
                 """Apply offset to current GPS"""
                 # Convert current GPS reading to UTM coordinates
-                current_easting, current_northing = self.getUTM(
+                current_easting, current_northing = lat_lon_to_utm(
                         lat = self.currentGPS.latitude,
                         lon = self.currentGPS.longitude
                 )
@@ -105,7 +84,7 @@ class GPSOffsetter(Node):
                 corrected_easting = current_easting + self.easting_offset
                 corrected_northing = current_northing + self.northing_offset
                 # Convert the corrected UTM back to lat and lon
-                corrected_lon, corrected_lat = self.getLatLon(
+                corrected_lon, corrected_lat = utm_to_lat_lon(
                         easting = corrected_easting,
                         northing = corrected_northing
                 )
@@ -130,7 +109,6 @@ class GPSOffsetter(Node):
                 else:
                         self.get_logger().info("Waiting for autonomous mode...")
                         
-
         def is_autonomous_mode_callback(self, msg: Bool):
                 """Update if in autonomous mode."""
                 self.is_autonomous_mode = msg.data

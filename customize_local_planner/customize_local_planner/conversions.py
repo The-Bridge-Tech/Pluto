@@ -12,8 +12,61 @@ import tf_transformations
 # CALCULATION MODULES
 import math
 import numpy as np
+from pyproj import Proj, transform
 from geodesy.utm import fromLatLong
 
+# PROJECTION SETUP: WGS84 (Lat & Lon) to UTM (easting & northing)
+PROJ_WGS84 = Proj(
+        proj = 'latlong',
+        datum = 'WGS84'
+)
+PROJ_UTM = Proj(
+        proj='utm', 
+        zone=17, # NOTE update zone to match location
+        datum='WGS84'
+)
+
+
+# POINT CONVERSIONS
+
+def utm_to_lat_lon(easting: float, northing: float) -> tuple:
+    """Returns (longitude, latitude)"""
+    return transform(
+            PROJ_UTM,
+            PROJ_WGS84,
+            easting,
+            northing
+    )
+
+def lat_lon_to_utm(lat: float, lon: float) -> tuple:
+    """Returns (easting, northing)"""
+    return transform(
+            PROJ_WGS84, 
+            PROJ_UTM, 
+            lon,
+            lat
+    )
+
+def calculate_goal_xy(origin_lat, origin_lon, goal_lat, goal_lon):
+    """Convert GPS (lat & lon) to UTM (easting & northing) relative to origin point."""
+    # Convert origin lat & lon to easting (x) & northing (y)
+    origin_utm = fromLatLong(
+        longitude = origin_lon, 
+        latitude = origin_lat
+    )
+    # Convert goal lat & lon to easting (x) & northing (y)
+    goal_utm = fromLatLong(
+        longitude = goal_lon, 
+        latitude = goal_lat
+    )
+    # x-distance between origin and goal
+    dx = goal_utm.easting - origin_utm.easting
+    # y-distance between origin and goal
+    dy = goal_utm.northing - origin_utm.northing
+    return (dx, dy)
+
+
+# ANGLE CONVERSIONS
 
 def angle_from_odometry(odom: Odometry):
         """Angle is returned in the range -180 to 180 degrees"""
@@ -79,47 +132,8 @@ def quaternion_to_euler(quaternion):
     yaw = np.arctan2(siny_cosp, cosy_cosp)
     return roll, pitch, yaw
 
-# # for the pid controllers
-# # assume forward_prediction_step is greater than 0
-# def process_from_global_path(global_path: Pose, forward_prediction_step: int):
 
-#     # look forward by certain pose index?
-
-#     future_way_point:PoseStamped  = None
-#     current_way_point: PoseStamped = global_path.poses[0]
-#     if len(global_path.poses) < forward_prediction_step:
-
-#         future_way_point = global_path.poses[len(global_path.poses)-1]
-#     else:
-#         # purpose skip waypoint at index 0, because it is the current position of the robot
-#         future_way_point = global_path.poses[forward_prediction_step]
-
-#     new_heading_angle = relative_angle_between_two_position(start_position_x=current_way_point.pose.position.x, 
-#                                                             start_position_y=current_way_point.pose.position.y,
-#                                                             start_position_angle=calculateEulerAngleFromPoseStamped(current_way_point),
-#                                                             goal_position_x=future_way_point.pose.position.x, 
-#                                                             goal_position_y=future_way_point.pose.position.y)
-#     return new_heading_angle
-
-
-# modify base on https://github.com/danielsnider/gps_goal
-def calculate_goal_xy(origin_lat, origin_lon, goal_lat, goal_lon):
-    """Convert GPS (lat & lon) to UTM (easting & northing) relative to origin point."""
-    # Convert origin lat & lon to easting (x) & northing (y)
-    origin_utm = fromLatLong(
-        longitude = origin_lon, 
-        latitude = origin_lat
-    )
-    # Convert goal lat & lon to easting (x) & northing (y)
-    goal_utm = fromLatLong(
-        longitude = goal_lon, 
-        latitude = goal_lat
-    )
-    # x-distance between origin and goal
-    dx = goal_utm.easting - origin_utm.easting
-    # y-distance between origin and goal
-    dy = goal_utm.northing - origin_utm.northing
-    return (dx, dy)
+# DISTANCE CONVERSIONS
 
 def meters_to_gps_degrees(meters: float, latitude: float) -> float:
     """Approximate conversion from a distance in meters to gps degrees"""
@@ -142,3 +156,27 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371000
     distance = R * c
     return distance
+
+
+
+# # for the pid controllers
+# # assume forward_prediction_step is greater than 0
+# def process_from_global_path(global_path: Pose, forward_prediction_step: int):
+
+#     # look forward by certain pose index?
+
+#     future_way_point:PoseStamped  = None
+#     current_way_point: PoseStamped = global_path.poses[0]
+#     if len(global_path.poses) < forward_prediction_step:
+
+#         future_way_point = global_path.poses[len(global_path.poses)-1]
+#     else:
+#         # purpose skip waypoint at index 0, because it is the current position of the robot
+#         future_way_point = global_path.poses[forward_prediction_step]
+
+#     new_heading_angle = relative_angle_between_two_position(start_position_x=current_way_point.pose.position.x, 
+#                                                             start_position_y=current_way_point.pose.position.y,
+#                                                             start_position_angle=calculateEulerAngleFromPoseStamped(current_way_point),
+#                                                             goal_position_x=future_way_point.pose.position.x, 
+#                                                             goal_position_y=future_way_point.pose.position.y)
+#     return new_heading_angle

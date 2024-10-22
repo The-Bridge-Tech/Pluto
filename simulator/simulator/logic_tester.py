@@ -17,7 +17,7 @@ from geometry_msgs.msg import Quaternion, Vector3
 import math
 
 # HELPER MODULES
-from .conversions import *
+from customize_local_planner.conversions import *
 
 # CONSTANTS
 BASE_GPS = (34.841400, -82.411743)

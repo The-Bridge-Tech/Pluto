@@ -16,7 +16,7 @@ import os
 import csv
 
 # HELPER MODULES
-from .conversions import *
+from customize_local_planner.conversions import *
 
 # CONSTANTS
 CSV_FILE = os.path.join(

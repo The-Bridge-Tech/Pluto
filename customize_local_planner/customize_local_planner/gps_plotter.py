@@ -24,7 +24,7 @@ import math
 # HELPER MODULES
 from.gps_list import GPSList
 from .phase_one_demo import WAYPOINTS, WAYPOINT_RADIUS
-from .untilit import meters_to_gps_degrees, haversine, angle_from_odometry
+from .conversions import *
 
 
 # CONSTANTS
