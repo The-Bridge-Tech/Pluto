@@ -104,14 +104,13 @@ class PhaseOneDemo(Node):
     def calculate_goal_poses(self):
         """Convert GPS waypoints to xy coordinates (goal poses) relative to origin point."""
         for waypoint in WAYPOINTS:
-                goal_x, goal_y = calc_goal(
+                goal_x, goal_y = calculate_goal_xy(
                     origin_lat = self.initial_gps.latitude,
-                    origin_long = self.initial_gps.longitude,
+                    origin_lon = self.initial_gps.longitude,
                     goal_lat = waypoint[0],
-                    goal_long = waypoint[1]
+                    goal_lon = waypoint[1]
                 )
-                self.get_logger().info(f"""Distance to navigate to from origin({self.initial_gps.latitude}, {self.initial_gps.longitude}) to goal{waypoint} with distance ({goal_x},{goal_y})""")
-                self.get_logger().info(f"Current gps is ({self.initial_gps.latitude}, {self.initial_gps.longitude}), distance is ({goal_x}, {goal_y}) from waypoint {len(self.goal_poses)+1}")
+                self.get_logger().info(f"""Origin: {(self.initial_gps.latitude, self.initial_gps.longitude)}\t Goal: {waypoint}\t Distance: {(goal_x, goal_y)}""")
                 self.goal_poses.append((goal_x, goal_y))
         self.get_logger().info("Calculated goal poses.")
 
@@ -186,24 +185,20 @@ class PhaseOneDemo(Node):
         self.calculate_distance_from_goal()
 
         # CREATE PATH
-        current_pose_stamp = PoseStamped(pose=self.current_odom.pose.pose)
-        goal_pose = Pose()
-
-        # if(tuningStraight):
-        #     goal_pose.position.x = 5.0
-        # else:
-        #     # means turning pid
-        #     # move 90 degree to north
-        #     goal_pose.orientation.x = 0.0
-        #     goal_pose.orientation.y = 0.0
-        #     goal_pose.orientation.z = 0.7071068
-        #     goal_pose.orientation.w = 0.7071068
-
-        # Update goal pose
+        # Configure current pose-stamp
+        current_pose_stamp = PoseStamped(
+            pose = self.current_odom.pose.pose
+        )
+        # Configure goal pose-stamp
         self.update_goal_pose()
-        # Configure goal pose stamp
-        goal_pose.position.x, goal_pose.position.y = self.get_goal_pose()
-        goal_pose_stamp = PoseStamped(pose=goal_pose)
+        goal_pose_stamp = PoseStamped(
+            pose = Pose(
+                position = Point(
+                    x = self.get_goal_pose()[0], 
+                    y = self.get_goal_pose()[1]
+                )
+            )
+        )
         # Create path from poses
         path = Path(
             poses = [
@@ -230,7 +225,7 @@ class PhaseOneDemo(Node):
         """Publish waypoint info to splunk_logger node and gps_plotter node."""
         # wait until publish_local_plan() has created the data to publish
         if self.ready_to_ping:
-            roll, pitch, yaw = euler_from_quaternion(self.current_odom.pose.pose.orientation)
+            roll, pitch, yaw = quaternion_to_euler(self.current_odom.pose.pose.orientation)
             yaw_degrees = math.degrees(yaw)
             ping = WaypointMsg(
                 waypoint_number = self.pose_i+1,
@@ -242,7 +237,7 @@ class PhaseOneDemo(Node):
             long = self.initial_gps.longitude
             lat_str = f"{int(lat)}° {((lat - int(lat)) * 60)}"
             long_str = f"{int(long)}° {((long - int(long)) * 60)}"
-            self.get_logger().info(f"GPS: {(lat_str, long_str)}\tHeading: {yaw_degrees}°\tDistance: {self.distance_from_goal}\tWaypoint #{self.pose_i+1}")
+            # self.get_logger().info(f"GPS: {(lat_str, long_str)}\tHeading: {yaw_degrees}°\tDistance: {self.distance_from_goal}\tWaypoint #{self.pose_i+1}")
             self.ping_publisher.publish(ping)
     
 
