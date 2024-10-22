@@ -18,6 +18,7 @@ import math
 
 # HELPER MODULES
 from customize_local_planner.conversions import *
+from customize_local_planner.gps_plotter import BASE_GPS
 
 # PARAMETERS (must be declared even when using a YAML file)
 DEFAULT_PARAMS = {
@@ -49,9 +50,6 @@ DEFAULT_PARAMS = {
         "PUBLISH_RATE": 0.0,
         "INITIAL_HEADING": 0.0,
 }
-
-# CONSTANTS
-BASE_GPS = (34.841400, -82.411743)
 
 
 class LogicTester(Node):

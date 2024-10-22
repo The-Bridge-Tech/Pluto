@@ -13,9 +13,7 @@ from std_msgs.msg import Bool
 
 # HELPER MODULES
 from customize_local_planner.conversions import *
-
-# CONSTANTS
-BASE_GPS = (34.841400, -82.411743)
+from customize_local_planner.gps_plotter import BASE_GPS
 
 
 class GPSOffsetter(Node):
