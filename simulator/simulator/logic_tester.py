@@ -19,42 +19,39 @@ import math
 # HELPER MODULES
 from customize_local_planner.conversions import *
 
+# PARAMETERS (must be declared even when using a YAML file)
+DEFAULT_PARAMS = {
+        # MOWER PHYSICAL PROPERTIES (Husqvarna Z246)
+        "MASS": 0.0,
+        "WHEEL_SEPARATION": 0.0,
+        "WIDTH": 0.0,
+        "LENGTH": 0.0,
+        "HEIGHT": 0.0,
+
+        # MOWER ENGINE PROPERTIES (Husqvarna Z246)
+        "MAX_POWER": 0.0,
+        "MAX_RPM": 0.0,
+        "MAX_TORQUE": 0.0,
+        "MAX_TORQUE_RPM": 0.0,
+        "MAX_LINEAR_VEL": 0.0,
+        "MAX_LEFT_BACKWARD_VEL": 0.0,
+        "MAX_RIGHT_BACKWARD_VEL": 0.0,
+        "MAX_LEFT_FORWARD_VEL": 0.0,
+        "MAX_RIGHT_FORWARD_VEL": 0.0,
+
+        # PHYSICS PARAMETERS
+        "GRAVITY": 0.0,
+        "COEFF_OF_FRICTION": 0.0,
+        "DRAG_COEFF": 0.0,
+        "AIR_DENSITY": 0.0,
+
+        # OTHER
+        "PUBLISH_RATE": 0.0,
+        "INITIAL_HEADING": 0.0,
+}
+
 # CONSTANTS
 BASE_GPS = (34.841400, -82.411743)
-
-# PARAMETERS
-PUBLISH_RATE = 10 # Hz (publishes / second)
-INITIAL_HEADING = 127.0 # ° (-180° to 180°)
-ANG_ACC_PER_PWM_PERCENT = 0.2 # (°/s^2) / pwm difference %
-LINEAR_ACC_PER_PWM_PERCENT = 0.05 # (m/s^2) / pwm average %
-FRICTION_COEFF = 0.05  # m/s^2 per m/s of velocity
-
-# MOWER PROPERTIES (Husqvarna Z246)
-MASS = 242.672 # kg (535 lbs)
-TRACK_WIDTH = 0.9906 # m (39 in)
-WIDTH = 1.11125 # m (43.75 in)
-LENGTH = 1.905 # m (75 in)
-HEIGHT = 1.016 # m (40 in)
-MAX_ENGINE_POWER = 16032.55 # Watts (21.5 hp)
-MAX_ENGINE_RPM = 3300 # ± 100 rpm
-MAX_ENGINE_ANG_VEL = MAX_ENGINE_RPM * ((2*math.pi)/60)
-MAX_LINEAR_VELOCITY = 2.90576 # m/s (6.5 mph)
-MAX_TORQUE = 53.2 # Nm at 2200 rpm
-MAX_TORQUE_RPM = 2200 # rpm
-
-# PHYSICS PARAMETERS
-GRAVITY = 9.81 # m/s^2
-COEFF_OF_FRICTION = 0.40 # 0.35 to 0.55 for dry grass
-DRAG_COEFF = 0.9 # 0.7 to 1.1 for non-streamlined vehicles
-AIR_DENSITY = 1.225  # kg/m^3 (standard air density at sea level)
-
-# PHYSICS CALCULATIONS
-MOMENT_OF_INERTIA = (1/12) * MASS * (LENGTH**2 + WIDTH**2) # kg*m^2
-FRICTION_FORCE = COEFF_OF_FRICTION * MASS * GRAVITY # N
-FRONTAL_AREA = WIDTH * HEIGHT # m^2
-DRAG_FORCE = lambda linear_vel: 0.5 * DRAG_COEFF * AIR_DENSITY * FRONTAL_AREA * linear_vel**2 # N
-
-
 
 
 class LogicTester(Node):
@@ -62,9 +59,46 @@ class LogicTester(Node):
         def __init__(self):
                 super().__init__("logic_tester")
 
+                # PARAMETERS
+                # declare all parameters with default values
+                for name, value in DEFAULT_PARAMS.items():
+                        self.declare_parameter(name, value)
+                # load parameter values from YAML file (pluto_launch/config/logic_tester.yaml)
+                load_param = lambda param_name: self.get_parameter(param_name).get_parameter_value()
+                # MOWER PHYSICAL PROPERTIES (Husqvarna Z246)
+                self.MASS = load_param("MASS").double_value
+                self.WHEEL_SEPARATION = load_param("WHEEL_SEPARATION").double_value
+                self.WIDTH = load_param("WIDTH").double_value
+                self.LENGTH = load_param("LENGTH").double_value
+                self.HEIGHT = load_param("HEIGHT").double_value
+                # MOWER ENGINE PROPERTIES (Husqvarna Z246)
+                self.MAX_POWER = load_param("MAX_POWER").double_value
+                self.MAX_RPM = load_param("MAX_RPM").double_value
+                self.MAX_TORQUE = load_param("MAX_TORQUE").double_value
+                self.MAX_TORQUE_RPM = load_param("MAX_TORQUE_RPM").double_value
+                self.MAX_LINEAR_VEL = load_param("MAX_LINEAR_VEL").double_value
+                self.MAX_LEFT_BACKWARD_VEL = load_param("MAX_LEFT_BACKWARD_VEL").double_value
+                self.MAX_RIGHT_BACKWARD_VEL = load_param("MAX_RIGHT_BACKWARD_VEL").double_value
+                self.MAX_LEFT_FORWARD_VEL = load_param("MAX_LEFT_FORWARD_VEL").double_value
+                self.MAX_RIGHT_FORWARD_VEL = load_param("MAX_RIGHT_FORWARD_VEL").double_value
+                # PHYSICS PARAMETERS
+                self.GRAVITY = load_param("GRAVITY").double_value
+                self.COEFF_OF_FRICTION = load_param("COEFF_OF_FRICTION").double_value
+                self.DRAG_COEFF = load_param("DRAG_COEFF").double_value
+                self.AIR_DENSITY = load_param("AIR_DENSITY").double_value
+                # OTHER
+                self.PUBLISH_RATE = load_param("PUBLISH_RATE").double_value
+                self.INITIAL_HEADING = load_param("INITIAL_HEADING").double_value
+
+                # PHYSICS CALCULATIONS
+                self.MOMENT_OF_INERTIA = (1/12) * self.MASS * (self.LENGTH**2 + self.WIDTH**2) # kg*m^2
+                self.FRICTION_FORCE = self.COEFF_OF_FRICTION * self.MASS * self.GRAVITY # N
+                self.FRONTAL_AREA = self.WIDTH * self.HEIGHT # m^2
+                self.DRAG_FORCE = lambda linear_vel: 0.5 * self.DRAG_COEFF * self.AIR_DENSITY * self.FRONTAL_AREA * linear_vel**2 # N
+
                 # TIMERS
                 self.publish_timer = self.create_timer(
-                        1 / PUBLISH_RATE,
+                        1 / self.PUBLISH_RATE,
                         self.publish_sensor_data
                 )
 
@@ -105,7 +139,7 @@ class LogicTester(Node):
 
                 # VARIABLES
                 self.counter = 0
-                self.heading = INITIAL_HEADING  # ° (-180° to 180°)
+                self.heading = self.INITIAL_HEADING  # ° (-180° to 180°)
                 self.x0, self.y0 = lat_lon_to_utm(*BASE_GPS) # m
                 self.x, self.y = 0.0, 0.0 # m
                 self.angular_vel = 0.0 # rad/s
@@ -123,7 +157,7 @@ class LogicTester(Node):
                         self.publish_gps(*BASE_GPS)
                 # publish initial heading (Stop -> Turn)
                 elif self.counter == self.seconds_to_counts(0.5):
-                        self.publish_heading(INITIAL_HEADING)
+                        self.publish_heading(self.INITIAL_HEADING)
                 # start autonomous mode (to allow some nodes to start subscribing)
                 elif self.counter == self.seconds_to_counts(1.0):
                         self.publish_autonomous_mode(True)
@@ -132,7 +166,7 @@ class LogicTester(Node):
                         self.publish_gps(*BASE_GPS)
                 # re-publish initial heading
                 elif self.counter == self.seconds_to_counts(2):
-                        self.publish_heading(INITIAL_HEADING)
+                        self.publish_heading(self.INITIAL_HEADING)
 
                 # publish gps & heading dynamically based on pwm values
                 elif self.counter > self.seconds_to_counts(2):
@@ -141,7 +175,7 @@ class LogicTester(Node):
                         # publish new heading
                         self.publish_heading(self.heading)
                         # only publish gps every second
-                        if self.counter % PUBLISH_RATE == 0:
+                        if self.counter % self.PUBLISH_RATE == 0:
                                 lon, lat = utm_to_lat_lon(
                                         self.x0 + self.x, 
                                         self.y0 + self.y
@@ -157,15 +191,15 @@ class LogicTester(Node):
         def update_physics(self):
                 # VELOCITY
                 # map PWM % to velocity of each wheel
-                self.left_vel = (self.left_pwm / 100.0) * MAX_LINEAR_VELOCITY
-                self.right_vel = (self.right_pwm / 100.0) * MAX_LINEAR_VELOCITY
+                self.left_vel = (self.left_pwm / 100.0) * (self.MAX_LEFT_FORWARD_VEL if self.left_pwm >= 0 else self.MAX_LEFT_BACKWARD_VEL)
+                self.right_vel = (self.right_pwm / 100.0) * (self.MAX_RIGHT_FORWARD_VEL if self.right_pwm >= 0 else self.MAX_RIGHT_BACKWARD_VEL)
                 # calculate linear and angular velocity of the mower
                 self.linear_vel = (self.left_vel + self.right_vel) / 2                  # average
-                self.angular_vel = (self.right_vel - self.left_vel) / TRACK_WIDTH       # difference / 2*radius
+                self.angular_vel = (self.right_vel - self.left_vel) / self.WHEEL_SEPARATION       # difference / 2*radius
                 # calculate deceleration due to drag
-                deceleration = DRAG_FORCE(self.linear_vel) / MASS       # a = F/m
+                deceleration = self.DRAG_FORCE(self.linear_vel) / self.MASS       # a = F/m
                 # apply deceleration to linear velocity
-                delta_time = 1 / PUBLISH_RATE                   # Δt = 1/f
+                delta_time = 1 / self.PUBLISH_RATE                   # Δt = 1/f
                 self.linear_vel -= deceleration * delta_time    # Δv = aΔt
                 # DIRECTION (HEADING)
                 # calculate change in heading
@@ -269,7 +303,7 @@ class LogicTester(Node):
 
         def seconds_to_counts(self, seconds: int | float) -> int:
                 # publish_rate = counts / second
-                return round(PUBLISH_RATE * seconds)
+                return round(self.PUBLISH_RATE * seconds)
         
 
         # SUBSCRIBER CALLBACKS

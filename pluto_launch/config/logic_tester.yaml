@@ -1,0 +1,30 @@
+logic_tester:
+  ros__parameters:
+
+    # MOWER PHYSICAL PROPERTIES (Husqvarna Z246)
+    MASS: 242.672 # kg (535 lbs)
+    WHEEL_SEPARATION: 0.889 # m
+    WIDTH: 1.11125 # m (43.75 in)
+    LENGTH: 1.905 # m (75 in)
+    HEIGHT: 1.016 # m (40 in)
+
+    # MOWER ENGINE PROPERTIES (Husqvarna Z246)
+    MAX_POWER: 16032.55 # Watts (21.5 hp)
+    MAX_RPM: 3300.0 # ± 100 rpm
+    MAX_TORQUE: 53.2 # N*m at 2200 rpm
+    MAX_TORQUE_RPM: 2200.0 # rpm
+    MAX_LINEAR_VEL: 2.90576 # m/s (6.5 mph)
+    MAX_LEFT_BACKWARD_VEL: 1.31065 # m/s
+    MAX_RIGHT_BACKWARD_VEL: 1.31065 # m/s
+    MAX_LEFT_FORWARD_VEL: 1.514 # m/s
+    MAX_RIGHT_FORWARD_VEL: 1.5366 # m/s
+
+    # PHYSICS PARAMETERS
+    GRAVITY: 9.81 # m/s^2
+    COEFF_OF_FRICTION: 0.40 # 0.35 to 0.55 for dry grass
+    DRAG_COEFF: 0.9 # 0.7 to 1.1 for non-streamlined vehicles
+    AIR_DENSITY: 1.225  # kg/m^3 (standard air density at sea level)
+
+    # OTHER
+    PUBLISH_RATE: 10.0 # Hz (publishes / second)
+    INITIAL_HEADING: 127.0 # ° (-180° to 180°)
