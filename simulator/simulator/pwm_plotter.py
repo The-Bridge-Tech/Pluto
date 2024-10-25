@@ -25,9 +25,10 @@ class PWMData:
 
         """Struct class for pwm plot data"""
 
-        def __init__(self, initial_time: float = 0.0):
+        def __init__(self, time_func, initial_time: float = 0.0):
                 self.clear()
                 self.update()
+                self.time_func = time_func
                 self.initial_time = initial_time
 
         def append(self, value: int | float):
@@ -48,7 +49,7 @@ class PWMData:
                 self.times = []
 
         def get_relative_time(self) -> float:
-                return time.time() - self.initial_time
+                return self.time_func() - self.initial_time
         
         def get_seconds_since_last_update(self) -> float:
                 return self.get_relative_time() - self.times[-1]
@@ -125,14 +126,17 @@ class PWMPlotter(Node):
                 )
 
                 # VARIABLES
-                self.initial_time = time.time()
-                self.left_pwm_data = PWMData(self.initial_time)
-                self.right_pwm_data = PWMData(self.initial_time)
+                self.initial_time = self.get_seconds()
+                self.left_pwm_data = PWMData(self.get_seconds, self.initial_time)
+                self.right_pwm_data = PWMData(self.get_seconds, self.initial_time)
 
         # HELPERS
 
+        def get_seconds(self) -> float:
+                return self.get_clock().now().nanoseconds * (10**-9)
+
         def get_relative_time(self) -> float:
-                return time.time() - self.initial_time
+                return self.get_seconds() - self.initial_time
 
         # TIMER CALLBACKS
 
