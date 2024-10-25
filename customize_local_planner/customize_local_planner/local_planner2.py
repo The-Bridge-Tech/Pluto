@@ -84,9 +84,19 @@ class LocalPlanner(Node):
                 )
 
                 # PUBLISHERS
-                self.state_publisher = self.create_publisher(
+                self.state_pub = self.create_publisher(
                         String,
-                        "/state",
+                        "/analysis/state",
+                        10
+                )
+                self.conditions_pub = self.create_publisher(
+                        String,
+                        "/analysis/conditions",
+                        10
+                )
+                self.subscribed_pub = self.create_publisher(
+                        String,
+                        "/analysis/subscribed",
                         10
                 )
 
@@ -169,6 +179,9 @@ class LocalPlanner(Node):
                 self.prev_error = 0
                 self.integral_error = 0
                 self.prev_t = time.time()
+
+        def get_seconds(self) -> float:
+                return self.get_clock().now().nanoseconds * (10**-9)
         
 
         # TIMER CALLBACKS
@@ -214,6 +227,7 @@ class LocalPlanner(Node):
                                 [self.current_x, self.current_y], 
                                 [goal_x, goal_y]
                         )
+                self.conditions_pub.publish(String(data = f"[{self.get_seconds()}] goal_angle = {round(self.goal_heading, 3)} angle_diff = {round(self.angle_diff, 3)} distance = {round(self.distance_diff, 3)}"))
 
         def update_state(self):
                 """Update state based on current conditions."""
@@ -270,7 +284,7 @@ class LocalPlanner(Node):
                 # log state change
                 self.get_logger().info(f"State: {self.state} -> {state}")
                 # publish state change
-                self.state_publisher.publish(String(data=f"{self.state} -> {state}"))
+                self.state_pub.publish(String(data=f"[{self.get_seconds()}] {self.state} -> {state}"))
                 # actually change the state
                 self.state = state
 
@@ -329,8 +343,8 @@ class LocalPlanner(Node):
                 self.prev_error = error
                 self.prev_time = t
                 # apply PID error correction
-                self.left_pwm.percentage = -correction / 2
-                self.right_pwm.percentage = correction / 2
+                self.left_pwm.percentage = -correction
+                self.right_pwm.percentage = correction
 
         def maintain_straight(self):
                 """Adjust right servo pwm from initial straight pwm using PID controller 
@@ -361,7 +375,8 @@ class LocalPlanner(Node):
         # SUBSCRIBER CALLBACKS
 
         def odom_callback(self, msg: Odometry):
-              self.current_odom = msg
+                self.current_odom = msg
+                self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] odom: x = {msg.pose.pose.position.x} y = {msg.pose.pose.position.y}"))
 
         def is_autonomous_mode_callback(self, msg: Bool):
                 # force into stop state
@@ -370,6 +385,7 @@ class LocalPlanner(Node):
                 if self.is_autonomous_mode and not msg.data:
                         self.local_plan = LocalPlan()
                 self.is_autonomous_mode = msg.data
+                self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] is_autonomous_mode: {msg.data}"))
 
         def local_plan_callback(self, path: Path):
                 """Sets the goal pose to the middle pose in the path"""
@@ -381,11 +397,13 @@ class LocalPlanner(Node):
                         self.get_logger().info("first path from /local_plan")
                         # set path as the first local plan
                         self.local_plan.set_path(path)
+                        # self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] local_plan: {[(pose.position.x, pose.position.y) for pose in path.poses]}"))
                 # if new path
                 elif self.local_plan != path:
                         self.get_logger().info("new path from /local_plan")
                         # set path as the new local plan
                         self.local_plan.set_path(path)
+                        # self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] local_plan: {[(pose.position.x, pose.position.y) for pose in path.poses]}"))
 
 
 # MAIN
