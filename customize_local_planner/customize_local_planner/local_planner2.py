@@ -169,8 +169,6 @@ class LocalPlanner(Node):
 
                 # STATE MACHINE
                 self.state = None
-                # set state to "Stop" and servos to neutral
-                self.stop()
 
         
         # HELPERS
@@ -187,6 +185,9 @@ class LocalPlanner(Node):
         # TIMER CALLBACKS
         
         def process(self):
+                # first time callback is called -> set state to "Stop" and servos to neutral
+                if not self.state:
+                        self.stop()
                 # wait for odometry data
                 if not self.current_odom:
                         self.get_logger().info("Waiting for odometry from /odometry/global")
