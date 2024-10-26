@@ -38,7 +38,7 @@ class GPSOffsetter(Node):
                         self.is_autonomous_mode_callback, 
                         1
                 )
-                self.is_autonomous_mode = False
+                self.autonomous_mode_started = False
 
                 # PUBLISHERS
                 # Publish gps message with the added offset
@@ -96,8 +96,8 @@ class GPSOffsetter(Node):
 
         def gps_callback(self, msg: NavSatFix):
                 """For initial gps message, calculate offset. Apply offset and publish corrected gps message."""
-                # Wait for autonous mode -> then get initial gps
-                if self.is_autonomous_mode:
+                # Wait for autonous mode to start -> then get initial gps
+                if self.autonomous_mode_started:
                         if not self.initialGPS:
                                 self.initialGPS = msg
                                 self.calculateOffset()
@@ -108,11 +108,9 @@ class GPSOffsetter(Node):
                         self.get_logger().info("Waiting for autonomous mode...")
                         
         def is_autonomous_mode_callback(self, msg: Bool):
-                """Update if in autonomous mode."""
-                self.is_autonomous_mode = msg.data
-                # if now in manual mode -> reset initial gps
-                # if not self.is_autonomous_mode:
-                #         self.initialGPS = None
+                """Trigger when autonomous mode starts."""
+                if msg.data: 
+                        self.autonomous_mode_started = True
 
 
 
