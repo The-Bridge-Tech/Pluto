@@ -90,7 +90,7 @@ class GPSPlotter(Node):
                 # Subscribe to odometry topic
                 self.odom_subscriber = self.create_subscription(
                         Odometry, 
-                        "odometry/global", 
+                        "odometry/offset", 
                         self.odom_callback, 
                         10
                 )
@@ -105,6 +105,11 @@ class GPSPlotter(Node):
                 self.lastWaypointNumber = 1
                 self.currentWaypointNumber = 1
                 self.currentDistance = None
+                self.odomDistance = None
+                self.current_x = None
+                self.current_y = None
+                self.goal_x = None
+                self.goal_y = None
 
                 # TIMERS
                 self.process_timer = self.create_timer(
@@ -296,6 +301,20 @@ class GPSPlotter(Node):
                         lat2 = currentWaypoint[0],
                         lon2 = currentWaypoint[1]
                 )
+                if self.currentOffsetGPS:
+                        self.current_x = self.currentOdom.pose.pose.position.x
+                        self.current_y = self.currentOdom.pose.pose.position.y
+                        self.goal_x, self.goal_y = calculate_goal_xy(
+                                origin_lat = self.offset_gps.latitudes[0],
+                                origin_lon = self.offset_gps.longitudes[0],
+                                goal_lat = self.getCurrentWaypoint()[0],
+                                goal_lon = self.getCurrentWaypoint()[1],
+
+                        )
+                        self.odomDistance = math.dist( 
+                                [self.current_x, self.current_y], 
+                                [self.goal_x, self.goal_y]
+                        )
 
 
         # SUBSCRIBER CALLBACKS
@@ -393,7 +412,11 @@ class GPSPlotter(Node):
                 # Update distance from current gps to the current waypoint
                 self.updateDistance()
                 # (gps and odom data are available)
-                self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {round(self.currentDistance, 4)}\t Waypoint #{self.currentWaypointNumber}')
+                if self.odomDistance:
+                        # self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {round(self.currentDistance, 4)}\t Odom Distance: {round(self.odomDistance, 4)}\t Waypoint #{self.currentWaypointNumber}')
+                        self.get_logger().info(f'current: ({round(self.current_x, 3)}, {round(self.current_y, 3)})\t goal: ({round(self.goal_x, 3)}, {round(self.goal_y, 3)})\t Odom Distance: {round(self.odomDistance, 3)}\t Distance: {round(self.currentDistance, 3)}')
+                else:
+                        self.get_logger().info(f'Lat: {self.currentGPS.latitude}\t Lon: {self.currentGPS.longitude}\t Distance: {round(self.currentDistance, 4)}\t Waypoint #{self.currentWaypointNumber}')
 
 
 # MAIN
