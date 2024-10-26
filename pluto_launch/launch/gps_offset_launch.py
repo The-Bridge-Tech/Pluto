@@ -8,4 +8,9 @@ def generate_launch_description():
             executable='gps_offsetter',
             name='gps_offsetter'
         ),
+        Node(
+            package='gps_offset',
+            executable='odom_offsetter',
+            name='odom_offsetter'
+        ),
     ])

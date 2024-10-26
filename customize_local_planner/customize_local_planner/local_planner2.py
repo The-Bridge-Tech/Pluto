@@ -103,7 +103,7 @@ class LocalPlanner(Node):
                 # SUBSCRIBERS
                 self.odom_sub = self.create_subscription(
                         Odometry, 
-                        "/odometry/global", 
+                        "/odometry/offset", 
                         self.odom_callback, 
                         10
                 )
@@ -190,7 +190,7 @@ class LocalPlanner(Node):
                         self.stop()
                 # wait for odometry data
                 if not self.current_odom:
-                        self.get_logger().info("Waiting for odometry from /odometry/global")
+                        self.get_logger().info("Waiting for odometry from /odometry/offset")
                         return
                 # wait for first path
                 if not self.local_plan.has_path():

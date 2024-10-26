@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-                'gps_offsetter = gps_offset.gps_offsetter:main'
+                'gps_offsetter = gps_offset.gps_offsetter:main',
+                'odom_offsetter = gps_offset.odom_offsetter:main'
         ],
     },
 )
