@@ -57,7 +57,7 @@ class Analyzer(Node):
                 # SUBSCRIBERS - OUTPUTS (SENSOR DATA)
                 self.odom_sub = self.create_subscription(
                         Odometry, 
-                        "/odometry/offset", 
+                        "/odometry/global", 
                         self.odom_callback, 
                         10
                 )

@@ -58,7 +58,7 @@ MAP_IMAGE_DIR = os.path.join(
 
 # PARAMETERS
 PROCESS_RATE = 10 # Hz (times / second)
-HEADING_LINE_LENGTH = 0.000025 * 3
+HEADING_LINE_LENGTH = 0.000025 * 2
 
 
 class GPSPlotter(Node):
@@ -90,7 +90,7 @@ class GPSPlotter(Node):
                 # Subscribe to odometry topic
                 self.odom_subscriber = self.create_subscription(
                         Odometry, 
-                        "odometry/offset", 
+                        "odometry/global", 
                         self.odom_callback, 
                         10
                 )
@@ -294,19 +294,19 @@ class GPSPlotter(Node):
         def updateDistance(self):
                 """Update distance from current gps to the current waypoint"""
                 currentWaypoint = self.getCurrentWaypoint()
-                currentGPS = self.currentGPS if self.currentOffsetGPS is None else self.currentOffsetGPS
+                # currentGPS = self.currentGPS #if self.currentOffsetGPS is None else self.currentOffsetGPS
                 self.currentDistance = haversine(
-                        lat1 = currentGPS.latitude,
-                        lon1 = currentGPS.longitude,
+                        lat1 = self.currentGPS.latitude,
+                        lon1 = self.currentGPS.longitude,
                         lat2 = currentWaypoint[0],
                         lon2 = currentWaypoint[1]
                 )
-                if self.currentOffsetGPS:
+                if self.currentOdom:
                         self.current_x = self.currentOdom.pose.pose.position.x
                         self.current_y = self.currentOdom.pose.pose.position.y
                         self.goal_x, self.goal_y = calculate_goal_xy(
-                                origin_lat = self.offset_gps.latitudes[0],
-                                origin_lon = self.offset_gps.longitudes[0],
+                                origin_lat = self.original_gps.latitudes[0],
+                                origin_lon = self.original_gps.longitudes[0],
                                 goal_lat = self.getCurrentWaypoint()[0],
                                 goal_lon = self.getCurrentWaypoint()[1],
 
@@ -363,12 +363,12 @@ class GPSPlotter(Node):
                                 self.original_gps.latitudes
                         )
                         # If there are not offset gps points yet
-                        if not self.currentOffsetGPS:
-                                # Update the last point (current position)
-                                self.current_position_scatter.set_data(
-                                        self.original_gps.currentLon(), 
-                                        self.original_gps.currentLat()
-                                )
+                        # if not self.currentOffsetGPS:
+                        # Update the last point (current position)
+                        self.current_position_scatter.set_data(
+                                self.original_gps.currentLon(), 
+                                self.original_gps.currentLat()
+                        )
                         self.original_gps.update()
                 # If there is new offset gps data
                 if self.offset_gps.new:
@@ -378,21 +378,21 @@ class GPSPlotter(Node):
                                 self.offset_gps.latitudes
                         )
                         # Update the last point (current position)
-                        self.current_position_scatter.set_data(
-                                self.offset_gps.currentLon(), 
-                                self.offset_gps.currentLat()
-                        )
+                        # self.current_position_scatter.set_data(
+                        #         self.offset_gps.currentLon(), 
+                        #         self.offset_gps.currentLat()
+                        # )
                         self.offset_gps.update()
                 # If odom data is available (for heading)
                 if self.currentOdom:
                         # Determine which gps data to use to draw heading line
-                        gps = self.original_gps if not self.currentOffsetGPS else self.offset_gps
+                        # gps = self.original_gps if not self.currentOffsetGPS else self.offset_gps
                         # if there is gps data available yet
-                        if len(gps) > 0:
+                        if len(self.original_gps) > 0:
                                 # Re-draw heading line
                                 self.drawHeadingLine(
-                                        current_lat = gps.currentLat(),
-                                        current_lon = gps.currentLon()
+                                        current_lat = self.original_gps.currentLat(),
+                                        current_lon = self.original_gps.currentLon()
                                 )
                 # Update the current waypoint
                 self.updateWaypoints()

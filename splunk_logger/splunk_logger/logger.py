@@ -72,7 +72,7 @@ class SplunkLogger(Node):
         # GPS
         self.fix_subscriber = self.create_subscription(
             NavSatFix,
-            "/fix/offset",
+            "/fix/filtered",
             self.fix_callback,
             10
         )
@@ -86,7 +86,7 @@ class SplunkLogger(Node):
         # Odometry
         self.odometry_subscriber = self.create_subscription(
             Odometry,
-            "/odometry/offset",
+            "/odometry/global",
             self.odometry_callback,
             10
         )

@@ -48,7 +48,7 @@ class GPSVelocity(Node):
 
         # TODO: change to best effort strategy?
         self.gps_fix_sub = self.create_subscription(
-            NavSatFix, "/fix/offset", self.update_gps_velocity, 10)
+            NavSatFix, "/fix/filtered", self.update_gps_velocity, 10)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.publish_gps_velocity)
 

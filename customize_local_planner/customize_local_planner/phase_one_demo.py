@@ -70,7 +70,7 @@ class PhaseOneDemo(Node):
         self.current_odom: Odometry = None
         self.gps_sub = self.create_subscription(
             NavSatFix, 
-            "/fix/offset", 
+            "/fix/filtered", 
             self.gps_callback, 
             10
         )
