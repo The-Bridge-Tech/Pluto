@@ -28,3 +28,5 @@ logic_tester:
     # OTHER
     PUBLISH_RATE: 10.0 # Hz (publishes / second)
     INITIAL_HEADING: 127.0 # ° (-180° to 180°)
+    INITIAL_LATITUDE: 34.84135495 # ° North
+    INITIAL_LONGITUDE: -82.4117773666666 # ° East

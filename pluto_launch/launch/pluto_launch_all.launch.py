@@ -222,5 +222,5 @@ def generate_launch_description():
         maestro_launch, # (servos)
         # camera_launch,
         # LOGGER
-        # splunk_logger_launch,
+        splunk_logger_launch,
     ])

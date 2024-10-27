@@ -18,7 +18,6 @@ import math
 
 # HELPER MODULES
 from customize_local_planner.conversions import *
-from customize_local_planner.gps_plotter import BASE_GPS
 
 # PARAMETERS (must be declared even when using a YAML file)
 DEFAULT_PARAMS = {
@@ -49,6 +48,8 @@ DEFAULT_PARAMS = {
         # OTHER
         "PUBLISH_RATE": 0.0,
         "INITIAL_HEADING": 0.0,
+        "INITIAL_LATITUDE": 0.0,
+        "INITIAL_LONGITUDE": 0.0,
 }
 
 
@@ -87,6 +88,8 @@ class LogicTester(Node):
                 # OTHER
                 self.PUBLISH_RATE = load_param("PUBLISH_RATE").double_value
                 self.INITIAL_HEADING = load_param("INITIAL_HEADING").double_value
+                self.INITIAL_LATITUDE = load_param("INITIAL_LATITUDE").double_value
+                self.INITIAL_LONGITUDE = load_param("INITIAL_LONGITUDE").double_value
 
                 # PHYSICS CALCULATIONS
                 self.MOMENT_OF_INERTIA = (1/12) * self.MASS * (self.LENGTH**2 + self.WIDTH**2) # kg*m^2
@@ -138,7 +141,7 @@ class LogicTester(Node):
                 # VARIABLES
                 self.counter = 0
                 self.heading = self.INITIAL_HEADING  # ° (-180° to 180°)
-                self.x0, self.y0 = lat_lon_to_utm(*BASE_GPS) # m
+                self.x0, self.y0 = lat_lon_to_utm(self.INITIAL_LATITUDE, self.INITIAL_LONGITUDE) # m
                 self.x, self.y = 0.0, 0.0 # m
                 self.angular_vel = 0.0 # rad/s
                 self.linear_vel = 0.0 # m/s
@@ -152,7 +155,7 @@ class LogicTester(Node):
                 """Simulate sensor data to observe logic in other nodes"""
                 # publish initial gps
                 if self.counter == self.seconds_to_counts(0):
-                        self.publish_gps(*BASE_GPS)
+                        self.publish_gps(self.INITIAL_LATITUDE, self.INITIAL_LONGITUDE)
                 # publish initial heading (Stop -> Turn)
                 elif self.counter == self.seconds_to_counts(0.5):
                         self.publish_heading(self.INITIAL_HEADING)
@@ -161,7 +164,7 @@ class LogicTester(Node):
                         self.publish_autonomous_mode(True)
                 # re-publish initial gps
                 elif self.counter == self.seconds_to_counts(1.5):
-                        self.publish_gps(*BASE_GPS)
+                        self.publish_gps(self.INITIAL_LATITUDE, self.INITIAL_LONGITUDE)
                 # re-publish initial heading
                 elif self.counter == self.seconds_to_counts(2):
                         self.publish_heading(self.INITIAL_HEADING)
