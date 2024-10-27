@@ -126,9 +126,10 @@ class SplunkLogger(Node):
         """Make HTTP POST request to splunk server. Return status code."""
         response = requests.post(
             "http://23.126.4.97:8013/services/collector/event",
-            headers={"Authorization": "Splunk 87ba4168-a30a-48f6-b809-2859b7052a46"},
+            headers={"Authorization": "Splunk 311596bb-ad45-4507-b9d1-ef7a7c19338d"},
             data=json.dumps(event, ensure_ascii=False).encode("utf-8"),
         )
+        # self.get_logger().info(f"{response.status_code}\t {event['event']['id']}")
         return response.status_code
     
     def pushMessage(self, event: dict):
