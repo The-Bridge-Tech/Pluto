@@ -13,7 +13,7 @@ from std_msgs.msg import Bool
 
 # HELPER MODULES
 from customize_local_planner.conversions import *
-from customize_local_planner.gps_plotter import BASE_GPS
+from customize_local_planner.phase_one_demo import BASE_GPS
 
 
 class GPSOffsetter(Node):

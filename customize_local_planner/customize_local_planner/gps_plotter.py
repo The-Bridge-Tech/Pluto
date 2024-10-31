@@ -23,12 +23,11 @@ import math
 
 # HELPER MODULES
 from.gps_list import GPSList
-from .phase_one_demo import WAYPOINTS, WAYPOINT_RADIUS
+from .phase_one_demo import WAYPOINTS, WAYPOINT_RADIUS, BASE_GPS
 from .conversions import *
 
 
 # CONSTANTS
-BASE_GPS = (34.841400, -82.411743)
 FENCE_GPS_POINTS=[
         (34.8414762, -82.4118085),      # front-right corner 
         (34.8413314, -82.4119220),      # back-right corner

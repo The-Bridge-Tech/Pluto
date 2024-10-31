@@ -8,8 +8,13 @@ Created: 10/1/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import UInt32, Bool, String, Float64
-from nav_msgs.msg import Odometry, Path
+from rclpy.action import ActionServer
+from rclpy.action.server import ServerGoalHandle
+from std_msgs.msg import UInt32, Bool, String, Float64, Int16, Float32, UInt16
+from builtin_interfaces.msg import Duration
+from geometry_msgs.msg import PoseStamped, Pose, Point
+from nav_msgs.msg import Odometry
+from nav2_msgs.action import NavigateThroughPoses
 
 # CALCULATION MODULES
 import math
@@ -115,11 +120,13 @@ class LocalPlanner(Node):
                         1
                 )
                 self.is_autonomous_mode = False
-                self.local_plan_sub = self.create_subscription(
-                        Path, 
+
+                # ACTION SERVER
+                self.local_plan_action_server = ActionServer(
+                        self,
+                        NavigateThroughPoses,
                         "/local_plan", 
                         self.local_plan_callback, 
-                        10
                 )
                 self.local_plan = LocalPlan()
 
@@ -388,23 +395,78 @@ class LocalPlanner(Node):
                 self.is_autonomous_mode = msg.data
                 self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] is_autonomous_mode: {msg.data}"))
 
-        def local_plan_callback(self, path: Path):
-                """Sets the goal pose to the middle pose in the path"""
-                # if path is empty
-                if len(path.poses) == 0:
-                        self.get_logger().warn("empty path from /local_plan")
-                # if first path
-                if not self.local_plan.has_path():
-                        self.get_logger().info("first path from /local_plan")
-                        # set path as the first local plan
-                        self.local_plan.set_path(path)
-                        # self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] local_plan: {[(pose.position.x, pose.position.y) for pose in path.poses]}"))
-                # if new path
-                elif self.local_plan != path:
-                        self.get_logger().info("new path from /local_plan")
+        def local_plan_callback(self, goal_handle: ServerGoalHandle):
+                """Executes accepted goal from action server."""
+                # GOAL
+                goal: NavigateThroughPoses.Goal = goal_handle.request
+                # geometry_msgs/PoseStamped[] poses
+                path = goal.poses
+                # string behavior_tree
+                behavior_tree = goal.behavior_tree
+                # if path is empty -> cancel goal
+                if len(path) == 0:
+                        self.get_logger().warn("empty path from /local_plan. Cancelling goal...")
+                        # cancel goal
+                        goal_handle.canceled()
+                # path has poses -> execute goal
+                else:
+                        # if first path
+                        if not self.local_plan.has_path():
+                                self.get_logger().info("first path from /local_plan")
+                        # if new path
+                        else:
+                                self.get_logger().info("new path from /local_plan")
                         # set path as the new local plan
                         self.local_plan.set_path(path)
-                        # self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] local_plan: {[(pose.position.x, pose.position.y) for pose in path.poses]}"))
+                        # self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] local_plan: {[(pose.position.x, pose.position.y) for pose in path]}"))
+                # FEEDBACK
+                # return feedback until path has been navigated
+                while not self.local_plan.is_path_navigated():
+                        # construct feedback message
+                        feedback_msg = NavigateThroughPoses.Feedback(
+                                # geometry_msgs/PoseStamped current_pose
+                                current_pose = PoseStamped(pose = Pose(position = Point(
+                                        x = self.current_x,
+                                        y = self.current_y
+                                ))),
+                                # TODO builtin_interfaces/Duration navigation_time
+                                navigation_time = Duration(
+                                        sec = 0,
+                                        nanosec = 0
+                                ),
+                                # TODO builtin_interfaces/Duration estimated_time_remaining
+                                estimated_time_remaining = Duration(
+                                        sec = 0,
+                                        nanosec = 0
+                                ),
+                                # TODO int16 number_of_recoveries
+                                number_of_recoveries = Int16(
+                                        data = 0
+                                ),
+                                # float32 distance_remaining
+                                distance_remaining = Float32(
+                                        data = self.distance_diff
+                                ),
+                                # int16 number_of_poses_remaining
+                                number_of_poses_remaining = Int16(
+                                        data = len(self.local_plan.future_poses)
+                                )
+                        )
+                        # publish feedback message
+                        goal_handle.publish_feedback(feedback_msg)
+                        time.sleep(1)
+                # RESULT
+                # return result that path has been navigated OR fatal error occured
+                goal_handle.succeed()
+                # construct result
+                result = NavigateThroughPoses.Result(
+                        # TODO uint16 error_code
+                        error_code = UInt16(
+                                data = 0
+                        )
+                )
+                # return result
+                return result
 
 
 # MAIN

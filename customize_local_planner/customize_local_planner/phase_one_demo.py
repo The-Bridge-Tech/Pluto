@@ -21,6 +21,7 @@ import time
 from .conversions import *
 
 # CONSTANTS
+BASE_GPS = (34.841400, -82.411743)
 OLD_WAYPOINTS = [
     (34.841433, -82.411767),    # front-right corner
     (34.841367, -82.411833),    # back-right corner
@@ -31,9 +32,9 @@ OLD_WAYPOINTS = [
 WAYPOINTS = [
     (34.841384, -82.411669),    # front-left corner
     (34.841254, -82.411731),    # back-left corner
-    # (34.841327, -82.411853),    # back-right corner
-    # (34.841434, -82.411776),    # front-right corner
-    # (34.841384, -82.411669),    # front-left corner (return to #1)
+    (34.841327, -82.411853),    # back-right corner
+    (34.841434, -82.411776),    # front-right corner
+    (34.841384, -82.411669),    # front-left corner (return to #1)
 ]
 WAYPOINT_RADIUS = 1.0           # should match local_planner's 'distance_error_tolerance' parameter
 
@@ -103,17 +104,22 @@ class PhaseOneDemo(Node):
 
     # HELPERS
 
+    def absolute_to_relative_utm(self, x: float, y: float) -> tuple:
+        """Converts absolute UTM coordinate (x = easting, y = northing)
+        to one relative to the known origin UTM (base pin)"""
+        base_x, base_y = lat_lon_to_utm(*BASE_GPS)
+        return (x - base_x, y - base_y)
+
     def calculate_goal_poses(self):
-        """Convert GPS waypoints to xy coordinates (goal poses) relative to origin point."""
+        """Convert waypoint lat & lon to UTM coordinates relative to origin (base pin)"""
         for waypoint in WAYPOINTS:
-                goal_x, goal_y = calculate_goal_xy(
-                    origin_lat = self.initial_gps.latitude,
-                    origin_lon = self.initial_gps.longitude,
-                    goal_lat = waypoint[0],
-                    goal_lon = waypoint[1]
-                )
-                self.get_logger().info(f"""Origin: {(self.initial_gps.latitude, self.initial_gps.longitude)}\t Goal: {waypoint}\t Distance: {(goal_x, goal_y)}""")
-                self.goal_poses.append((goal_x, goal_y))
+                # get the absolute UTM of the waypoint
+                abs_goal_utm = lat_lon_to_utm(*waypoint)
+                # get UTM relative to known origin UTM (base pin)
+                rel_goal_utm = self.absolute_to_relative_utm(*abs_goal_utm)
+                # add relative goal UTM to list of poses
+                self.goal_poses.append(rel_goal_utm)
+                self.get_logger().info(f"""Goal: {waypoint}\t Relative UTM: {rel_goal_utm}""")
         self.get_logger().info("Calculated goal poses.")
 
     def update_goal_pose(self):

@@ -6,7 +6,6 @@ Created: 10/18/24
 
 
 # ROS MODULES
-from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 
 
@@ -18,9 +17,9 @@ class LocalPlan:
                 self.future_poses: list[PoseStamped] = None
                 self.completed_poses: list[PoseStamped] = None
 
-        def set_path(self, path: Path):
+        def set_path(self, poses: list[PoseStamped]):
                 """Set/change the path to navigate."""
-                self.future_poses = path.poses
+                self.future_poses = poses
                 self.completed_poses = list[PoseStamped]()
 
         def is_path_navigated(self) -> bool:
@@ -53,10 +52,10 @@ class LocalPlan:
                 self.completed_poses.append(self.future_poses.pop(0))
                 
         def __eq__(self, other):
-                if isinstance(other, Path):
+                if isinstance(other, list[PoseStamped]):
                         return (
-                                self.future_poses == other.poses or
-                                (self.completed_poses + self.future_poses) == other.poses
+                                self.future_poses == other or
+                                (self.completed_poses + self.future_poses) == other
                         )
                 elif isinstance(other, LocalPlan):
                         return self.future_poses == other.future_poses
