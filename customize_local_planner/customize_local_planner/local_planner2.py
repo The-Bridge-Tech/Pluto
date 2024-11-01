@@ -53,6 +53,7 @@ class LocalPlanner(Node):
                 self.turn_kd = self.load_param_double("turn_kd")
                 # OTHER
                 self.process_frequency = self.load_param_int("process_frequency")
+                self.calculate_utm_error = self.load_param_bool("calculate_utm_error")
 
                 # ACTION SERVER
                 self.local_plan_action_server = ActionServer(
