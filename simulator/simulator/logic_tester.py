@@ -19,39 +19,6 @@ import math
 # HELPER MODULES
 from customize_local_planner.conversions import *
 
-# PARAMETERS (must be declared even when using a YAML file)
-DEFAULT_PARAMS = {
-        # MOWER PHYSICAL PROPERTIES (Husqvarna Z246)
-        "MASS": 0.0,
-        "WHEEL_SEPARATION": 0.0,
-        "WIDTH": 0.0,
-        "LENGTH": 0.0,
-        "HEIGHT": 0.0,
-
-        # MOWER ENGINE PROPERTIES (Husqvarna Z246)
-        "MAX_POWER": 0.0,
-        "MAX_RPM": 0.0,
-        "MAX_TORQUE": 0.0,
-        "MAX_TORQUE_RPM": 0.0,
-        "MAX_LINEAR_VEL": 0.0,
-        "MAX_LEFT_BACKWARD_VEL": 0.0,
-        "MAX_RIGHT_BACKWARD_VEL": 0.0,
-        "MAX_LEFT_FORWARD_VEL": 0.0,
-        "MAX_RIGHT_FORWARD_VEL": 0.0,
-
-        # PHYSICS PARAMETERS
-        "GRAVITY": 0.0,
-        "COEFF_OF_FRICTION": 0.0,
-        "DRAG_COEFF": 0.0,
-        "AIR_DENSITY": 0.0,
-
-        # OTHER
-        "PUBLISH_RATE": 0.0,
-        "INITIAL_HEADING": 0.0,
-        "INITIAL_LATITUDE": 0.0,
-        "INITIAL_LONGITUDE": 0.0,
-}
-
 
 class LogicTester(Node):
 
@@ -59,37 +26,33 @@ class LogicTester(Node):
                 super().__init__("logic_tester")
 
                 # PARAMETERS
-                # declare all parameters with default values
-                for name, value in DEFAULT_PARAMS.items():
-                        self.declare_parameter(name, value)
                 # load parameter values from YAML file (pluto_launch/config/logic_tester.yaml)
-                load_param = lambda param_name: self.get_parameter(param_name).get_parameter_value()
                 # MOWER PHYSICAL PROPERTIES (Husqvarna Z246)
-                self.MASS = load_param("MASS").double_value
-                self.WHEEL_SEPARATION = load_param("WHEEL_SEPARATION").double_value
-                self.WIDTH = load_param("WIDTH").double_value
-                self.LENGTH = load_param("LENGTH").double_value
-                self.HEIGHT = load_param("HEIGHT").double_value
+                self.MASS = self.load_param_double("MASS")
+                self.WHEEL_SEPARATION = self.load_param_double("WHEEL_SEPARATION")
+                self.WIDTH = self.load_param_double("WIDTH")
+                self.LENGTH = self.load_param_double("LENGTH")
+                self.HEIGHT = self.load_param_double("HEIGHT")
                 # MOWER ENGINE PROPERTIES (Husqvarna Z246)
-                self.MAX_POWER = load_param("MAX_POWER").double_value
-                self.MAX_RPM = load_param("MAX_RPM").double_value
-                self.MAX_TORQUE = load_param("MAX_TORQUE").double_value
-                self.MAX_TORQUE_RPM = load_param("MAX_TORQUE_RPM").double_value
-                self.MAX_LINEAR_VEL = load_param("MAX_LINEAR_VEL").double_value
-                self.MAX_LEFT_BACKWARD_VEL = load_param("MAX_LEFT_BACKWARD_VEL").double_value
-                self.MAX_RIGHT_BACKWARD_VEL = load_param("MAX_RIGHT_BACKWARD_VEL").double_value
-                self.MAX_LEFT_FORWARD_VEL = load_param("MAX_LEFT_FORWARD_VEL").double_value
-                self.MAX_RIGHT_FORWARD_VEL = load_param("MAX_RIGHT_FORWARD_VEL").double_value
+                self.MAX_POWER = self.load_param_double("MAX_POWER")
+                self.MAX_RPM = self.load_param_double("MAX_RPM")
+                self.MAX_TORQUE = self.load_param_double("MAX_TORQUE")
+                self.MAX_TORQUE_RPM = self.load_param_double("MAX_TORQUE_RPM")
+                self.MAX_LINEAR_VEL = self.load_param_double("MAX_LINEAR_VEL")
+                self.MAX_LEFT_BACKWARD_VEL = self.load_param_double("MAX_LEFT_BACKWARD_VEL")
+                self.MAX_RIGHT_BACKWARD_VEL = self.load_param_double("MAX_RIGHT_BACKWARD_VEL")
+                self.MAX_LEFT_FORWARD_VEL = self.load_param_double("MAX_LEFT_FORWARD_VEL")
+                self.MAX_RIGHT_FORWARD_VEL = self.load_param_double("MAX_RIGHT_FORWARD_VEL")
                 # PHYSICS PARAMETERS
-                self.GRAVITY = load_param("GRAVITY").double_value
-                self.COEFF_OF_FRICTION = load_param("COEFF_OF_FRICTION").double_value
-                self.DRAG_COEFF = load_param("DRAG_COEFF").double_value
-                self.AIR_DENSITY = load_param("AIR_DENSITY").double_value
+                self.GRAVITY = self.load_param_double("GRAVITY")
+                self.COEFF_OF_FRICTION = self.load_param_double("COEFF_OF_FRICTION")
+                self.DRAG_COEFF = self.load_param_double("DRAG_COEFF")
+                self.AIR_DENSITY = self.load_param_double("AIR_DENSITY")
                 # OTHER
-                self.PUBLISH_RATE = load_param("PUBLISH_RATE").double_value
-                self.INITIAL_HEADING = load_param("INITIAL_HEADING").double_value
-                self.INITIAL_LATITUDE = load_param("INITIAL_LATITUDE").double_value
-                self.INITIAL_LONGITUDE = load_param("INITIAL_LONGITUDE").double_value
+                self.PUBLISH_RATE = self.load_param_double("PUBLISH_RATE")
+                self.INITIAL_HEADING = self.load_param_double("INITIAL_HEADING")
+                self.INITIAL_LATITUDE = self.load_param_double("INITIAL_LATITUDE")
+                self.INITIAL_LONGITUDE = self.load_param_double("INITIAL_LONGITUDE")
 
                 # PHYSICS CALCULATIONS
                 self.MOMENT_OF_INERTIA = (1/12) * self.MASS * (self.LENGTH**2 + self.WIDTH**2) # kg*m^2
@@ -147,6 +110,19 @@ class LogicTester(Node):
                 self.linear_vel = 0.0 # m/s
                 self.left_vel = 0.0 # m/s
                 self.right_vel = 0.0 # m/s
+
+
+        # HELPERS - PARAMETERS
+
+        def load_param(self, param_name: str, init_value):
+                self.declare_parameter(param_name, init_value)
+                return self.get_parameter(param_name).get_parameter_value()
+        
+        def load_param_int(self, param_name: str) -> int:
+                return self.load_param(param_name, 0).integer_value
+        
+        def load_param_double(self, param_name: str) -> float:
+                return self.load_param(param_name, 0.0).double_value
 
 
         # TIMER CALLBACKS

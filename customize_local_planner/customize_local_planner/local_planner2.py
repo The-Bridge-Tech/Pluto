@@ -26,67 +26,46 @@ from .pwm import PWM
 from .conversions import *
 
 
-# PARAMETERS (must be declared even when using a YAML file)
-DEFAULT_PARAMS = {
-        # PWM
-        "min_pwm": 0,
-        "neutral_pwm": 0,
-        "max_pwm": 0,
-
-        # STATE: STRAIGHT
-        "straight_initial_pwm": 0.0,
-        "straight_distance_tolerance": 0.0,
-        "straight_kp": 0.0,
-        "straight_ki": 0.0,
-        "straight_kd": 0.0,
-
-        # STATE: TURN
-        "turn_max_pwm": 0.0,
-        "turn_angle_tolerance": 0.0,
-        "turn_kp": 0.0,
-        "turn_ki": 0.0,
-        "turn_kd": 0.0,
-
-        # OTHER
-        "process_frequency": 0,
-}
-
-
 class LocalPlanner(Node):
 
         def __init__(self):
                 super().__init__("local_planner")
 
                 # PARAMETERS
-                # declare all parameters with default values
-                for name, value in DEFAULT_PARAMS.items():
-                        self.declare_parameter(name, value)
                 # load parameter values from YAML file (pluto_launch/config/local_planner.yaml)
-                load_param = lambda param_name: self.get_parameter(param_name).get_parameter_value()
                 # PWM
-                self.min_pwm = load_param("min_pwm").integer_value
-                self.neutral_pwm = load_param("neutral_pwm").integer_value
-                self.max_pwm = load_param("max_pwm").integer_value
+                self.min_pwm = self.load_param_int("min_pwm")
+                self.neutral_pwm = self.load_param_int("neutral_pwm")
+                self.max_pwm = self.load_param_int("max_pwm")
                 # STATE: STRAIGHT
-                self.straight_initial_pwm = load_param("straight_initial_pwm").double_value
-                self.straight_distance_tolerance = load_param("straight_distance_tolerance").double_value
-                self.straight_kp = load_param("straight_kp").double_value
-                self.straight_ki = load_param("straight_ki").double_value
-                self.straight_kd = load_param("straight_kp").double_value
+                self.straight_initial_pwm = self.load_param_double("straight_initial_pwm")
+                self.straight_distance_tolerance = self.load_param_double("straight_distance_tolerance")
+                self.straight_kp = self.load_param_double("straight_kp")
+                self.straight_ki = self.load_param_double("straight_ki")
+                self.straight_kd = self.load_param_double("straight_kd")
                 # STATE: TURN
-                self.turn_max_pwm = load_param("turn_max_pwm").double_value
-                self.turn_angle_tolerance = load_param("turn_angle_tolerance").double_value
-                self.turn_kp = load_param("turn_kp").double_value
-                self.turn_ki = load_param("turn_ki").double_value
-                self.turn_kd = load_param("turn_kp").double_value
+                self.turn_max_pwm = self.load_param_double("turn_max_pwm")
+                self.turn_angle_tolerance = self.load_param_double("turn_angle_tolerance")
+                self.turn_kp = self.load_param_double("turn_kp")
+                self.turn_ki = self.load_param_double("turn_ki")
+                self.turn_kd = self.load_param_double("turn_kd")
                 # OTHER
-                self.process_frequency = load_param("process_frequency").integer_value
+                self.process_frequency = self.load_param_int("process_frequency")
 
                 # TIMERS
                 self.process_timer = self.create_timer(
                         1 / self.process_frequency, 
                         self.process
                 )
+
+                # ACTION SERVER
+                self.local_plan_action_server = ActionServer(
+                        self,
+                        NavigateThroughPoses,
+                        "/local_plan", 
+                        self.local_plan_callback, 
+                )
+                self.local_plan = LocalPlan()
 
                 # PUBLISHERS
                 self.state_pub = self.create_publisher(
@@ -121,14 +100,6 @@ class LocalPlanner(Node):
                 )
                 self.is_autonomous_mode = False
 
-                # ACTION SERVER
-                self.local_plan_action_server = ActionServer(
-                        self,
-                        NavigateThroughPoses,
-                        "/local_plan", 
-                        self.local_plan_callback, 
-                )
-                self.local_plan = LocalPlan()
 
                 # PWM CONTROLLERS
                 self.left_pwm = PWM(
@@ -177,7 +148,20 @@ class LocalPlanner(Node):
                 # STATE MACHINE
                 self.state = None
 
+
+        # HELPERS - PARAMETERS
+
+        def load_param(self, param_name: str, init_value):
+                self.declare_parameter(param_name, init_value)
+                return self.get_parameter(param_name).get_parameter_value()
         
+        def load_param_int(self, param_name: str) -> int:
+                return self.load_param(param_name, 0).integer_value
+        
+        def load_param_double(self, param_name: str) -> float:
+                return self.load_param(param_name, 0.0).double_value
+        
+
         # HELPERS
 
         def reset_PID(self):
