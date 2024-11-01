@@ -8,9 +8,11 @@ Created: 10/1/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor, ExternalShutdownException
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
-from std_msgs.msg import Bool, String, Int16, UInt16, UInt32, Float32
+from std_msgs.msg import Bool, String, UInt32, Float32
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import PoseStamped, Pose, Point
 from nav_msgs.msg import Odometry
@@ -52,20 +54,25 @@ class LocalPlanner(Node):
                 # OTHER
                 self.process_frequency = self.load_param_int("process_frequency")
 
-                # TIMERS
-                self.process_timer = self.create_timer(
-                        1 / self.process_frequency, 
-                        self.process
-                )
-
                 # ACTION SERVER
                 self.local_plan_action_server = ActionServer(
                         self,
                         NavigateThroughPoses,
                         "/local_plan", 
-                        self.local_plan_callback, 
+                        self.local_plan_callback
                 )
                 self.local_plan = LocalPlan()
+
+                # CALLBACK GROUP 
+                # (for multi-threaded executor - to solve ActionServer callback blocking)
+                self.callback_group = MutuallyExclusiveCallbackGroup()
+
+                # TIMERS
+                self.process_timer = self.create_timer(
+                        1 / self.process_frequency, 
+                        self.process,
+                        callback_group = self.callback_group
+                )
 
                 # PUBLISHERS
                 self.state_pub = self.create_publisher(
@@ -89,14 +96,16 @@ class LocalPlanner(Node):
                         Odometry, 
                         "/odometry/global", 
                         self.odom_callback, 
-                        10
+                        10,
+                        callback_group = self.callback_group
                 )
                 self.current_odom: Odometry = None
                 self.is_autonomous_mode_sub = self.create_subscription(
                         Bool, 
                         "/is_autonomous_mode", 
                         self.is_autonomous_mode_callback, 
-                        1
+                        1,
+                        callback_group = self.callback_group
                 )
                 self.is_autonomous_mode = False
 
@@ -446,18 +455,17 @@ class LocalPlanner(Node):
                 # return result
                 return result
 
-
 # MAIN
 
 def main(args=None):
-        rclpy.init(args=args)
-
-        local_planner = LocalPlanner()
-
-        rclpy.spin(local_planner)
-
-        local_planner.destroy_node()
-        rclpy.shutdown()
+        try:
+                rclpy.init(args=args)
+                local_planner = LocalPlanner()
+                executor = MultiThreadedExecutor(num_threads = 4)
+                executor.add_node(local_planner)
+                executor.spin()
+        except (KeyboardInterrupt, ExternalShutdownException):
+                pass
 
 
 if __name__ == "__main__":
