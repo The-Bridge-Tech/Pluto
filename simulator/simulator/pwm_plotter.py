@@ -7,7 +7,7 @@ Created: 10/11/24
 # ROS2 MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64
+from std_msgs.msg import Float32
 
 # CALCULATION MODULES
 import matplotlib.pyplot as plt
@@ -66,13 +66,13 @@ class PWMPlotter(Node):
 
                 # SUBSCRIBERS - INPUTS (CONTROL VARIABLES)
                 self.left_pwm_sub = self.create_subscription(
-                        Float64,
+                        Float32,
                         "/steering_left/percentage",
                         self.left_pwm_callback,
                         10
                 )
                 self.right_pwm_sub = self.create_subscription(
-                        Float64,
+                        Float32,
                         "/steering_right/percentage",
                         self.right_pwm_callback,
                         10
@@ -188,10 +188,10 @@ class PWMPlotter(Node):
         
         # SUBSCRIBER CALLBACKS
 
-        def left_pwm_callback(self, msg: Float64):
+        def left_pwm_callback(self, msg: Float32):
                 self.left_pwm_data.append(msg.data)
 
-        def right_pwm_callback(self, msg: Float64):
+        def right_pwm_callback(self, msg: Float32):
                 self.right_pwm_data.append(msg.data)
 
 # MAIN

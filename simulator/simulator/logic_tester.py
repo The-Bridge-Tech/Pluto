@@ -9,7 +9,7 @@ Created: 10/9/24
 import rclpy
 from rclpy.node import Node
 import rclpy.time_source
-from std_msgs.msg import Header, Bool, Float64
+from std_msgs.msg import Header, Bool, Float32
 from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import Quaternion, Vector3
 
@@ -124,14 +124,14 @@ class LogicTester(Node):
 
                 # SUBSCRIBERS
                 self.left_pwm_sub = self.create_subscription(
-                        Float64,
+                        Float32,
                         "/steering_left/percentage",
                         self.left_pwm_callback,
                         10
                 )
                 self.left_pwm = 0
                 self.right_pwm_sub = self.create_subscription(
-                        Float64,
+                        Float32,
                         "/steering_right/percentage",
                         self.right_pwm_callback,
                         10
@@ -309,10 +309,10 @@ class LogicTester(Node):
 
         # SUBSCRIBER CALLBACKS
 
-        def left_pwm_callback(self, msg: Float64):
+        def left_pwm_callback(self, msg: Float32):
                 self.left_pwm = msg.data
 
-        def right_pwm_callback(self, msg: Float64):
+        def right_pwm_callback(self, msg: Float32):
                 self.right_pwm = msg.data
 
 # MAIN

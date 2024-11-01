@@ -10,7 +10,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
-from std_msgs.msg import UInt32, Bool, String, Float64, Int16, Float32, UInt16
+from std_msgs.msg import Bool, String, Int16, UInt16, UInt32, Float32
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import PoseStamped, Pose, Point
 from nav_msgs.msg import Odometry
@@ -141,7 +141,7 @@ class LocalPlanner(Node):
                                 10
                         ),
                         percent_pub = self.create_publisher(
-                                Float64,
+                                Float32,
                                 "/steering_left/percentage",
                                 10
                         ),
@@ -157,7 +157,7 @@ class LocalPlanner(Node):
                                 10
                         ),
                         percent_pub = self.create_publisher(
-                                Float64,
+                                Float32,
                                 "/steering_right/percentage",
                                 10
                         ),

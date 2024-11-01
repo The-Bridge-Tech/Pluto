@@ -8,7 +8,7 @@ Created: 10/9/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64
+from std_msgs.msg import Float32
 from nav_msgs.msg import Odometry
 
 # FILE WRITING
@@ -42,13 +42,13 @@ class Analyzer(Node):
 
                 # SUBSCRIBERS - INPUTS (CONTROL VARIABLES)
                 self.left_pwm_sub = self.create_subscription(
-                        Float64,
+                        Float32,
                         "/steering_left/percentage",
                         self.left_pwm_callback,
                         10
                 )
                 self.right_pwm_sub = self.create_subscription(
-                        Float64,
+                        Float32,
                         "/steering_right/percentage",
                         self.right_pwm_callback,
                         10
@@ -77,10 +77,10 @@ class Analyzer(Node):
                 self.y = msg.pose.pose.position.y
                 self.heading = angle_from_odometry(msg)
 
-        def left_pwm_callback(self, msg: Float64):
+        def left_pwm_callback(self, msg: Float32):
                 self.left_pwm = msg.data
 
-        def right_pwm_callback(self, msg: Float64):
+        def right_pwm_callback(self, msg: Float32):
                 self.right_pwm = msg.data
 
 
