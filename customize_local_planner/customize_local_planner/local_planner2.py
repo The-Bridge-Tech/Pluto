@@ -139,11 +139,11 @@ class LocalPlanner(Node):
                 self.reset_PID()
 
                 # CONDITION VARIABLES
-                self.heading = None
-                self.current_x = None
-                self.current_y = None
-                self.angle_diff = None
-                self.distance_diff = None
+                self.heading = 0.0
+                self.current_x = 0.0
+                self.current_y = 0.0
+                self.angle_diff = 0.0
+                self.distance_diff = 0.0
 
                 # STATE MACHINE
                 self.state = None
@@ -411,7 +411,8 @@ class LocalPlanner(Node):
                                 # geometry_msgs/PoseStamped current_pose
                                 current_pose = PoseStamped(pose = Pose(position = Point(
                                         x = self.current_x,
-                                        y = self.current_y
+                                        y = self.current_y,
+                                        z = 0.0
                                 ))),
                                 # TODO builtin_interfaces/Duration navigation_time
                                 navigation_time = Duration(
@@ -424,20 +425,15 @@ class LocalPlanner(Node):
                                         nanosec = 0
                                 ),
                                 # TODO int16 number_of_recoveries
-                                number_of_recoveries = Int16(
-                                        data = 0
-                                ),
+                                number_of_recoveries = 0,
                                 # float32 distance_remaining
-                                distance_remaining = Float32(
-                                        data = self.distance_diff
-                                ),
+                                distance_remaining = self.distance_diff,
                                 # int16 number_of_poses_remaining
-                                number_of_poses_remaining = Int16(
-                                        data = len(self.local_plan.future_poses)
-                                )
+                                number_of_poses_remaining = len(self.local_plan.future_poses)
                         )
                         # publish feedback message
                         goal_handle.publish_feedback(feedback_msg)
+                        # loop delay
                         time.sleep(1)
                 # RESULT
                 # return result that path has been navigated OR fatal error occured
@@ -445,9 +441,7 @@ class LocalPlanner(Node):
                 # construct result
                 result = NavigateThroughPoses.Result(
                         # TODO uint16 error_code
-                        error_code = UInt16(
-                                data = 0
-                        )
+                        error_code = 0
                 )
                 # return result
                 return result
