@@ -22,9 +22,9 @@ import os
 import math
 
 # HELPER MODULES
-from.gps_list import GPSList
-from .phase_one_demo import WAYPOINTS, BASE_GPS
-from .conversions import *
+from .gps_list import GPSList
+from customize_local_planner.phase_one_demo import WAYPOINTS, BASE_GPS
+from customize_local_planner.conversions import *
 
 
 # CONSTANTS
@@ -47,8 +47,8 @@ MAP_IMAGE_LOCATION = {
 PARENT_DIR = os.path.join(
         "src", 
         "Pluto", 
-        "customize_local_planner", 
-        "customize_local_planner"
+        "simulator", 
+        "simulator"
 )
 MAP_IMAGE_DIR = os.path.join(
         PARENT_DIR, 
@@ -201,6 +201,15 @@ class GPSPlotter(Node):
                         markersize=2,
                         label='Current Waypoint'
                 )[0] # get the first and only item in the list returned by Axes.plot()
+                # Add radius circle around base pin
+                base_radius_circle = patches.Circle(
+                        (BASE_GPS[1], BASE_GPS[0]),  # (x=longitude, y=latitude)
+                        meters_to_gps_degrees(WAYPOINT_RADIUS, BASE_GPS[0]),  # Convert meter radius to degrees
+                        edgecolor='white', 
+                        facecolor='none', 
+                        # linestyle='--',
+                )
+                self.ax.add_patch(base_radius_circle)
                 # Add radius circles around each waypoint
                 self.waypoint_radius_circles = list[patches.Circle]()
                 for waypoint in WAYPOINTS:

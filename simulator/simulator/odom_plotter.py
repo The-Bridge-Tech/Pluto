@@ -16,7 +16,7 @@ from threading import Thread
 import math
 
 # HELPER MODULES
-from .conversions import angle_from_odometry
+from customize_local_planner.conversions import angle_from_odometry
 
 
 HEADING_LINE_LENGTH = 0.1

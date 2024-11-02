@@ -14,7 +14,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='customize_local_planner',
-            executable='localPlanner',
+            executable='local_planner',
             name='local_planner',
             output='screen',
             parameters=[params_file]

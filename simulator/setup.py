@@ -20,9 +20,11 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+                'gps_plotter = simulator.gps_plotter:main',
+                'odom_plotter = simulator.odom_plotter:main',
                 'logic_tester = simulator.logic_tester:main',
                 'analyzer = simulator.analyzer:main',
-                'pwm_plotter = simulator.pwm_plotter:main'
+                'pwm_plotter = simulator.pwm_plotter:main',
         ],
     },
 )

@@ -20,11 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'localPlanner = customize_local_planner.local_planner2:main',
-            'pidTuning = customize_local_planner.pid_tuning_tool:main',
-            'phaseOne = customize_local_planner.phase_one_demo:main',
-            'gps_plotter = customize_local_planner.gps_plotter:main',
-            'odom_plotter = customize_local_planner.odom_plotter:main'
+            'local_planner = customize_local_planner.local_planner2:main',
+            'phase_one_demo = customize_local_planner.phase_one_demo:main',
         ],
     },
 )
