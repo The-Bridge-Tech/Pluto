@@ -10,10 +10,42 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Bool
+from pyproj import Proj, transform
 
 # HELPER MODULES
-from customize_local_planner.conversions import *
 from customize_local_planner.phase_one_demo import BASE_GPS
+
+# PROJECTION SETUP: WGS84 (Lat & Lon) to UTM (easting & northing)
+PROJ_WGS84 = Proj(
+        proj = 'latlong',
+        datum = 'WGS84'
+)
+PROJ_UTM = Proj(
+        proj='utm', 
+        zone=17, # NOTE update zone to match location
+        datum='WGS84'
+)
+
+
+# POINT CONVERSIONS
+
+def utm_to_lat_lon(easting: float, northing: float) -> tuple:
+    """Returns (longitude, latitude)"""
+    return transform(
+            PROJ_UTM,
+            PROJ_WGS84,
+            easting,
+            northing
+    )
+
+def lat_lon_to_utm(lat: float, lon: float) -> tuple:
+    """Returns (easting, northing)"""
+    return transform(
+            PROJ_WGS84, 
+            PROJ_UTM, 
+            lon,
+            lat
+    )
 
 
 class GPSOffsetter(Node):

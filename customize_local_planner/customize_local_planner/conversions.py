@@ -12,58 +12,6 @@ import tf_transformations
 # CALCULATION MODULES
 import math
 import numpy as np
-from pyproj import Proj, transform
-from geodesy.utm import fromLatLong
-
-# PROJECTION SETUP: WGS84 (Lat & Lon) to UTM (easting & northing)
-PROJ_WGS84 = Proj(
-        proj = 'latlong',
-        datum = 'WGS84'
-)
-PROJ_UTM = Proj(
-        proj='utm', 
-        zone=17, # NOTE update zone to match location
-        datum='WGS84'
-)
-
-
-# POINT CONVERSIONS
-
-def utm_to_lat_lon(easting: float, northing: float) -> tuple:
-    """Returns (longitude, latitude)"""
-    return transform(
-            PROJ_UTM,
-            PROJ_WGS84,
-            easting,
-            northing
-    )
-
-def lat_lon_to_utm(lat: float, lon: float) -> tuple:
-    """Returns (easting, northing)"""
-    return transform(
-            PROJ_WGS84, 
-            PROJ_UTM, 
-            lon,
-            lat
-    )
-
-def calculate_goal_xy(origin_lat, origin_lon, goal_lat, goal_lon):
-    """Convert GPS (lat & lon) to UTM (easting & northing) relative to origin point."""
-    # Convert origin lat & lon to easting (x) & northing (y)
-    origin_utm = fromLatLong(
-        longitude = origin_lon, 
-        latitude = origin_lat
-    )
-    # Convert goal lat & lon to easting (x) & northing (y)
-    goal_utm = fromLatLong(
-        longitude = goal_lon, 
-        latitude = goal_lat
-    )
-    # x-distance between origin and goal
-    dx = goal_utm.easting - origin_utm.easting
-    # y-distance between origin and goal
-    dy = goal_utm.northing - origin_utm.northing
-    return (dx, dy)
 
 
 # ANGLE CONVERSIONS

@@ -15,6 +15,7 @@ from rclpy.action.server import ServerGoalHandle
 from std_msgs.msg import Bool, String, UInt32, Float32
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import PoseStamped, Pose, Point
+from geodesy import utm
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import NavSatFix
 from nav2_msgs.action import NavigateThroughPoses
@@ -198,25 +199,24 @@ class LocalPlanner(Node):
                 return self.get_clock().now().nanoseconds * (10**-9)
         
 
-        # HELPERS - UTM
+        # HELPERS - POSITION
 
-        def get_utm_from_odom(self, odom_msg: Odometry) -> tuple:
-                """Extract UTM coordinate (x, y) from Odometry message."""
-                position = odom_msg.pose.pose.position
-                return (position.x, position.y)
+        def get_position_from_odom(self, odom_msg: Odometry) -> Point:
+                """Return position (x, y) from Odometry message."""
+                return odom_msg.pose.pose.position
 
         def update_relative_position(self):
-                """Calculate the current UTM coordinate relative to the true origin (base pin). 
+                """Calculate current position (x, y) relative to local origin (base pin). 
                 If parameter "calculate_utm_error" is set to True, this will compensate the UTM error."""
-                # get UTM from current odometry reading
-                utm_current_reading = self.get_utm_from_odom(self.current_odom)
-                # get UTM from base odometry reading (at base pin)
-                utm_initial_reading = self.get_utm_from_odom(self.base_odom)
+                # get position from current odometry reading
+                current_position_reading = self.get_position_from_odom(self.current_odom)
+                # get position from base odometry reading (at base pin)
+                initial_position_reading = self.get_position_from_odom(self.base_odom)
                 # get UTM error
                 utm_error = self.utm_error if self.calculate_utm_error else (0, 0)
-                # calculate relative UTM (update relative position)
-                self.current_x = (utm_current_reading[0] - utm_initial_reading[0]) - utm_error[0]
-                self.current_y = (utm_current_reading[1] - utm_initial_reading[1]) - utm_error[1]
+                # calculate relative position (update relative position)
+                self.current_x = (current_position_reading.x - initial_position_reading.x) - utm_error[0]
+                self.current_y = (current_position_reading.y - initial_position_reading.y) - utm_error[1]
         
 
         # TIMER CALLBACKS
@@ -427,13 +427,13 @@ class LocalPlanner(Node):
                 # Wait for autonomous mode to start the first time -> get initial gps -> calculate UTM error
                 if self.is_autonomous_mode and not self.utm_error:
                         # convert lat & lon reading at base pin to absolute UTM coodinates
-                        reading_base_utm = lat_lon_to_utm(msg.latitude, msg.longitude)
+                        reading_base_utm = utm.fromLatLong(msg.latitude, msg.longitude)
                         # convert actual lat & lon at base pin to absolute UTM coordinates
-                        actual_base_utm = lat_lon_to_utm(*BASE_GPS)
+                        actual_base_utm = utm.fromLatLong(*BASE_GPS)
                         # calculate UTM error
                         self.utm_error = (
-                                reading_base_utm[0] - actual_base_utm[0],
-                                reading_base_utm[1] - actual_base_utm[1]
+                                reading_base_utm.easting - actual_base_utm.easting,     # x
+                                reading_base_utm.northing - actual_base_utm.northing    # y
                         )
                         # log the subscription and calculation
                         self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] gps: lat = {msg.latitude} lon = {msg.longitude}"))

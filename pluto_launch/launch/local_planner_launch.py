@@ -20,10 +20,3 @@ def generate_launch_description():
             parameters=[params_file]
         ),
     ])
-
-# the YAML file path is correct
-# the package name matches
-# the executable name matches
-
-# the problem is on the node's end
-

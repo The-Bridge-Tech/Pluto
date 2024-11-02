@@ -11,6 +11,7 @@ from rclpy.action import ActionClient
 from rclpy.action.client import Future, ClientGoalHandle
 from std_msgs.msg import Bool
 from geometry_msgs.msg import Pose, PoseStamped, Point
+from geodesy import utm
 from nav2_msgs.action import NavigateThroughPoses
 from custom_msgs.msg import WaypointMsg
 
@@ -18,7 +19,7 @@ from custom_msgs.msg import WaypointMsg
 from .conversions import *
 
 # CONSTANTS
-BASE_GPS = (34.841400, -82.411743)
+BASE_GPS = (34.841374, -82.411773)
 WAYPOINTS = [
     (34.841384, -82.411669),    # front-left corner
     (34.841254, -82.411731),    # back-left corner
@@ -31,7 +32,7 @@ WAYPOINTS = [
 class PhaseOneDemo(Node):
 
     def __init__(self):
-        super().__init__('PhaseOneDemo')
+        super().__init__('phase_one_demo')
 
         # ACTION CLIENT
         self.local_plan_action_client = ActionClient(
@@ -137,18 +138,18 @@ class PhaseOneDemo(Node):
 
     # HELPERS
 
-    def absolute_to_relative_utm(self, x: float, y: float) -> tuple:
-        """Converts absolute UTM coordinate (x = easting, y = northing)
-        to one relative to the known origin UTM (base pin)"""
-        base_x, base_y = lat_lon_to_utm(*BASE_GPS)
-        return (x - base_x, y - base_y)
-
-    def lat_lon_to_relative_utm(self, lat: float, lon: float) -> tuple:
-        """Convert lat & lon to UTM coordinate relative to origin (base pin)"""
-        # convert lat & lon to absolute UTM
-        abs_goal_utm = lat_lon_to_utm(lat, lon)
-        # return UTM relative to known origin UTM (base pin)
-        return self.absolute_to_relative_utm(*abs_goal_utm)
+    def lat_lon_to_local_point(self, lat: float, lon: float) -> Point:
+        """Converts latitude & longitude to a point (x, y) relative to local origin (base pin)"""
+        # convert lat & lon to UTM coordinates (easting, northing) and then to points (x, y)
+        base = utm.fromLatLong(*BASE_GPS).toPoint()
+        goal = utm.fromLatLong(lat, lon).toPoint()
+        # local = goal - base
+        local_point = Point(
+            x = goal.x - base.x,
+            y = goal.y - base.y,
+            z = goal.z - base.z,
+        )
+        return local_point
     
     def reset(self):
         """Reset goal poses and current goal pose."""
@@ -160,21 +161,20 @@ class PhaseOneDemo(Node):
 
     def send_waypoint_path_goal(self):
         """Phase 1 method: send path with hardcoded waypoints."""
-        # calculate relative UTM coordinates of waypoints (origin at the base pin)
-        rel_goal_utms = [self.lat_lon_to_relative_utm(*waypoint) for waypoint in WAYPOINTS]
+        # convert waypoint lat & lon's to local points (origin at the base pin)
+        goal_points = [
+            self.lat_lon_to_local_point(*waypoint) 
+            for waypoint in WAYPOINTS
+        ]
         # construct pose messages with relative UTM coordinates
         goal_poses = [
-            PoseStamped(pose = Pose(position = Point(
-                x = rel_goal_utm[0], 
-                y = rel_goal_utm[1],
-                z = 0.0
-            )))
-            for rel_goal_utm in rel_goal_utms
+            PoseStamped(pose = Pose(position = point)) 
+            for point in goal_points
         ]
         self.get_logger().info("Calculated goal poses.")
         # debugging info
-        for i, goal_pose in enumerate(rel_goal_utms):
-            self.get_logger().info(f"{i+1}: {goal_pose}")
+        for i, point in enumerate(goal_points):
+            self.get_logger().info(f"{i+1}: {(point.x, point.y, point.z)}")
         # construct action goal message
         goal_msg = NavigateThroughPoses.Goal(
             poses = goal_poses,

@@ -12,6 +12,7 @@ import rclpy.time_source
 from std_msgs.msg import Header, Bool, Float32
 from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from geometry_msgs.msg import Quaternion, Vector3
+from geodesy import utm
 
 # CALCULATION MODULES
 import math
@@ -104,7 +105,7 @@ class LogicTester(Node):
                 # VARIABLES
                 self.counter = 0
                 self.heading = self.INITIAL_HEADING  # ° (-180° to 180°)
-                self.x0, self.y0 = lat_lon_to_utm(self.INITIAL_LATITUDE, self.INITIAL_LONGITUDE) # m
+                self.initial_utm = utm.fromLatLong(self.INITIAL_LATITUDE, self.INITIAL_LONGITUDE)
                 self.x, self.y = 0.0, 0.0 # m
                 self.angular_vel = 0.0 # rad/s
                 self.linear_vel = 0.0 # m/s
@@ -153,11 +154,15 @@ class LogicTester(Node):
                         self.publish_heading(self.heading)
                         # only publish gps every second
                         if self.counter % self.PUBLISH_RATE == 0:
-                                lon, lat = utm_to_lat_lon(
-                                        self.x0 + self.x, 
-                                        self.y0 + self.y
+                                new_utm = utm.UTMPoint(
+                                        easting = self.initial_utm.easting + self.x,
+                                        northing = self.initial_utm.northing + self.y,
+                                        altitude = 278.299,
+                                        zone = self.initial_utm.zone,
+                                        band = self.initial_utm.band
                                 )
-                                self.publish_gps(lat, lon)
+                                new_gps = new_utm.toMsg()
+                                self.publish_gps(new_gps.latitude, new_gps.longitude)
                         # self.get_logger().info(f"w: {self.angular_vel} v: {self.linear_vel}")
                 # update counter
                 self.counter += 1
