@@ -213,11 +213,10 @@ class LocalPlanner(Node):
                 # get UTM from base odometry reading (at base pin)
                 utm_initial_reading = self.get_utm_from_odom(self.base_odom)
                 # get UTM error
-                utm_error = self.utm_error if self.calculate_utm_error else 0
-                # calculate relative UTM
-                utm_relative = (utm_current_reading - utm_initial_reading) - utm_error
-                # update relative position
-                self.current_x, self.current_y = utm_relative
+                utm_error = self.utm_error if self.calculate_utm_error else (0, 0)
+                # calculate relative UTM (update relative position)
+                self.current_x = (utm_current_reading[0] - utm_initial_reading[0]) - utm_error[0]
+                self.current_y = (utm_current_reading[1] - utm_initial_reading[1]) - utm_error[1]
         
 
         # TIMER CALLBACKS
@@ -232,11 +231,11 @@ class LocalPlanner(Node):
                         return
                 # wait for first path
                 if not self.local_plan.has_path():
-                        self.get_logger().info("Waiting for first goal (path) from /local_plan")
+                        self.get_logger().info("Waiting for first goal with path")
                         return
-                # wait for base odometry reading (set after autonomous mode is started)
-                if not self.base_odom:
-                        self.get_logger().info("Waiting for base odometry reading. Start autonomous mode.")
+                # wait for base odometry & gps readings (set after autonomous mode is started)
+                if not self.base_odom or not self.utm_error:
+                        self.get_logger().info("Waiting for base odometry & gps reading. Start autonomous mode.")
                         return
                 # update current conditions
                 self.update_conditions()
@@ -432,7 +431,10 @@ class LocalPlanner(Node):
                         # convert actual lat & lon at base pin to absolute UTM coordinates
                         actual_base_utm = lat_lon_to_utm(*BASE_GPS)
                         # calculate UTM error
-                        self.utm_error = reading_base_utm - actual_base_utm
+                        self.utm_error = (
+                                reading_base_utm[0] - actual_base_utm[0],
+                                reading_base_utm[1] - actual_base_utm[1]
+                        )
                         # log the subscription and calculation
                         self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] gps: lat = {msg.latitude} lon = {msg.longitude}"))
                         self.get_logger().info(f"UTM error: {(round(self.utm_error[0], 3), round(self.utm_error[1], 3))}")
@@ -447,7 +449,7 @@ class LocalPlanner(Node):
                 self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] is_autonomous_mode: {msg.data}"))
 
         def local_plan_callback(self, goal_handle: ServerGoalHandle):
-                """Executes accepted goal from action server."""
+                """Executes accepted goal sent by action client (path planner node)."""
                 # GOAL
                 goal: NavigateThroughPoses.Goal = goal_handle.request
                 # geometry_msgs/PoseStamped[] poses

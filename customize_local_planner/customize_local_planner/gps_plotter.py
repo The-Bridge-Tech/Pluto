@@ -23,7 +23,7 @@ import math
 
 # HELPER MODULES
 from.gps_list import GPSList
-from .phase_one_demo import WAYPOINTS, WAYPOINT_RADIUS, BASE_GPS
+from .phase_one_demo import WAYPOINTS, BASE_GPS
 from .conversions import *
 
 
@@ -58,6 +58,7 @@ MAP_IMAGE_DIR = os.path.join(
 # PARAMETERS
 PROCESS_RATE = 10 # Hz (times / second)
 HEADING_LINE_LENGTH = 0.000025 * 2
+WAYPOINT_RADIUS = 1.0 # should match local_planner's 'straight_distance_tolerance' parameter
 
 
 class GPSPlotter(Node):

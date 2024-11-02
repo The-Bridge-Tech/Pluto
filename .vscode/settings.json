@@ -521,7 +521,8 @@
         "/home/shouyu/ros2_humble/build/ament_clang_format",
         "/home/shouyu/ros2_humble/install/ament_clang_format/lib/python3.10/site-packages",
         "/opt/ros/humble/lib/python3.10/site-packages",
-        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+        "/opt/ros/humble/local/lib/python3.10/dist-packages",
+        "./customize_local_planner"
     ],
     "ros.distro": "humble"
 }
