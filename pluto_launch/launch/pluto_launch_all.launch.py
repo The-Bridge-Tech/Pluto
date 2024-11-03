@@ -181,12 +181,6 @@ def generate_launch_description():
             get_package_share_directory('pluto_launch')),
             '/splunk_logger_launch.py']),
     )
-    gps_offset_launch = IncludeLaunchDescription(
-
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('pluto_launch')),
-            '/gps_offset_launch.py']),
-    )
 
     return LaunchDescription([
         # #imu_launch,
@@ -210,7 +204,6 @@ def generate_launch_description():
         gps_launch,
         gps_filter_launch,
         gps_velocity_launch,
-        gps_offset_launch,
         # ODOMETRY
         ekf_filter, 
         # STATIC TRANSFORM
