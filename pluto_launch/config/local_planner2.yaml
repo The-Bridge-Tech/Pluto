@@ -22,4 +22,5 @@ local_planner:
 
     # OTHER
     process_frequency: 10 # Hz (times / second)
+    feedback_frequency: 5 # Hz (times / second)
     calculate_utm_error: true

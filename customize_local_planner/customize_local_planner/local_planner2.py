@@ -56,6 +56,7 @@ class LocalPlanner(Node):
                 self.turn_kd = self.load_param_double("turn_kd")
                 # OTHER
                 self.process_frequency = self.load_param_int("process_frequency")
+                self.feedback_frequency = self.load_param_int("feedback_frequency")
                 self.calculate_utm_error = self.load_param_bool("calculate_utm_error")
 
                 # ACTION SERVER
@@ -193,7 +194,7 @@ class LocalPlanner(Node):
         def reset_PID(self):
                 self.prev_error = 0
                 self.integral_error = 0
-                self.prev_t = time.time()
+                self.prev_t = self.get_seconds()
 
         def get_seconds(self) -> float:
                 return self.get_clock().now().nanoseconds * (10**-9)
@@ -358,7 +359,7 @@ class LocalPlanner(Node):
                 """Adjust left and right servo pwm's from neutral using PID controller
                 to correct the mower's direction in place (no linear movement)."""
                 # update PID controller error terms
-                t = time.time()
+                t = self.get_seconds()
                 dt = t - self.prev_t
                 error = self.angle_diff
                 self.integral_error += error * dt
@@ -389,7 +390,7 @@ class LocalPlanner(Node):
                 """Adjust right servo pwm from initial straight pwm using PID controller 
                 to correct the mower's direction (maintaining linear movement)."""
                 # update PID controller error terms
-                t = time.time()
+                t = self.get_seconds()
                 dt = t - self.prev_t
                 error = self.angle_diff
                 self.integral_error += error * dt
@@ -502,7 +503,7 @@ class LocalPlanner(Node):
                         # publish feedback message
                         goal_handle.publish_feedback(feedback_msg)
                         # loop delay
-                        time.sleep(1)
+                        time.sleep(1 / self.feedback_frequency)
                 # RESULT
                 # return result that path has been navigated OR fatal error occured
                 goal_handle.succeed()
