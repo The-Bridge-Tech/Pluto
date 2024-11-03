@@ -9,6 +9,7 @@ Created: 8/2/24
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
+from geodesy import utm
 from nav_msgs.msg import Odometry
 from custom_msgs.msg import WaypointMsg
 
@@ -77,16 +78,16 @@ class GPSPlotter(Node):
                 self.currentGPS = None
                 # For storing original GPS coordinates
                 self.original_gps = GPSList()
-                # Subscribe to offset gps topic
-                self.offset_gps_sub = self.create_subscription(
-                        NavSatFix, 
-                        "/fix/offset", 
-                        self.offset_gps_callback, 
+                # Subscribe to local_planner's position
+                self.local_position_sub = self.create_subscription(
+                        utm.GeoPoint, 
+                        "/analysis/position", 
+                        self.local_position_callback, 
                         10
                 )
-                self.currentOffsetGPS = None
-                # For storing offset (corrected) GPS coordinates
-                self.offset_gps = GPSList()
+                self.currentLocalGPS = None
+                # For storing local_planner's GPS coordinates
+                self.local_gps = GPSList()
                 # Subscribe to odometry topic
                 self.odom_subscriber = self.create_subscription(
                         Odometry, 
@@ -139,14 +140,14 @@ class GPSPlotter(Node):
                         markersize=2,
                         label='Original Trail'
                 )[0] # get the first and only item in the list returned by Axes.plot()
-                # Create plot for offset (corrected) gps points (trail)
-                self.offset_scatter = self.ax.plot(
+                # Create plot for local_planner's gps points (trail)
+                self.local_scatter = self.ax.plot(
                         [], # initially empty
                         [], # initially empty
                         color='blue', 
                         marker='o',
                         markersize=2,
-                        label='Offset Trail'
+                        label='Local Trail'
                 )[0] # get the first and only item in the list returned by Axes.plot()
                 self.current_position_scatter = self.ax.plot(
                         [], # initially empty
@@ -228,7 +229,7 @@ class GPSPlotter(Node):
                 )
                 # Only update plot if there is new data
                 self.new_data = False
-                self.new_offset_data = False
+                self.new_local_data = False
                 # Finish plot
                 plt.legend()
                 plt.xlabel('Longitude')
@@ -262,7 +263,7 @@ class GPSPlotter(Node):
                         self.lastWaypointNumber = self.currentWaypointNumber
 
         def getCurrentHeading(self) -> float:
-                return angle_from_odometry(self.currentOdom)
+                return angle_from_odom(self.currentOdom)
         
         def drawHeadingLine(self, current_lat: float, current_lon: float):
                 # Remove previous heading line
@@ -297,10 +298,10 @@ class GPSPlotter(Node):
         def updateDistance(self):
                 """Update distance from current gps to the current waypoint"""
                 currentWaypoint = self.getCurrentWaypoint()
-                # currentGPS = self.currentGPS #if self.currentOffsetGPS is None else self.currentOffsetGPS
+                currentGPS = self.currentGPS if self.currentLocalGPS is None else self.currentLocalGPS
                 self.currentDistance = haversine(
-                        lat1 = self.currentGPS.latitude,
-                        lon1 = self.currentGPS.longitude,
+                        lat1 = currentGPS.latitude,
+                        lon1 = currentGPS.longitude,
                         lat2 = currentWaypoint[0],
                         lon2 = currentWaypoint[1]
                 )
@@ -319,16 +320,16 @@ class GPSPlotter(Node):
                         )
                 self.currentGPS = msg
 
-        def offset_gps_callback(self, msg: NavSatFix):
-                """Update current GPS point with correction offset"""
+        def local_position_callback(self, msg: utm.GeoPoint):
+                """Update current GPS point from local_planner"""
                 # if new gps point is not an outlier
                 if not self.isOutlier(msg.latitude, msg.longitude):
-                        # update offset latitudes and longitudes with current offset gps for plot
-                        self.offset_gps.append(
+                        # update gps list for plot
+                        self.local_gps.append(
                                 lat = msg.latitude,
                                 lon = msg.longitude
                         )
-                self.currentOffsetGPS = msg
+                self.currentLocalGPS = msg
 
         def odom_callback(self, msg: Odometry):
                 """Update current odometry."""
@@ -351,37 +352,37 @@ class GPSPlotter(Node):
                                 self.original_gps.longitudes,
                                 self.original_gps.latitudes
                         )
-                        # If there are not offset gps points yet
-                        # if not self.currentOffsetGPS:
+                        # If there are not local gps points yet
+                        if not self.currentLocalGPS:
+                                # Update the last point (current position)
+                                self.current_position_scatter.set_data(
+                                        self.original_gps.currentLon(), 
+                                        self.original_gps.currentLat()
+                                )
+                        self.original_gps.update()
+                # If there is new local gps data
+                if self.local_gps.new:
+                        # Update all local gps points (trail)
+                        self.local_scatter.set_data(
+                                self.local_gps.longitudes,
+                                self.local_gps.latitudes
+                        )
                         # Update the last point (current position)
                         self.current_position_scatter.set_data(
-                                self.original_gps.currentLon(), 
-                                self.original_gps.currentLat()
+                                self.local_gps.currentLon(), 
+                                self.local_gps.currentLat()
                         )
-                        self.original_gps.update()
-                # If there is new offset gps data
-                if self.offset_gps.new:
-                        # Update all offset (corrected) gps points (trail)
-                        self.offset_scatter.set_data(
-                                self.offset_gps.longitudes,
-                                self.offset_gps.latitudes
-                        )
-                        # Update the last point (current position)
-                        # self.current_position_scatter.set_data(
-                        #         self.offset_gps.currentLon(), 
-                        #         self.offset_gps.currentLat()
-                        # )
-                        self.offset_gps.update()
+                        self.local_gps.update()
                 # If odom data is available (for heading)
                 if self.currentOdom:
                         # Determine which gps data to use to draw heading line
-                        # gps = self.original_gps if not self.currentOffsetGPS else self.offset_gps
+                        gps = self.original_gps if not self.currentLocalGPS else self.local_gps
                         # if there is gps data available yet
-                        if len(self.original_gps) > 0:
+                        if len(gps) > 0:
                                 # Re-draw heading line
                                 self.drawHeadingLine(
-                                        current_lat = self.original_gps.currentLat(),
-                                        current_lon = self.original_gps.currentLon()
+                                        current_lat = gps.currentLat(),
+                                        current_lon = gps.currentLon()
                                 )
                 # Update the current waypoint
                 self.updateWaypoints()

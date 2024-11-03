@@ -75,7 +75,7 @@ class Analyzer(Node):
         def odom_callback(self, msg: Odometry):
                 self.x = msg.pose.pose.position.x
                 self.y = msg.pose.pose.position.y
-                self.heading = angle_from_odometry(msg)
+                self.heading = angle_from_odom(msg)
 
         def left_pwm_callback(self, msg: Float32):
                 self.left_pwm = msg.data

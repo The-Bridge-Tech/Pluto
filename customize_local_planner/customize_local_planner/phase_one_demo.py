@@ -141,13 +141,13 @@ class PhaseOneDemo(Node):
     def lat_lon_to_local_point(self, lat: float, lon: float) -> Point:
         """Converts latitude & longitude to a point (x, y) relative to local origin (base pin)"""
         # convert lat & lon to UTM coordinates (easting, northing) and then to points (x, y)
-        base = utm.fromLatLong(*BASE_GPS).toPoint()
-        goal = utm.fromLatLong(lat, lon).toPoint()
+        base_point = utm.fromLatLong(*BASE_GPS).toPoint()
+        goal_point = utm.fromLatLong(lat, lon).toPoint()
         # local = goal - base
         local_point = Point(
-            x = goal.x - base.x,
-            y = goal.y - base.y,
-            z = goal.z - base.z,
+            x = goal_point.x - base_point.x,
+            y = goal_point.y - base_point.y,
+            z = goal_point.z - base_point.z
         )
         return local_point
     

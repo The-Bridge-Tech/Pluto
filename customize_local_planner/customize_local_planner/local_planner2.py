@@ -95,6 +95,11 @@ class LocalPlanner(Node):
                         "/analysis/subscribed",
                         10
                 )
+                self.position_pub = self.create_publisher(
+                        utm.GeoPoint,
+                        "/analysis/position",
+                        10
+                )
 
                 # SUBSCRIBERS
                 self.odom_sub = self.create_subscription(
@@ -114,7 +119,7 @@ class LocalPlanner(Node):
                         10,
                         callback_group = self.callback_group
                 )
-                self.utm_error = None
+                self.utm_error: Point = None
                 self.is_autonomous_mode_sub = self.create_subscription(
                         Bool, 
                         "/is_autonomous_mode", 
@@ -164,8 +169,7 @@ class LocalPlanner(Node):
 
                 # CONDITION VARIABLES
                 self.heading = 0.0
-                self.current_x = 0.0
-                self.current_y = 0.0
+                self.local_position = Point()
                 self.angle_diff = 0.0
                 self.distance_diff = 0.0
 
@@ -202,22 +206,36 @@ class LocalPlanner(Node):
 
         # HELPERS - POSITION
 
-        def get_position_from_odom(self, odom_msg: Odometry) -> Point:
-                """Return position (x, y) from Odometry message."""
-                return odom_msg.pose.pose.position
-
-        def update_relative_position(self):
+        def update_local_position(self):
                 """Calculate current position (x, y) relative to local origin (base pin). 
                 If parameter "calculate_utm_error" is set to True, this will compensate the UTM error."""
                 # get position from current odometry reading
-                current_position_reading = self.get_position_from_odom(self.current_odom)
+                current_position_reading = position_from_odom(self.current_odom)
                 # get position from base odometry reading (at base pin)
-                initial_position_reading = self.get_position_from_odom(self.base_odom)
+                initial_position_reading = position_from_odom(self.base_odom)
                 # get UTM error
-                utm_error = self.utm_error if self.calculate_utm_error else (0, 0)
-                # calculate relative position (update relative position)
-                self.current_x = (current_position_reading.x - initial_position_reading.x) - utm_error[0]
-                self.current_y = (current_position_reading.y - initial_position_reading.y) - utm_error[1]
+                utm_error = self.utm_error if self.calculate_utm_error else Point()
+                # calculate/update local position
+                self.local_position.x = (current_position_reading.x - initial_position_reading.x) # - utm_error.x
+                self.local_position.y = (current_position_reading.y - initial_position_reading.y) # - utm_error.y
+                # debugging info
+                self.get_logger().info(f"x = {round(current_position_reading.x, 3)} - {round(initial_position_reading.x, 3)} - {round(utm_error.x, 3)}   = {round(self.local_position.x, 3)}")
+                self.get_logger().info(f"y = {round(current_position_reading.y, 3)} - {round(initial_position_reading.y, 3)} - {round(utm_error.y, 3)}   = {round(self.local_position.y, 3)}")
+                # publish global position (local position converted to global UTM coordinate)
+                self.position_pub.publish(self.get_global_position().toMsg())
+
+        def get_global_position(self) -> utm.UTMPoint:
+                """Return local position converted to a global UTM coordinate."""
+                base_utm = utm.fromLatLong(*BASE_GPS)
+                base_point = base_utm.toPoint()
+                global_position = utm.UTMPoint(
+                        easting = base_point.x + self.local_position.x,
+                        northing = base_point.y + self.local_position.y,
+                        altitude = base_utm.altitude,
+                        zone = base_utm.zone,
+                        band = base_utm.band
+                )
+                return global_position
         
 
         # TIMER CALLBACKS
@@ -251,23 +269,23 @@ class LocalPlanner(Node):
         def update_conditions(self):
                 """Update conditions that will determine the next state."""
                 # update current direction
-                self.heading = angle_from_odometry(self.current_odom)
+                self.heading = angle_from_odom(self.current_odom)
                 # update current position
-                self.update_relative_position()
+                self.update_local_position()
                 # if path hasn't been fully navigated yet -> there is still a goal pose
                 if not self.local_plan.is_path_navigated():
                         # update current goal position
-                        goal_x, goal_y = self.local_plan.get_goal_xy()
+                        goal_position = self.local_plan.get_goal_position()
                         # calculate current angle difference (between current angle and goal angle)
                         self.goal_heading = math.degrees(math.atan2(
-                                goal_y - self.current_y, 
-                                goal_x - self.current_x
+                                goal_position.y - self.local_position.y, 
+                                goal_position.x - self.local_position.x
                         ))
                         self.angle_diff = self.goal_heading - self.heading
                         # calculate current distance between current position and goal position
                         self.distance_diff  = math.dist( 
-                                [self.current_x, self.current_y], 
-                                [goal_x, goal_y]
+                                [self.local_position.x, self.local_position.y], 
+                                [goal_position.x, goal_position.y]
                         )
                 self.conditions_pub.publish(String(data = f"[{self.get_seconds()}] angle_diff = {round(self.angle_diff, 3)}° distance = {round(self.distance_diff, 3)}m"))
 
@@ -276,11 +294,11 @@ class LocalPlanner(Node):
                 if self.state == "Stop":
                         # wait for autonomous mode to be True
                         if not self.is_autonomous_mode:
-                                self.get_logger().info("Waiting for autonomous mode.")
+                                self.get_logger().info("Stopped. Waiting for autonomous mode.")
                                 return
                         # path has been fully navigated -> wait for new goal
                         if self.local_plan.is_path_navigated():
-                                self.get_logger().info("Waiting for new goal (path) from /local_plan")
+                                self.get_logger().info("Stopped. Waiting for new goal (path) from /local_plan")
                                 return
                         # path has poses to navigate -> Turn
                         else:
@@ -291,7 +309,7 @@ class LocalPlanner(Node):
                         if abs(self.angle_diff) < self.turn_angle_tolerance:
                                 self.straight()
                         else:
-                                self.get_logger().info(f"angle_diff = {round(self.angle_diff, 3)}°")
+                                pass # self.get_logger().info(f"angle_diff = {round(self.angle_diff, 3)}°")
                 elif self.state == "Straight":
                         # If within distance tolerance of goal position -> Stop
                         if self.distance_diff < self.straight_distance_tolerance:
@@ -299,7 +317,7 @@ class LocalPlanner(Node):
                                 self.local_plan.complete_goal_pose()
                                 self.stop()
                         else:
-                                self.get_logger().info(f"angle_diff = {round(self.angle_diff, 3)}° distance = {round(self.distance_diff, 3)}m")
+                                pass # self.get_logger().info(f"angle_diff = {round(self.angle_diff, 3)}° distance = {round(self.distance_diff, 3)}m")
                 else:
                         self.get_logger().error(f"Invalid state: '{self.state}'.")
                         self.stop() # default
@@ -427,18 +445,18 @@ class LocalPlanner(Node):
                 """Get lat & lon reading at base pin to calculate error in odometry UTM."""
                 # Wait for autonomous mode to start the first time -> get initial gps -> calculate UTM error
                 if self.is_autonomous_mode and not self.utm_error:
-                        # convert lat & lon reading at base pin to absolute UTM coodinates
-                        reading_base_utm = utm.fromLatLong(msg.latitude, msg.longitude)
-                        # convert actual lat & lon at base pin to absolute UTM coordinates
-                        actual_base_utm = utm.fromLatLong(*BASE_GPS)
+                        # convert lat & lon reading at base pin to a UTM coodinate -> then to a point
+                        reading_base_utm = utm.fromLatLong(msg.latitude, msg.longitude).toPoint()
+                        # convert actual lat & lon at base pin to a UTM coordinate -> then to a point
+                        actual_base_utm = utm.fromLatLong(*BASE_GPS).toPoint()
                         # calculate UTM error
-                        self.utm_error = (
-                                reading_base_utm.easting - actual_base_utm.easting,     # x
-                                reading_base_utm.northing - actual_base_utm.northing    # y
+                        self.utm_error = Point(
+                                x = reading_base_utm.x - actual_base_utm.x,
+                                y = reading_base_utm.y - actual_base_utm.y
                         )
                         # log the subscription and calculation
                         self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] gps: lat = {msg.latitude} lon = {msg.longitude}"))
-                        self.get_logger().info(f"UTM error: {(round(self.utm_error[0], 3), round(self.utm_error[1], 3))}")
+                        self.get_logger().info(f"UTM error: {(round(self.utm_error.x, 3), round(self.utm_error.y, 3))}")
 
         def is_autonomous_mode_callback(self, msg: Bool):
                 # force into stop state
@@ -478,11 +496,7 @@ class LocalPlanner(Node):
                         # construct feedback message
                         feedback_msg = NavigateThroughPoses.Feedback(
                                 # geometry_msgs/PoseStamped current_pose
-                                current_pose = PoseStamped(pose = Pose(position = Point(
-                                        x = self.current_x,
-                                        y = self.current_y,
-                                        z = 0.0
-                                ))),
+                                current_pose = PoseStamped(pose = Pose(position = self.local_position)),
                                 # TODO builtin_interfaces/Duration navigation_time
                                 navigation_time = Duration(
                                         sec = 0,

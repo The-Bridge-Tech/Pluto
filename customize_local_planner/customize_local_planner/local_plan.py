@@ -6,7 +6,7 @@ Created: 10/18/24
 
 
 # ROS MODULES
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Point
 
 
 class LocalPlan:
@@ -37,12 +37,9 @@ class LocalPlan:
                 # return the first future pose
                 return self.future_poses[0]
         
-        def get_goal_xy(self) -> tuple[float]:
+        def get_goal_position(self) -> Point:
                 """Return the (x,y) coordinates of the current goal pose."""
-                return (
-                        self.get_goal_pose().pose.position.x,
-                        self.get_goal_pose().pose.position.y
-                )
+                return self.get_goal_pose().pose.position
         
         def complete_goal_pose(self):
                 """Current goal pose has been reached -> set next goal pose."""

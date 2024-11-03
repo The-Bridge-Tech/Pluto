@@ -8,15 +8,24 @@ Authors: Joel Du Shouyu & Matthew Lauriault
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 import tf_transformations
+from geometry_msgs.msg import Point
+from geodesy import utm
 
 # CALCULATION MODULES
 import math
 import numpy as np
 
 
+# POSITION CONVERSIONS
+
+def position_from_odom(odom_msg: Odometry) -> Point:
+    """Return position (x, y) from Odometry message."""
+    return odom_msg.pose.pose.position
+
+
 # ANGLE CONVERSIONS
 
-def angle_from_odometry(odom: Odometry):
+def angle_from_odom(odom: Odometry):
         """Angle is returned in the range -180 to 180 degrees"""
         q = [
                 odom.pose.pose.orientation.x, 

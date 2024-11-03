@@ -16,7 +16,7 @@ from threading import Thread
 import math
 
 # HELPER MODULES
-from customize_local_planner.conversions import angle_from_odometry
+from customize_local_planner.conversions import angle_from_odom
 
 
 HEADING_LINE_LENGTH = 0.1
@@ -90,7 +90,7 @@ class OdomPlotter(Node):
         # HELPERS
 
         def getCurrentHeading(self) -> float:
-                return angle_from_odometry(self.currentOdom)
+                return angle_from_odom(self.currentOdom)
         
         def drawHeadingLine(self):
                 # Remove previous heading line
