@@ -37,22 +37,25 @@ class ControllerNode(Node):
         super().__init__('controller_node')
 
         # PARAMETERS
-        self.define_parameters()
-        self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
-        self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
-        self.RIGHT_MAX = self.get_parameter("RIGHT_MAX").get_parameter_value().integer_value
-        self.LEFT_MAX = self.get_parameter("LEFT_MAX").get_parameter_value().integer_value
-        self.RIGHT_MIN = self.get_parameter("RIGHT_MIN").get_parameter_value().integer_value
-        self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
-        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().double_value
-        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().double_value
-        
-        self.KNOW_LEFT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_RIGHT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_LEFT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_FORWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
-        self.PUBLISH_RATE = self.get_parameter('PUBLISH_RATE').get_parameter_value().integer_value
-        
+        # YAML File:
+        #   Gas         pluto_launch/config/servos.yaml
+        #   Electric    pluto_launch/config/servos_electric.yaml
+        # PWM
+        self.min_pwm = self.load_param_int("min_pwm")
+        self.neutral_pwm = self.load_param_int("neutral_pwm")
+        self.max_pwm = self.load_param_int("max_pwm")
+        # WHEEL
+        self.wheel_radius = self.load_param_double("wheel_radius")
+        self.wheel_separation = self.load_param_double("wheel_separation")
+        # MAX BACKWARD SPEED
+        self.max_left_backward_speed = self.load_param_double('max_left_backward_speed')
+        self.max_right_backward_speed = self.load_param_double('max_right_backward_speed')
+        # MAX FORWARD SPEED
+        self.max_left_forward_speed = self.load_param_double('max_left_forward_speed')
+        self.max_right_forward_speed = self.load_param_double('max_right_forward_speed')    
+        # OTHER
+        self.publish_frequency = self.load_param_int('publish_frequency')   
+
         # PUBLISHERS
         self.right_server_publisher = self.create_publisher(
             UInt32, 
@@ -66,7 +69,7 @@ class ControllerNode(Node):
         )        
         #self.differential_raw_twist_publisher = self.create_publisher(TwistStamped, 'differential_raw_twist', 10)
         
-        timer_period = 1/self.PUBLISH_RATE  # publish speed
+        timer_period = 1 / self.publish_frequency  # publish speed
         # self.right_timer = self.create_timer(timer_period, self.right_servero_timer_callback)
         # self.left_timer = self.create_timer(timer_period, self.left_servero_time_callback)
         #self.differential_raw_twist_timer = self.create_timer(timer_period, self.differential_raw_twist_callback)
@@ -78,8 +81,8 @@ class ControllerNode(Node):
         self.differential_twist_frame_id = "differential_twist"
         
         # set the servo to neutral at startup
-        self.new_left_pwm.data = self.LEFT_NEUTRAL
-        self.new_right_pwm.data = self.RIGHT_NEUTRAL
+        self.new_left_pwm.data = self.neutral_pwm
+        self.new_right_pwm.data = self.neutral_pwm
 
         # SUBSCRIBERS
         self.cmd_vel_sub = self.create_subscription(
@@ -97,25 +100,20 @@ class ControllerNode(Node):
         self.is_autonomous_mode = False
     
 
-    # HELPERS
+    # HELPERS - PARAMETERS
     
-    def define_parameters(self)->None:
-        self.declare_parameter('LEFT_NEUTRAL', 0)
-        self.declare_parameter('RIGHT_NEUTRAL',0)
-        self.declare_parameter('RIGHT_MAX', 0)
-        self.declare_parameter('LEFT_MAX',0)
-        self.declare_parameter('RIGHT_MIN',0)
-        self.declare_parameter('LEFT_MIN',0)
-        self.declare_parameter('WHEEL_RADIUS',0.4318)
-        self.declare_parameter('WHEEL_SEPARATION',0.889)
-        # self.declare_parameter('KNOW_VELOCITY',1)
-        # self.declare_parameter('KNOW_PWM_LEFT',4600)
-        # self.declare_parameter('KNOW_PWM_RIGHT', 7000)
-        self.declare_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED', -1.31065)
-        self.declare_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED', -1.0847)
-        self.declare_parameter('KNOW_LEFT_FULL_FORWARD_SPEED',1.514 )
-        self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
-        self.declare_parameter('PUBLISH_RATE',30)
+    def load_param(self, param_name: str, init_value):
+        self.declare_parameter(param_name, init_value)
+        return self.get_parameter(param_name).get_parameter_value()
+    
+    def load_param_int(self, param_name: str) -> int:
+        return self.load_param(param_name, 0).integer_value
+    
+    def load_param_double(self, param_name: str) -> float:
+        return self.load_param(param_name, 0.0).double_value
+    
+    def load_param_bool(self, param_name: str) -> bool:
+        return self.load_param(param_name, False).bool_value
 
 
     # SUBSCRIBER CALLBACKS
@@ -143,26 +141,26 @@ class ControllerNode(Node):
 
             
             # https://navigation.ros.org/setup_guides/odom/setup_odom.html
-            wheel_speed_left = (2*velocity_x - velocity_yaw*self.WHEEL_SEPARATION)/2
+            wheel_speed_left = (2*velocity_x - velocity_yaw*self.wheel_separation)/2
             wheel_speed_right = 2*velocity_x -wheel_speed_left
             
 
             
-            new_calculated_left_pwm =  int(calculate_pwm_from_velocity2(wheel_speed_left,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL))
-            new_calculated_right_pwm = int(calculate_pwm_from_velocity2(wheel_speed_right,self.KNOW_RIGHT_FULL_FORWARD_SPEED, self.KNOW_RIGHT_FULL_BACKWARD_SPEED,self.RIGHT_MAX, self.RIGHT_MIN, self.RIGHT_NEUTRAL))
+            new_calculated_left_pwm =  int(calculate_pwm_from_velocity2(wheel_speed_left,self.max_left_forward_speed, self.max_left_backward_speed, self.max_pwm, self.min_pwm, self.neutral_pwm))
+            new_calculated_right_pwm = int(calculate_pwm_from_velocity2(wheel_speed_right,self.max_right_forward_speed, self.max_right_backward_speed,self.max_pwm, self.min_pwm, self.neutral_pwm))
 
             # Ensure pwm value fall within the limit
-            if new_calculated_left_pwm > self.LEFT_MAX:
-                new_calculated_left_pwm= self.LEFT_MAX
-            elif new_calculated_left_pwm< self.LEFT_MIN:
-                new_calculated_left_pwm = self.LEFT_MIN
+            if new_calculated_left_pwm > self.max_pwm:
+                new_calculated_left_pwm= self.max_pwm
+            elif new_calculated_left_pwm< self.min_pwm:
+                new_calculated_left_pwm = self.min_pwm
             else:
                 pass
             
-            if new_calculated_right_pwm  > self.RIGHT_MAX:
-                new_calculated_right_pwm  = self.RIGHT_MAX
-            elif new_calculated_right_pwm  < self.RIGHT_MIN:
-                new_calculated_right_pwm  = self.RIGHT_MIN
+            if new_calculated_right_pwm  > self.max_pwm:
+                new_calculated_right_pwm  = self.max_pwm
+            elif new_calculated_right_pwm  < self.min_pwm:
+                new_calculated_right_pwm  = self.min_pwm
             else:
                 pass
             
@@ -193,12 +191,12 @@ class ControllerNode(Node):
     #     It shows that the maestro just return the recent received value. Thus, it does not make a difference in this case.
     #     """
     #     # 1. Calculate left and right wheel's velocity base on current pwm
-    #     current_left_vel = calculate_velocity_from_pwm2(self.new_left_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
-    #     current_right_vel = calculate_velocity_from_pwm2(self.new_right_pwm.data,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
+    #     current_left_vel = calculate_velocity_from_pwm2(self.new_left_pwm.data,self.max_left_forward_speed, self.max_left_backward_speed, self.max_pwm, self.min_pwm, self.neutral_pwm)
+    #     current_right_vel = calculate_velocity_from_pwm2(self.new_right_pwm.data,self.max_left_forward_speed, self.max_left_backward_speed, self.max_pwm, self.min_pwm, self.neutral_pwm)
         
         
     #     self.differential_twist.twist.linear.x = (current_right_vel + current_left_vel)/2
-    #     self.differential_twist.twist.angular.z = (current_right_vel - current_left_vel)/self.WHEEL_SEPARATION
+    #     self.differential_twist.twist.angular.z = (current_right_vel - current_left_vel)/self.wheel_separation
         
         
     #     # setting the header part

@@ -27,7 +27,7 @@ class LogicTester(Node):
                 super().__init__("logic_tester")
 
                 # PARAMETERS
-                # load parameter values from YAML file (pluto_launch/config/logic_tester.yaml)
+                # YAML File: pluto_launch/config/logic_tester.yaml
                 # MOWER PHYSICAL PROPERTIES (Husqvarna Z246)
                 self.MASS = self.load_param_double("MASS")
                 self.WHEEL_SEPARATION = self.load_param_double("WHEEL_SEPARATION")

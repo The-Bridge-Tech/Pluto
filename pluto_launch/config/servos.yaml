@@ -1,0 +1,22 @@
+/**: 
+  ros__parameters:
+
+    # PWM
+    min_pwm: 992
+    neutral_pwm: 1376
+    max_pwm: 1765
+
+    # WHEEL
+    wheel_radius: 0.2159 # m
+    wheel_separation: 0.889 # m
+
+    # MAX BACKWARD SPEED
+    max_left_backward_speed: 1.31065 # m/s
+    max_right_backward_speed: 1.31065 # m/s
+
+    # MAX FORWARD SPEED
+    max_left_forward_speed: 1.514 # m/s
+    max_right_forward_speed: 1.5366 # m/s   (68 *pi*0.4318)/60
+
+    # OTHER
+    publish_frequency: 200 # Hz (publishes / second)

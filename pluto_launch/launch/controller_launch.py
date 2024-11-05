@@ -6,46 +6,45 @@
 # colcon build --packages-select controller
 #ros2 launch controller controller_launch.py
 
-import os
-
-from pytest import param
-
 from launch import LaunchDescription
-from launch.substitutions import EnvironmentVariable
+from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
 
-import launch
-import launch_ros.actions
 
-from ament_index_python.packages import get_package_share_directory
-from pathlib import Path
+# CONFIG FILES
 
-controller_node_config = os.path.join(
-      get_package_share_directory('pluto_launch'),
-      'config',
-      'ServoAndSpeed.yaml'
-      )
+servos_config = os.path.join(
+    get_package_share_directory('pluto_launch'),
+    'config',
+    'servos.yaml'
+)
+controller_keycodes_config = os.path.join(
+    get_package_share_directory('pluto_launch'),
+    'config',
+    'controller_keycodes.yaml'
+)
+
+
+# LAUNCH DESCRIPTION
+
 def generate_launch_description():
-    
     return LaunchDescription([
-        
-        launch_ros.actions.Node(
+        # controller/ControllerNode.py
+        Node(
             package='controller',
             executable='controller',
             name='controller',
-            parameters=[controller_node_config]
-            ),
-        launch_ros.actions.Node(
+            parameters=[servos_config]
+        ),
+        # controller/JoystickInterpreter.py
+        Node(
             package='controller',
             executable='joystickInterpreter', 
             name='joystickInterpreter',
-            parameters=[controller_node_config]
+            parameters=[
+                servos_config,
+                controller_keycodes_config
+            ]
         ),
-        # launch_ros.actions.Node(
-        #     package='controller',
-        #     executable='autonomousController', 
-        #     name='autonomousController',
-        #     # parameters=[controller_node_config]
-        # )
     ])

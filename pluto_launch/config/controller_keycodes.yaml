@@ -1,0 +1,17 @@
+controller_keycodes:
+  ros__parameters:
+
+    # BUTTONS
+    Y: 0
+    B: 1
+    A: 2
+    X: 3
+    L1: 4
+    R1: 5
+    L2: 6
+    R2: 7
+    SELECT: 8
+    START: 9
+    LEFT_JOYSTICK_PUSH_IN: 10
+    RIGHT_JOYSTICK_PUSH_IN: 11
+    HOME: 12

@@ -33,24 +33,6 @@ from std_msgs.msg import Bool
 #TODO: change later
 
 
-# CONSTANTS
-BUTTONS = {
-    'Y': 0,
-    'B': 1,
-    'A': 2,
-    'X': 3,
-    'L1': 4,
-    'R1': 5,
-    'L2': 6,
-    'R2': 7,
-    'SELECT': 8,
-    'START': 9,
-    'LEFT JOYSTICK PUSH IN': 10,
-    'RIGHT JOYSTICK PUSH IN': 11,
-    'HOME': 12,
-}
-
-
 class JoystickInterpreter(Node):
     
     def __init__(self, mode: int) -> None:
@@ -58,21 +40,44 @@ class JoystickInterpreter(Node):
         self.mode = mode # mode of joystick
 
         # PARAMETERS
-        self.define_parameters()
-        self.LEFT_NEUTRAL = self.get_parameter("LEFT_NEUTRAL").get_parameter_value().integer_value
-        self.RIGHT_NEUTRAL = self.get_parameter("RIGHT_NEUTRAL").get_parameter_value().integer_value
-        self.RIGHT_MAX = self.get_parameter("RIGHT_MAX").get_parameter_value().integer_value
-        self.LEFT_MAX = self.get_parameter("LEFT_MAX").get_parameter_value().integer_value
-        self.RIGHT_MIN = self.get_parameter("RIGHT_MIN").get_parameter_value().integer_value
-        self.LEFT_MIN = self.get_parameter("LEFT_MIN").get_parameter_value().integer_value
-        self.WHEEL_RADIUS = self.get_parameter("WHEEL_RADIUS").get_parameter_value().double_value
-        self.WHEEL_SEPARATION = self.get_parameter("WHEEL_SEPARATION").get_parameter_value().double_value
-        
-        self.KNOW_LEFT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_RIGHT_FULL_BACKWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_LEFT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_LEFT_FULL_FORWARD_SPEED').get_parameter_value().double_value
-        self.KNOW_RIGHT_FULL_FORWARD_SPEED = self.get_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED').get_parameter_value().double_value    
-        self.PUBLISH_RATE = self.get_parameter('PUBLISH_RATE').get_parameter_value().integer_value
+        # YAML File:
+        #   Gas         pluto_launch/config/servos.yaml
+        #   Electric    pluto_launch/config/servos_electric.yaml
+        # PWM
+        self.min_pwm = self.load_param_int("min_pwm")
+        self.neutral_pwm = self.load_param_int("neutral_pwm")
+        self.max_pwm = self.load_param_int("max_pwm")
+        # WHEEL
+        self.wheel_radius = self.load_param_double("wheel_radius")
+        self.wheel_separation = self.load_param_double("wheel_separation")
+        # MAX BACKWARD SPEED
+        self.max_left_backward_speed = self.load_param_double('max_left_backward_speed')
+        self.max_right_backward_speed = self.load_param_double('max_right_backward_speed')
+        # MAX FORWARD SPEED
+        self.max_left_forward_speed = self.load_param_double('max_left_forward_speed')
+        self.max_right_forward_speed = self.load_param_double('max_right_forward_speed')    
+        # OTHER
+        self.publish_frequency = self.load_param_int('publish_frequency')
+        # YAML File: pluto_launch/config/controller_keycodes.yaml
+        # BUTTONS
+        self.buttons = {
+            button_name: self.load_param_int(button_name) 
+            for button_name in [
+                'Y',
+                'B',
+                'A',
+                'X',
+                'L1',
+                'R1',
+                'L2',
+                'R2',
+                'SELECT',
+                'START',
+                'LEFT JOYSTICK PUSH IN',
+                'RIGHT JOYSTICK PUSH IN',
+                'HOME',
+            ]
+        }
         
         # SUBSCRIBERS
         self.joy_sub = self.create_subscription(
@@ -90,9 +95,8 @@ class JoystickInterpreter(Node):
             'cmd_vel', 
             10
         )
-        cmd_vel_publisher_period =1/self.PUBLISH_RATE # seconds
         self.cmd_vel_timer = self.create_timer(
-            cmd_vel_publisher_period, 
+            1 / self.publish_frequency, 
             self.interpret_message
         )
         
@@ -104,7 +108,7 @@ class JoystickInterpreter(Node):
             1
         )
         self.is_autonomous_mode = False
-        self.button_states = [0] * len(BUTTONS)
+        self.button_states = [0] * len(self.buttons)
 
         # JOYSTICK MODE
         if mode == 1:
@@ -125,23 +129,24 @@ class JoystickInterpreter(Node):
         else:
             raise ValueError("Unknown mode in joystick_interpreter")
         
+    
+    # HELPERS - PARAMETERS
+    
+    def load_param(self, param_name: str, init_value):
+        self.declare_parameter(param_name, init_value)
+        return self.get_parameter(param_name).get_parameter_value()
+    
+    def load_param_int(self, param_name: str) -> int:
+        return self.load_param(param_name, 0).integer_value
+    
+    def load_param_double(self, param_name: str) -> float:
+        return self.load_param(param_name, 0.0).double_value
+    
+    def load_param_bool(self, param_name: str) -> bool:
+        return self.load_param(param_name, False).bool_value
+        
 
-    # HELPERS
-
-    def define_parameters(self)->None:
-        self.declare_parameter('LEFT_NEUTRAL', 0)
-        self.declare_parameter('RIGHT_NEUTRAL',0)
-        self.declare_parameter('RIGHT_MAX', 0)
-        self.declare_parameter('LEFT_MAX',0)
-        self.declare_parameter('RIGHT_MIN',0)
-        self.declare_parameter('LEFT_MIN',0)
-        self.declare_parameter('WHEEL_RADIUS',0.4318)
-        self.declare_parameter('WHEEL_SEPARATION',0.889)
-        self.declare_parameter('KNOW_LEFT_FULL_BACKWARD_SPEED', -1.31065)
-        self.declare_parameter('KNOW_RIGHT_FULL_BACKWARD_SPEED', -1.0847)
-        self.declare_parameter('KNOW_LEFT_FULL_FORWARD_SPEED',1.514 )
-        self.declare_parameter('KNOW_RIGHT_FULL_FORWARD_SPEED',1.5366)
-        self.declare_parameter('PUBLISH_RATE',30)
+    # HELPERS - JOYSTICK INTERPRETATION
 
     def calculate_pwm_from_axis(self, axis: float, neutral, min, max):
         if axis == 0:
@@ -185,39 +190,63 @@ class JoystickInterpreter(Node):
         left_axis_value = message.axes[1]   
         right_axis_value = message.axes[4]
         #print(left_axis_value, right_axis_value)
-        left_pwm = self.calculate_pwm_from_axis(left_axis_value, self.LEFT_NEUTRAL, self.LEFT_MIN, self.LEFT_MAX)
-        right_pwm = self.calculate_pwm_from_axis(right_axis_value, self.RIGHT_NEUTRAL, self.RIGHT_MIN, self.RIGHT_MAX)
+        left_pwm = self.calculate_pwm_from_axis(
+            left_axis_value, 
+            self.neutral_pwm, 
+            self.min_pwm, 
+            self.max_pwm
+        )
+        right_pwm = self.calculate_pwm_from_axis(
+            right_axis_value, 
+            self.neutral_pwm, 
+            self.min_pwm, 
+            self.max_pwm
+        )
         
         # self.get_logger().info('left pwm: ' + str(left_pwm))
-        # self.get_logger().info('left forward: ' + str(self.KNOW_LEFT_FULL_FORWARD_SPEED))
-        # self.get_logger().info('right forward: ' + str(self.KNOW_RIGHT_FULL_FORWARD_SPEED))
-        # self.get_logger().info('left backward: ' + str(self.KNOW_LEFT_FULL_FORWARD_SPEED))
-        # self.get_logger().info('right backward: ' + str(self.KNOW_RIGHT_FULL_BACKWARD_SPEED))
+        # self.get_logger().info('left forward: ' + str(self.max_left_forward_speed))
+        # self.get_logger().info('right forward: ' + str(self.max_right_forward_speed))
+        # self.get_logger().info('left backward: ' + str(self.max_left_forward_speed))
+        # self.get_logger().info('right backward: ' + str(self.max_right_backward_speed))
         
         # then conver to standard cmd_vel message
-        left_velocity =  calculate_velocity_from_pwm2(left_pwm,self.KNOW_LEFT_FULL_FORWARD_SPEED, self.KNOW_LEFT_FULL_BACKWARD_SPEED, self.LEFT_MAX, self.LEFT_MIN, self.LEFT_NEUTRAL)
-        right_velocity =  calculate_velocity_from_pwm2(right_pwm,self.KNOW_RIGHT_FULL_FORWARD_SPEED, self.KNOW_RIGHT_FULL_BACKWARD_SPEED, self.RIGHT_MAX, self.RIGHT_MIN, self.RIGHT_NEUTRAL)
+        left_velocity =  calculate_velocity_from_pwm2(
+            left_pwm,
+            self.max_left_forward_speed, 
+            self.max_left_backward_speed, 
+            self.max_pwm, 
+            self.min_pwm, 
+            self.neutral_pwm
+        )
+        right_velocity =  calculate_velocity_from_pwm2(
+            right_pwm,
+            self.max_right_forward_speed, 
+            self.max_right_backward_speed, 
+            self.max_pwm, 
+            self.min_pwm, 
+            self.neutral_pwm
+        )
         
         # self.get_logger().info('left velocity: ' + str(left_velocity))
         # self.get_logger().info('right velocity: ' + str(right_velocity))
         # print("Velocity left" + str(left_velocity))
         # print("Velocity right" + str(right_velocity))
         
-        velocity_x = ( self.WHEEL_RADIUS*left_velocity) + (self.WHEEL_RADIUS*right_velocity - self.WHEEL_RADIUS*left_velocity)/2
-        velocity_yaw = (right_velocity*self.WHEEL_RADIUS - left_velocity*self.WHEEL_RADIUS) / self.WHEEL_SEPARATION
+        velocity_x = (self.wheel_radius*left_velocity) + (self.wheel_radius*right_velocity - self.wheel_radius*left_velocity)/2
+        velocity_yaw = (right_velocity*self.wheel_radius - left_velocity*self.wheel_radius) / self.wheel_separation
         
         self.twist_msg.linear.x = velocity_x
         self.twist_msg.angular.z = velocity_yaw
         self.cmd_vel_publisher.publish(self.twist_msg)
         
 
-    # BUTTON HELPERS
+    # HELPERS - BUTTONS
 
     def getButtonState(self, msg: Joy, button_name: str) -> int:
-        return msg.buttons[BUTTONS[button_name]]
+        return msg.buttons[self.buttons[button_name]]
     
     def getLastButtonState(self, button_name: str) -> int:
-        return self.button_states[BUTTONS[button_name]]
+        return self.button_states[self.buttons[button_name]]
     
     def updateButtonStates(self, msg: Joy):
         self.button_states = msg.buttons
@@ -250,6 +279,8 @@ class JoystickInterpreter(Node):
         # x =  self.last_twist_message.linear.x
         # yaw = self.last_twist_message.angular.z
         # print(x, yaw)
+
+
 
 # MAIN
 

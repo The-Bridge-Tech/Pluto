@@ -37,11 +37,12 @@ class LocalPlanner(Node):
                 super().__init__("local_planner")
 
                 # PARAMETERS
-                # load parameter values from YAML file (pluto_launch/config/local_planner.yaml)
+                # YAML File: pluto_launch/config/servos.yaml
                 # PWM
                 self.min_pwm = self.load_param_int("min_pwm")
                 self.neutral_pwm = self.load_param_int("neutral_pwm")
                 self.max_pwm = self.load_param_int("max_pwm")
+                # YAML File: pluto_launch/config/local_planner.yaml
                 # STATE: STRAIGHT
                 self.straight_initial_pwm = self.load_param_double("straight_initial_pwm")
                 self.straight_distance_tolerance = self.load_param_double("straight_distance_tolerance")

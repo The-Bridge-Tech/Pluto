@@ -6,19 +6,22 @@
 #ros2 launch joystick_launch joystick_mode_launch.py
 
 import os
-
 from ament_index_python.packages import get_package_share_directory
-
 import launch
 import launch_ros.actions
-from launch.substitutions import LaunchConfiguration
+
+
+# CONFIGURATION FILES
 
 launch_file_path = os.path.join(
-      get_package_share_directory('pluto_launch'),
-      'config',
-      'xbox.config.yaml'
-      )
-# print(launch_file_path)
+    get_package_share_directory('pluto_launch'),
+    'config',
+    'xbox.config.yaml'
+)
+
+
+# LAUNCH DESCRIPTION
+
 def generate_launch_description():
     joy_config = launch.substitutions.LaunchConfiguration('joy_config')
     joy_dev = launch.substitutions.LaunchConfiguration('joy_dev')

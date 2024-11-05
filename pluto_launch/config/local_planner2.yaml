@@ -1,11 +1,6 @@
 local_planner:
   ros__parameters:
 
-    # PWM
-    min_pwm: 992
-    neutral_pwm: 1376
-    max_pwm: 1765
-
     # STATE: STRAIGHT
     straight_initial_pwm: 30.0 # percent - forward speed of mower
     straight_distance_tolerance: 1.0 # meters - will stop once within this distance of the waypoint
