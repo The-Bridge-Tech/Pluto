@@ -57,7 +57,7 @@ class LocalPlanner(Node):
                 # OTHER
                 self.process_frequency = self.load_param_int("process_frequency")
                 self.feedback_frequency = self.load_param_int("feedback_frequency")
-                self.calculate_utm_error = self.load_param_bool("calculate_utm_error")
+                self.compensate_utm_error = self.load_param_bool("compensate_utm_error")
                 # load parameter values from YAML file (pluto_launch/config/location.yaml)
                 self.base_lat = self.load_param_double("base_lat")
                 self.base_lon = self.load_param_double("base_lon")
@@ -211,16 +211,16 @@ class LocalPlanner(Node):
 
         def update_local_position(self):
                 """Calculate current position (x, y) relative to local origin (base pin). 
-                If parameter "calculate_utm_error" is set to True, this will compensate the UTM error."""
+                If parameter "compensate_utm_error" is set to True, this will compensate the UTM error."""
                 # get position from current odometry reading
                 current_position_reading = position_from_odom(self.current_odom)
                 # get position from base odometry reading (at base pin)
                 initial_position_reading = position_from_odom(self.base_odom)
                 # get UTM error
-                utm_error = self.utm_error if self.calculate_utm_error else Point()
+                utm_error = self.utm_error if self.compensate_utm_error else Point()
                 # calculate/update local position
-                self.local_position.x = (current_position_reading.x - initial_position_reading.x) # - utm_error.x
-                self.local_position.y = (current_position_reading.y - initial_position_reading.y) # - utm_error.y
+                self.local_position.x = (current_position_reading.x - initial_position_reading.x)  - utm_error.x
+                self.local_position.y = (current_position_reading.y - initial_position_reading.y)  - utm_error.y
                 # debugging info
                 # self.get_logger().info(f"x = {round(current_position_reading.x, 3)} - {round(initial_position_reading.x, 3)} - {round(utm_error.x, 3)}   = {round(self.local_position.x, 3)}")
                 # self.get_logger().info(f"y = {round(current_position_reading.y, 3)} - {round(initial_position_reading.y, 3)} - {round(utm_error.y, 3)}   = {round(self.local_position.y, 3)}")
