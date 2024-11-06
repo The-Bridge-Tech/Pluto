@@ -8,32 +8,31 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
-
-
-use_sim_time = LaunchConfiguration('use_sim_time', default='true')  
+# LAUNCH DESCRIPTION
 
 def generate_launch_description():
-
     # spatial_launch = IncludeLaunchDescription(
     #   PythonLaunchDescriptionSource([os.path.join(
     #      get_package_share_directory('phidgets_spatial') ),
     #      '/launch/spatial-launch.py']),
     #     launch_arguments={
-    #         "use_sim_time": use_sim_time
+    #         "use_sim_time": LaunchConfiguration('use_sim_time', default='true')
     #     }.items(),
     #   )
-    
     camera_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('realsense2_camera'), "launch"),
-            '/rs_launch.py']),
+        PythonLaunchDescriptionSource([
+            os.path.join(
+                get_package_share_directory('realsense2_camera'), 
+                "launch",
+                'rs_launch.py'
+            ),
+        ]),
         launch_arguments={
             'pointcloud.enable': 'true',
             'align_depth.enable' : 'true',
             # 'enable_gyro': 'true',
             # 'enable_accel': 'true',
-            'pointcloud.ordered_pc': 'true',
-        
+            'pointcloud.ordered_pc': 'true'
         }.items()
     )
     camera_node = Node(

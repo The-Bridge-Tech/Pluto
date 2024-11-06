@@ -13,22 +13,29 @@
 # limitations under the License.
 
 from launch import LaunchDescription
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-import launch_ros.actions
 import os
-import yaml
-from launch.substitutions import EnvironmentVariable
-import pathlib
-import launch.actions
-from launch.actions import DeclareLaunchArgument
+
+
+# CONFIG FILES
+
+navsat_transform_config = os.path.join(
+    get_package_share_directory("pluto_launch"), 
+    'config', 
+    'navsat_transform.yaml'
+)
+
+
+# LAUNCH DESCRIPTION
 
 def generate_launch_description():
     return LaunchDescription([
-        launch_ros.actions.Node(
+        Node(
             package='robot_localization',
             executable='navsat_transform_node',
             name='navsat_transform_node',
             output='screen',
-            parameters=[os.path.join(get_package_share_directory("pluto_launch"), 'config', 'navsat_transform.yaml')],
-           ),
-])
+            parameters=[navsat_transform_config],
+        ),
+    ])

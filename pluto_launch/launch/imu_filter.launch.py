@@ -1,26 +1,30 @@
-import os
-import launch
-import launch.actions
-import launch.substitutions
-import launch_ros.actions
+from launch import LaunchDescription
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+import os
 
+
+# CONFIG FILES
+
+imu_filter_config = os.path.join(
+    get_package_share_directory('pluto_launch'),
+    'config',
+    'imu_filter.yaml'
+)
+
+
+# LAUNCH DESCRIPTION
 
 def generate_launch_description():
-
-    config_dir = os.path.join(get_package_share_directory('pluto_launch'), 'config')
-
-    return launch.LaunchDescription(
-        [
-            launch_ros.actions.Node(
-                package='imu_filter_madgwick',
-                executable='imu_filter_madgwick_node',
-                name='imu_filter',
-                output='screen',
-                parameters=[os.path.join(config_dir, 'imu_filter.yaml')],
-                remappings=[
-                   #('/imu/data','/imu')
-                ]
-            )
-        ]
-    )
+    return LaunchDescription([
+        Node(
+            package='imu_filter_madgwick',
+            executable='imu_filter_madgwick_node',
+            name='imu_filter',
+            output='screen',
+            parameters=[imu_filter_config],
+            remappings=[
+                #('/imu/data','/imu')
+            ]
+        ),
+    ])

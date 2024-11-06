@@ -1,13 +1,13 @@
 
 from launch import LaunchDescription
-import launch_ros.actions
-import os
-import yaml
-from launch.substitutions import EnvironmentVariable
-import pathlib
-import launch.actions
-from launch.actions import DeclareLaunchArgument
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+import os
+from launch.actions import DeclareLaunchArgument
+
+
+# CONFIG FILES
+
 ekf_navsat_config = os.path.join(
     get_package_share_directory('pluto_launch'),
     'config',
@@ -20,18 +20,21 @@ navsat_config = os.path.join(
 )
 
 
+# LAUNCH DESCRIPTION
+
 def generate_launch_description():
-
     return LaunchDescription([
-        launch.actions.DeclareLaunchArgument(
+        # launch arguments
+        DeclareLaunchArgument(
             'output_final_position',
-            default_value='false'),
-        launch.actions.DeclareLaunchArgument(
+            default_value='false'
+        ),
+        DeclareLaunchArgument(
             'output_location',
-            default_value='~/dual_ekf_navsat_example_debug.txt'),
-
+            default_value='~/dual_ekf_navsat_example_debug.txt'
+        ),
         # filters /odometry/local
-        launch_ros.actions.Node(
+        Node(
             package='robot_localization',
             executable='ekf_node',
             name='ekf_filter_node_odom',
@@ -40,7 +43,7 @@ def generate_launch_description():
             remappings=[('odometry/filtered', 'odometry/local')]
         ),
         # filters /odometry/global
-        launch_ros.actions.Node(
+        Node(
             package='robot_localization',
             executable='ekf_node',
             name='ekf_filter_node_map',
@@ -49,7 +52,7 @@ def generate_launch_description():
             remappings=[('odometry/filtered', 'odometry/global')]
         ),
         # publishes odometry data using gps and imu topics
-        launch_ros.actions.Node(
+        Node(
             package='robot_localization',
             executable='navsat_transform_node',
             name='navsat_transform',

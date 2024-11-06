@@ -21,9 +21,8 @@ def generate_launch_description():
             arguments=['0','0','0','0','0','0','base_link', 'camera_link'],
             # parameters=[{"use_sim_time":use_sim_time}]
     )
-    return LaunchDescription(
-        
-        [
-            imu_to_base_link, gps_to_base_link,camera_to_baselink
-        ]
-    )
+    return LaunchDescription([
+        imu_to_base_link, 
+        gps_to_base_link,
+        camera_to_baselink
+    ])

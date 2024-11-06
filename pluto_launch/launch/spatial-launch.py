@@ -1,11 +1,11 @@
 import launch
-from launch_ros.actions import ComposableNodeContainer, LoadComposableNodes, Node
+from launch_ros.actions import LoadComposableNodes, Node
 from launch_ros.descriptions import ComposableNode
-from ament_index_python.packages import get_package_share_directory
-import os
+
+
+# CONFIG FILES
+
 def generate_launch_description():
-
-
     container = Node(
         name='phidget_container',
         namespace='',
@@ -13,7 +13,6 @@ def generate_launch_description():
         executable='component_container',
         output='both',
     )
-
     load_composable_nodes = LoadComposableNodes(
         target_container='phidget_container',
         composable_node_descriptions=[
@@ -21,9 +20,10 @@ def generate_launch_description():
                 package='phidgets_spatial',
                 plugin='phidgets::SpatialRosI',
                 name='phidgets_spatial',
-
             ),
         ],
     )
-
-    return launch.LaunchDescription([        container,        load_composable_nodes,    ])
+    return launch.LaunchDescription([
+        container,
+        load_composable_nodes,
+    ])

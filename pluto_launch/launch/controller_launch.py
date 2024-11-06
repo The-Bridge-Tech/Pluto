@@ -1,15 +1,7 @@
-
-
-# https://stackoverflow.com/questions/73579586/how-to-read-specific-parameter-from-yaml-in-ros2-py-launch-file
-
-
-# colcon build --packages-select controller
-#ros2 launch controller controller_launch.py
-
 from launch import LaunchDescription
 from launch_ros.actions import Node
-import os
 from ament_index_python.packages import get_package_share_directory
+import os
 
 
 # CONFIG FILES
