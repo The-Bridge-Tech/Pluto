@@ -28,7 +28,6 @@ import time
 from .local_plan import LocalPlan
 from .pwm import PWM
 from .conversions import *
-from .phase_one_demo import BASE_GPS
 
 
 class LocalPlanner(Node):
@@ -59,6 +58,9 @@ class LocalPlanner(Node):
                 self.process_frequency = self.load_param_int("process_frequency")
                 self.feedback_frequency = self.load_param_int("feedback_frequency")
                 self.calculate_utm_error = self.load_param_bool("calculate_utm_error")
+                # load parameter values from YAML file (pluto_launch/config/location.yaml)
+                self.base_lat = self.load_param_double("base_lat")
+                self.base_lon = self.load_param_double("base_lon")
 
                 # ACTION SERVER
                 self.local_plan_action_server = ActionServer(
@@ -220,14 +222,14 @@ class LocalPlanner(Node):
                 self.local_position.x = (current_position_reading.x - initial_position_reading.x) # - utm_error.x
                 self.local_position.y = (current_position_reading.y - initial_position_reading.y) # - utm_error.y
                 # debugging info
-                self.get_logger().info(f"x = {round(current_position_reading.x, 3)} - {round(initial_position_reading.x, 3)} - {round(utm_error.x, 3)}   = {round(self.local_position.x, 3)}")
-                self.get_logger().info(f"y = {round(current_position_reading.y, 3)} - {round(initial_position_reading.y, 3)} - {round(utm_error.y, 3)}   = {round(self.local_position.y, 3)}")
+                # self.get_logger().info(f"x = {round(current_position_reading.x, 3)} - {round(initial_position_reading.x, 3)} - {round(utm_error.x, 3)}   = {round(self.local_position.x, 3)}")
+                # self.get_logger().info(f"y = {round(current_position_reading.y, 3)} - {round(initial_position_reading.y, 3)} - {round(utm_error.y, 3)}   = {round(self.local_position.y, 3)}")
                 # publish global position (local position converted to global UTM coordinate)
                 self.position_pub.publish(self.get_global_position().toMsg())
 
         def get_global_position(self) -> utm.UTMPoint:
                 """Return local position converted to a global UTM coordinate."""
-                base_utm = utm.fromLatLong(*BASE_GPS)
+                base_utm = utm.fromLatLong(self.base_lat, self.base_lon)
                 base_point = base_utm.toPoint()
                 global_position = utm.UTMPoint(
                         easting = base_point.x + self.local_position.x,
@@ -449,7 +451,7 @@ class LocalPlanner(Node):
                         # convert lat & lon reading at base pin to a UTM coodinate -> then to a point
                         reading_base_utm = utm.fromLatLong(msg.latitude, msg.longitude).toPoint()
                         # convert actual lat & lon at base pin to a UTM coordinate -> then to a point
-                        actual_base_utm = utm.fromLatLong(*BASE_GPS).toPoint()
+                        actual_base_utm = utm.fromLatLong(self.base_lat, self.base_lon).toPoint()
                         # calculate UTM error
                         self.utm_error = Point(
                                 x = reading_base_utm.x - actual_base_utm.x,

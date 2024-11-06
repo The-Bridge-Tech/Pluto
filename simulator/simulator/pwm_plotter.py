@@ -13,7 +13,6 @@ from std_msgs.msg import Float32
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from threading import Thread
-import time
 
 # PARAMETERS
 PROCESS_RATE = 10 # Hz (times / second)

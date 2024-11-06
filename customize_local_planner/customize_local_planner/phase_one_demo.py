@@ -19,7 +19,6 @@ from custom_msgs.msg import WaypointMsg
 from .conversions import *
 
 # CONSTANTS
-BASE_GPS = (34.841374, -82.411773)
 WAYPOINTS = [
     (34.841384, -82.411669),    # front-left corner
     (34.841254, -82.411731),    # back-left corner
@@ -33,6 +32,11 @@ class PhaseOneDemo(Node):
 
     def __init__(self):
         super().__init__('phase_one_demo')
+
+        # PARAMETERS
+        # YAML File: pluto_launch/config/location.yaml
+        self.base_lat = self.load_param_double("base_lat")
+        self.base_lon = self.load_param_double("base_lon")
 
         # ACTION CLIENT
         self.local_plan_action_client = ActionClient(
@@ -67,6 +71,16 @@ class PhaseOneDemo(Node):
 
         # Initialize goal poses
         self.reset()
+
+
+    # HELPERS - PARAMETERS
+
+    def load_param(self, param_name: str, init_value):
+        self.declare_parameter(param_name, init_value)
+        return self.get_parameter(param_name).get_parameter_value()
+    
+    def load_param_double(self, param_name: str) -> float:
+        return self.load_param(param_name, 0.0).double_value
 
     
     # ACTION CLIENT
@@ -141,7 +155,7 @@ class PhaseOneDemo(Node):
     def lat_lon_to_local_point(self, lat: float, lon: float) -> Point:
         """Converts latitude & longitude to a point (x, y) relative to local origin (base pin)"""
         # convert lat & lon to UTM coordinates (easting, northing) and then to points (x, y)
-        base_point = utm.fromLatLong(*BASE_GPS).toPoint()
+        base_point = utm.fromLatLong(self.base_lat, self.base_lon).toPoint()
         goal_point = utm.fromLatLong(lat, lon).toPoint()
         # local = goal - base
         local_point = Point(

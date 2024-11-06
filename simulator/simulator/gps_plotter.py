@@ -24,7 +24,7 @@ import math
 
 # HELPER MODULES
 from .gps_list import GPSList
-from customize_local_planner.phase_one_demo import WAYPOINTS, BASE_GPS
+from customize_local_planner.phase_one_demo import WAYPOINTS
 from customize_local_planner.conversions import *
 
 
@@ -66,6 +66,11 @@ class GPSPlotter(Node):
 
         def __init__(self):
                 super().__init__('gps_plotter')
+
+                # PARAMETERS
+                # YAML File: pluto_launch/config/location.yaml
+                self.base_lat = self.load_param_double("base_lat")
+                self.base_lon = self.load_param_double("base_lon")
 
                 # SUBSCRIBERS
                 # Subscribe to original gps topic
@@ -160,8 +165,8 @@ class GPSPlotter(Node):
                 )[0] # get the first and only item in the list returned by Axes.plot()
                 # Plot the base point
                 self.base_scatter = self.ax.scatter(
-                        x = [BASE_GPS[1]],   # longitude
-                        y = [BASE_GPS[0]],   # latitude
+                        x = [self.base_lon],   # longitude
+                        y = [self.base_lat],   # latitude
                         s = 7,               # marker-size
                         color='red', 
                         marker='o', 
@@ -198,8 +203,8 @@ class GPSPlotter(Node):
                 )[0] # get the first and only item in the list returned by Axes.plot()
                 # Add radius circle around base pin
                 base_radius_circle = patches.Circle(
-                        (BASE_GPS[1], BASE_GPS[0]),  # (x=longitude, y=latitude)
-                        meters_to_gps_degrees(WAYPOINT_RADIUS, BASE_GPS[0]),  # Convert meter radius to degrees
+                        (self.base_lon, self.base_lat),  # (x=longitude, y=latitude)
+                        meters_to_gps_degrees(WAYPOINT_RADIUS, self.base_lat),  # Convert meter radius to degrees
                         edgecolor='white', 
                         facecolor='none', 
                         # linestyle='--',
@@ -235,6 +240,16 @@ class GPSPlotter(Node):
                 plt.xlabel('Longitude')
                 plt.ylabel('Latitude')
                 plt.title('Dynamic GPS Plotter')
+
+        
+        # HELPERS - PARAMETERS
+
+        def load_param(self, param_name: str, init_value):
+                self.declare_parameter(param_name, init_value)
+                return self.get_parameter(param_name).get_parameter_value()
+        
+        def load_param_double(self, param_name: str) -> float:
+                return self.load_param(param_name, 0.0).double_value
         
 
         # HELPERS

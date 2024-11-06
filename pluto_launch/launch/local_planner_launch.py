@@ -16,6 +16,11 @@ servos_config = os.path.join(
     'config',
     'servos.yaml'
 )
+location_config = os.path.join(
+    get_package_share_directory('pluto_launch'),
+    'config',
+    'location.yaml'
+)
 
 
 # LAUNCH DESCRIPTION
@@ -30,7 +35,8 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 local_planner2_config,
-                servos_config
+                servos_config,
+                location_config
             ]
         ),
     ])

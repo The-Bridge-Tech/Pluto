@@ -6,10 +6,10 @@ import os
 
 # CONFIG FILES
 
-logic_tester_config = os.path.join(
-    get_package_share_directory('pluto_launch'), 
+location_config = os.path.join(
+    get_package_share_directory('pluto_launch'),
     'config',
-    'logic_tester.yaml'
+    'location.yaml'
 )
 
 
@@ -17,12 +17,12 @@ logic_tester_config = os.path.join(
 
 def generate_launch_description():
     return LaunchDescription([
-        # simulator/logic_tester.py
+        # simulator/gps_plotter.py
         Node(
             package='simulator',
-            executable='logic_tester',
-            name='logic_tester',
+            executable='gps_plotter',
+            name='gps_plotter',
             output='screen',
-            parameters=[logic_tester_config]
-        ),
+            parameters=[location_config]
+        )
     ])
