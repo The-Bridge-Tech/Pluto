@@ -50,7 +50,7 @@ class PhaseOneDemo(Node):
         #       * callbacks within group block each other
         #       * groups execute in parallel with other groups
         self.local_plan_callback_group = MutuallyExclusiveCallbackGroup()
-        self.initial_gps_callback_group = MutuallyExclusiveCallbackGroup()
+        self.origin_gps_callback_group = MutuallyExclusiveCallbackGroup()
         self.process_callback_group = MutuallyExclusiveCallbackGroup()
         # Reentrant Callback Group
         #       * individual callbacks overlap themselves
@@ -67,10 +67,10 @@ class PhaseOneDemo(Node):
         )
 
         # CLIENTS
-        self.initial_gps_client = self.create_client(
+        self.origin_gps_client = self.create_client(
             GPS,
-            "/initial_gps",
-            callback_group = self.initial_gps_callback_group
+            "/origin_gps",
+            callback_group = self.origin_gps_callback_group
         )
         self.local_origin: Point = None
 
@@ -190,37 +190,36 @@ class PhaseOneDemo(Node):
 
     # CLIENT REQUESTS
 
-    def request_initial_gps(self):
-            """Request and Return the initial gps message after autonomous mode was started for the first time."""
+    def request_origin_gps(self):
+            """Request and Return the origin gps message after autonomous mode was started for the first time."""
             # wait for service to be available
-            while not self.initial_gps_client.wait_for_service(timeout_sec=1.0):
-                self.get_logger().info("Waiting for '/initial_gps' service to be available")
+            while not self.origin_gps_client.wait_for_service(timeout_sec=1.0):
+                self.get_logger().info("Waiting for '/origin_gps' service to be available")
             # send request asynchronously
             request = GPS.Request()
-            self.get_logger().info("Requesting '/initial_gps' service")
-            future = self.initial_gps_client.call_async(request)
+            self.get_logger().info("Requesting '/origin_gps' service")
+            future = self.origin_gps_client.call_async(request)
             # set callback for when response is returned
-            future.add_done_callback(self.initial_gps_response_callback)
+            future.add_done_callback(self.origin_gps_response_callback)
             
-    def initial_gps_response_callback(self, future: Future):
-        """Calculate local origin using initial gps from response."""
+    def origin_gps_response_callback(self, future: Future):
+        """Calculate local origin using origin gps from response."""
         # get response
         response: GPS.Response = future.result()
-        initial_gps: NavSatFix = response.data
-        self.get_logger().info(f"Received '/initial_gps' response: ({initial_gps.latitude}, {initial_gps.longitude})")
+        origin_gps: NavSatFix = response.data
+        self.get_logger().info(f"Received '/origin_gps' response: ({origin_gps.latitude}, {origin_gps.longitude})")
         # calculate local origin
-        self.local_origin = utm.fromLatLong(initial_gps.latitude, initial_gps.longitude).toPoint()
+        self.local_origin = utm.fromLatLong(origin_gps.latitude, origin_gps.longitude).toPoint()
 
     
 
     # HELPERS
 
     def lat_lon_to_local_point(self, lat: float, lon: float) -> Point:
-        """Converts latitude & longitude to a point (x, y) relative to local origin (base pin)"""
+        """Converts latitude & longitude to a point (x, y) relative to the local origin."""
         # convert lat & lon to UTM coordinates (easting, northing) and then to points (x, y)
-        # base_point = utm.fromLatLong(self.base_lat, self.base_lon).toPoint()
         goal_point = utm.fromLatLong(lat, lon).toPoint()
-        # local = goal - base
+        # local = goal - origin
         local_point = Point(
             x = goal_point.x - self.local_origin.x,
             y = goal_point.y - self.local_origin.y,
@@ -238,7 +237,7 @@ class PhaseOneDemo(Node):
 
     def send_waypoint_path_goal(self):
         """Phase 1 method: send path with hardcoded waypoints."""
-        # convert waypoint lat & lon's to local points (origin at the base pin)
+        # convert waypoint lat & lon's to local points (relative to origin gps)
         goal_points = [
             self.lat_lon_to_local_point(*waypoint) 
             for waypoint in WAYPOINTS
@@ -283,8 +282,8 @@ class PhaseOneDemo(Node):
     #             yaw = yaw_degrees # orientation around the vertical axis
     #         )
     #         # log so that you can see realtime messages on monitor in phaseOne terminal
-    #         lat = self.initial_gps.latitude
-    #         long = self.initial_gps.longitude
+    #         lat = self.origin_gps.latitude
+    #         long = self.origin_gps.longitude
     #         lat_str = f"{int(lat)}° {((lat - int(lat)) * 60)}"
     #         long_str = f"{int(long)}° {((long - int(long)) * 60)}"
     #         # self.get_logger().info(f"GPS: {(lat_str, long_str)}\tHeading: {yaw_degrees}°\tDistance: {self.distance_from_goal}\tWaypoint #{self.pose_i+1}")
@@ -299,9 +298,8 @@ class PhaseOneDemo(Node):
         if not self.is_autonomous_mode and msg.data:
             # if local origin hasn't been calculated yet
             if not self.local_origin:
-                # request initial gps from local_planner
-                self.request_initial_gps()
-                # self.local_origin = utm.fromLatLong(self.base_lat, self.base_lon).toPoint()
+                # request origin gps from local_planner
+                self.request_origin_gps()
         # if autonomous to manual -> reset
         elif self.is_autonomous_mode and not msg.data:
             self.reset()
@@ -326,6 +324,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-
-# 2. try timer thing

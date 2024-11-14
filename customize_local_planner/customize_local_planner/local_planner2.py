@@ -89,13 +89,13 @@ class LocalPlanner(Node):
                 self.local_plan = LocalPlan()
 
                 # SERVICES
-                self.initial_gps_service = self.create_service(
+                self.origin_gps_service = self.create_service(
                         GPS,
-                        "/initial_gps",
-                        self.initial_gps_service_callback,
+                        "/origin_gps",
+                        self.origin_gps_service_callback,
                         callback_group = self.service_callback_group
                 )
-                self.initial_gps: NavSatFix = None
+                self.origin_gps: NavSatFix = None
                 self.utm_error: Point = None
 
                 # TIMERS
@@ -114,7 +114,7 @@ class LocalPlanner(Node):
                         10,
                         callback_group = self.sub_callback_group
                 )
-                self.base_odom: Odometry = None
+                self.origin_odom: Odometry = None
                 self.current_odom: Odometry = None
                 self.gps_sub = self.create_subscription(
                         NavSatFix,
@@ -231,26 +231,26 @@ class LocalPlanner(Node):
         # HELPERS - POSITION
 
         def update_local_position(self):
-                """Calculate current position (x, y) relative to local origin (base pin). 
+                """Calculate current position (x, y) relative to local origin. 
                 If parameter "compensate_utm_error" is set to True, this will compensate the UTM error."""
                 # get position from current odometry reading
                 current_position_reading = position_from_odom(self.current_odom)
-                # get position from base odometry reading (at base pin)
-                initial_position_reading = position_from_odom(self.base_odom)
+                # get position from odometry reading at the local origin
+                origin_position_reading = position_from_odom(self.origin_odom)
                 # get UTM error
                 utm_error = self.utm_error if self.compensate_utm_error else Point()
                 # calculate/update local position
-                self.local_position.x = (current_position_reading.x - initial_position_reading.x) - utm_error.x
-                self.local_position.y = (current_position_reading.y - initial_position_reading.y) - utm_error.y
+                self.local_position.x = (current_position_reading.x - origin_position_reading.x) - utm_error.x
+                self.local_position.y = (current_position_reading.y - origin_position_reading.y) - utm_error.y
                 # debugging info
-                # self.get_logger().info(f"x = {round(current_position_reading.x, 3)} - {round(initial_position_reading.x, 3)} - {round(utm_error.x, 3)}   = {round(self.local_position.x, 3)}")
-                # self.get_logger().info(f"y = {round(current_position_reading.y, 3)} - {round(initial_position_reading.y, 3)} - {round(utm_error.y, 3)}   = {round(self.local_position.y, 3)}")
+                # self.get_logger().info(f"x = {round(current_position_reading.x, 3)} - {round(origin_position_reading.x, 3)} - {round(utm_error.x, 3)}   = {round(self.local_position.x, 3)}")
+                # self.get_logger().info(f"y = {round(current_position_reading.y, 3)} - {round(origin_position_reading.y, 3)} - {round(utm_error.y, 3)}   = {round(self.local_position.y, 3)}")
                 # publish global position (local position converted to global UTM coordinate)
                 self.position_pub.publish(self.get_global_position().toMsg())
 
         def get_global_position(self) -> utm.UTMPoint:
                 """Return local position converted to a global UTM coordinate."""
-                origin_utm = utm.fromLatLong(self.initial_gps.latitude, self.initial_gps.longitude)
+                origin_utm = utm.fromLatLong(self.origin_gps.latitude, self.origin_gps.longitude)
                 global_origin = origin_utm.toPoint()
                 global_position = utm.UTMPoint(
                         easting = global_origin.x + self.local_position.x,
@@ -264,16 +264,16 @@ class LocalPlanner(Node):
 
         # SERVICE CALLBACKS
 
-        def initial_gps_service_callback(self, request, response):
-                """Serve request for initial gps message when autonomous mode is started for first time."""
+        def origin_gps_service_callback(self, request, response):
+                """Serve request for origin gps message when autonomous mode is started for first time."""
                 # log request
-                self.get_logger().info(f"Incoming request for initial gps: {request}")
-                # wait for gps subscriber callback to set initial gps
-                while not self.initial_gps:
+                self.get_logger().info(f"Incoming request for origin gps: {request}")
+                # wait for gps subscriber callback to set origin gps
+                while not self.origin_gps:
                         time.sleep(0.1)
                 # log response
-                response.data = self.initial_gps
-                self.get_logger().info(f"Serving request for initial gps: ({response.data.latitude}, {response.data.longitude})")
+                response.data = self.origin_gps
+                self.get_logger().info(f"Serving request for origin gps: ({response.data.latitude}, {response.data.longitude})")
                 # return response
                 return response
 
@@ -289,12 +289,12 @@ class LocalPlanner(Node):
                 # wait for odometry data
                 if not self.current_odom:
                         self.pending_data_log.add("odom data")
-                # wait for base odometry reading
-                elif not self.base_odom:
-                        self.pending_data_log.add("base odom")
-                # wait for base/initial gps reading
-                if not self.initial_gps:
-                        self.pending_data_log.add("base gps")
+                # wait for origin odometry reading
+                elif not self.origin_odom:
+                        self.pending_data_log.add("origin odom")
+                # wait for origin gps reading
+                if not self.origin_gps:
+                        self.pending_data_log.add("origin gps")
                 # wait for first path
                 if not self.local_plan.has_path():
                         self.pending_data_log.add("first path")
@@ -344,7 +344,7 @@ class LocalPlanner(Node):
                                 return
                         # path has been fully navigated -> wait for new goal
                         if self.local_plan.is_path_navigated():
-                                self.get_logger().info("Stopped. Waiting for new goal (path) from /local_plan")
+                                self.get_logger().info("Stopped. Waiting for new path")
                                 return
                         # path has poses to navigate -> Turn
                         else:
@@ -480,18 +480,18 @@ class LocalPlanner(Node):
 
         def odom_callback(self, msg: Odometry):
                 """Get odometry data for UTM and angle reading."""
-                # wait for autonomous mode to start the first time -> get base UTM coordinate (base pin relative to where nodes were launched)
-                if self.is_autonomous_mode and not self.base_odom:
-                        self.base_odom = msg
+                # wait for autonomous mode to start the first time -> get origin UTM coordinate (relative to where nodes were launched)
+                if self.is_autonomous_mode and not self.origin_odom:
+                        self.origin_odom = msg
                 # get current UTM coordinate (relative to where nodes were launched)
                 self.current_odom = msg
                 self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] odom: x = {msg.pose.pose.position.x} y = {msg.pose.pose.position.y}"))
 
         def gps_callback(self, msg: NavSatFix):
-                """Get initial lat & lon when autonomous mode is started for the first time."""
-                # Wait for autonomous mode to start the first time -> get initial gps -> calculate UTM error
-                if self.is_autonomous_mode and not self.initial_gps:
-                        self.initial_gps = msg
+                """Get origin lat & lon when autonomous mode is started for the first time."""
+                # Wait for autonomous mode to start the first time -> get origin gps -> calculate UTM error
+                if self.is_autonomous_mode and not self.origin_gps:
+                        self.origin_gps = msg
                         # convert lat & lon reading at base pin to a UTM coodinate -> then to a point
                         reading_base_utm = utm.fromLatLong(msg.latitude, msg.longitude).toPoint()
                         # convert actual lat & lon at base pin to a UTM coordinate -> then to a point
