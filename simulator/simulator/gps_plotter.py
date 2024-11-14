@@ -29,7 +29,7 @@ from customize_local_planner.conversions import *
 
 
 # CONSTANTS
-FENCE_GPS_POINTS=[
+FENCE_GPS_POINTS = [
         (34.8414762, -82.4118085),      # front-right corner 
         (34.8413314, -82.4119220),      # back-right corner
         (34.8412136, -82.4116773),      # back-left corner

@@ -1,5 +1,5 @@
 """
-Publishes path with goal poses to local_planner node
+Global Planner: sends localized path as an action goal to local_planner
 Author: Matthew Lauriault
 """
 
@@ -38,6 +38,8 @@ class PhaseOneDemo(Node):
         super().__init__('phase_one_demo')
 
         # PARAMETERS
+        # YAML File: pluto_launch/config/global_planner.yaml
+        self.process_frequency = self.load_param_int("process_frequency")
         # YAML File: pluto_launch/config/location.yaml
         self.base_lat = self.load_param_double("base_lat")
         self.base_lon = self.load_param_double("base_lon")
@@ -91,7 +93,7 @@ class PhaseOneDemo(Node):
 
         # TIMERS
         self.process_timer = self.create_timer(
-                1 / 10, 
+                1 / self.process_frequency, 
                 self.process,
                 callback_group = self.process_callback_group
         )
@@ -111,6 +113,9 @@ class PhaseOneDemo(Node):
     def load_param(self, param_name: str, init_value):
         self.declare_parameter(param_name, init_value)
         return self.get_parameter(param_name).get_parameter_value()
+    
+    def load_param_int(self, param_name: str) -> int:
+        return self.load_param(param_name, 0).integer_value
     
     def load_param_double(self, param_name: str) -> float:
         return self.load_param(param_name, 0.0).double_value

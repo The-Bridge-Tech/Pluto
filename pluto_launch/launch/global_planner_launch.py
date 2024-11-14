@@ -5,7 +5,11 @@ import os
 
 
 # CONFIG FILES
-
+global_planner_config = os.path.join(
+    get_package_share_directory('pluto_launch'), 
+    'config',
+    'global_planner.yaml'
+)
 location_config = os.path.join(
     get_package_share_directory('pluto_launch'),
     'config',
@@ -23,6 +27,9 @@ def generate_launch_description():
             executable='phase_one_demo',        # TODO global_planner
             name='phase_one_demo',              # TODO global_planner
             output='screen',
-            parameters=[location_config]
+            parameters=[
+                global_planner_config,
+                location_config
+            ]
         ),
     ])
