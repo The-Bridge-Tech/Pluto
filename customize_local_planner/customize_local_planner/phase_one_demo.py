@@ -7,15 +7,19 @@ Author: Matthew Lauriault
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor, ExternalShutdownException
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 from rclpy.action import ActionClient
 from rclpy.action.client import Future, ClientGoalHandle
 from std_msgs.msg import Bool
 from geometry_msgs.msg import Pose, PoseStamped, Point
 from geodesy import utm
+from sensor_msgs.msg import NavSatFix
 from nav2_msgs.action import NavigateThroughPoses
-from custom_msgs.msg import WaypointMsg
 
 # HELPER MODULES
+from custom_msgs.msg import WaypointMsg
+from custom_msgs.srv import GPS
 from .conversions import *
 
 # CONSTANTS
@@ -38,12 +42,45 @@ class PhaseOneDemo(Node):
         self.base_lat = self.load_param_double("base_lat")
         self.base_lon = self.load_param_double("base_lon")
 
+        # CALLBACK GROUPS
+        # Mutually Exclusive Callback Group
+        #       * individual callbacks block themselves
+        #       * callbacks within group block each other
+        #       * groups execute in parallel with other groups
+        self.local_plan_callback_group = MutuallyExclusiveCallbackGroup()
+        self.initial_gps_callback_group = MutuallyExclusiveCallbackGroup()
+        self.process_callback_group = MutuallyExclusiveCallbackGroup()
+        # Reentrant Callback Group
+        #       * individual callbacks overlap themselves
+        #       * callbacks within group execute in parallel
+        #       * groups execute in parallel with other groups
+        self.sub_callback_group = ReentrantCallbackGroup()
+
         # ACTION CLIENT
         self.local_plan_action_client = ActionClient(
             self,
             NavigateThroughPoses,
             "/local_plan",
+            callback_group = self.local_plan_callback_group
         )
+
+        # CLIENTS
+        self.initial_gps_client = self.create_client(
+            GPS,
+            "/initial_gps",
+            callback_group = self.initial_gps_callback_group
+        )
+        self.local_origin: Point = None
+
+        # SUBSCRIBERS
+        self.is_autonomous_mode_sub = self.create_subscription(
+            Bool, 
+            "is_autonomous_mode",
+            self.is_autonomous_mode_callback,
+            1,
+            callback_group = self.sub_callback_group
+        )
+        self.is_autonomous_mode = False
 
         # PUBLISHERS
         self.ping_publisher = self.create_publisher(
@@ -52,24 +89,20 @@ class PhaseOneDemo(Node):
             10
         )
 
-        # SUBSCRIBERS
-        self.is_autonomous_mode_sub = self.create_subscription(
-            Bool, 
-            "is_autonomous_mode",
-            self.is_autonomous_mode_callback,
-            1
-        )
-        self.is_autonomous_mode = False
-
         # TIMERS
-        self.ready_to_ping = False
-        ping_timer_period = 1 # seconds
+        self.process_timer = self.create_timer(
+                1 / 10, 
+                self.process,
+                callback_group = self.process_callback_group
+        )
+        # ping_timer_period = 1 # seconds
         # self.ping_timer = self.create_timer(
         #     ping_timer_period,
         #     self.publish_waypoint_ping
         # )
+        self.ready_to_ping = False
 
-        # Initialize goal poses
+        # Initialize goal poses list
         self.reset()
 
 
@@ -150,18 +183,43 @@ class PhaseOneDemo(Node):
             # STOP
 
 
+    # CLIENT REQUESTS
+
+    def request_initial_gps(self):
+            """Request and Return the initial gps message after autonomous mode was started for the first time."""
+            # wait for service to be available
+            while not self.initial_gps_client.wait_for_service(timeout_sec=1.0):
+                self.get_logger().info("Waiting for '/initial_gps' service to be available")
+            # send request asynchronously
+            request = GPS.Request()
+            self.get_logger().info("Requesting '/initial_gps' service")
+            future = self.initial_gps_client.call_async(request)
+            # set callback for when response is returned
+            future.add_done_callback(self.initial_gps_response_callback)
+            
+    def initial_gps_response_callback(self, future: Future):
+        """Calculate local origin using initial gps from response."""
+        # get response
+        response: GPS.Response = future.result()
+        initial_gps: NavSatFix = response.data
+        self.get_logger().info(f"Received '/initial_gps' response: ({initial_gps.latitude}, {initial_gps.longitude})")
+        # calculate local origin
+        self.local_origin = utm.fromLatLong(initial_gps.latitude, initial_gps.longitude).toPoint()
+
+    
+
     # HELPERS
 
     def lat_lon_to_local_point(self, lat: float, lon: float) -> Point:
         """Converts latitude & longitude to a point (x, y) relative to local origin (base pin)"""
         # convert lat & lon to UTM coordinates (easting, northing) and then to points (x, y)
-        base_point = utm.fromLatLong(self.base_lat, self.base_lon).toPoint()
+        # base_point = utm.fromLatLong(self.base_lat, self.base_lon).toPoint()
         goal_point = utm.fromLatLong(lat, lon).toPoint()
         # local = goal - base
         local_point = Point(
-            x = goal_point.x - base_point.x,
-            y = goal_point.y - base_point.y,
-            z = goal_point.z - base_point.z
+            x = goal_point.x - self.local_origin.x,
+            y = goal_point.y - self.local_origin.y,
+            z = goal_point.z - self.local_origin.z
         )
         return local_point
     
@@ -188,7 +246,7 @@ class PhaseOneDemo(Node):
         self.get_logger().info("Calculated goal poses.")
         # debugging info
         for i, point in enumerate(goal_points):
-            self.get_logger().info(f"{i+1}: {(point.x, point.y, point.z)}")
+            self.get_logger().info(f"{i+1}: {(round(point.x, 3), round(point.y, 3), round(point.z, 3))}")
         # construct action goal message
         goal_msg = NavigateThroughPoses.Goal(
             poses = goal_poses,
@@ -199,6 +257,14 @@ class PhaseOneDemo(Node):
 
         
     # TIMER CALLBACKS
+
+    def process(self):
+        if not self.local_origin:
+            return
+        self.send_waypoint_path_goal()
+        # destroy timer (phase 1)
+        self.process_timer.cancel()
+        self.get_logger().info("cancelled process timer")
 
     # def publish_waypoint_ping(self):
     #     """Publish waypoint info to splunk_logger node and gps_plotter node."""
@@ -226,12 +292,13 @@ class PhaseOneDemo(Node):
         """Update if in autonomous mode."""
         # if manual to autonomous -> send goal
         if not self.is_autonomous_mode and msg.data:
-
-            # PHASE 1
-            self.send_waypoint_path_goal()
-
+            # if local origin hasn't been calculated yet
+            if not self.local_origin:
+                # request initial gps from local_planner
+                self.request_initial_gps()
+                # self.local_origin = utm.fromLatLong(self.base_lat, self.base_lon).toPoint()
         # if autonomous to manual -> reset
-        if self.is_autonomous_mode and not msg.data:
+        elif self.is_autonomous_mode and not msg.data:
             self.reset()
             self.ready_to_ping = False
         self.is_autonomous_mode = msg.data
@@ -242,12 +309,18 @@ class PhaseOneDemo(Node):
 def main(args=None):
     rclpy.init(args=args)
     phase_one_demo = PhaseOneDemo()
-
-    rclpy.spin(phase_one_demo)
-
+    executor = MultiThreadedExecutor(num_threads = 8)
+    executor.add_node(phase_one_demo)
+    try:
+        executor.spin()
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
     phase_one_demo.destroy_node()
     rclpy.shutdown()
 
 
 if __name__ == '__main__':
     main()
+
+
+# 2. try timer thing

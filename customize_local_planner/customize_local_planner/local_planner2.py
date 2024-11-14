@@ -9,7 +9,7 @@ Created: 10/1/24
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor, ExternalShutdownException
-from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup, ReentrantCallbackGroup
 from rclpy.action import ActionServer
 from rclpy.action.server import ServerGoalHandle
 from std_msgs.msg import Bool, String, UInt32, Float32
@@ -25,6 +25,7 @@ import math
 import time
 
 # HELPER MODULES
+from custom_msgs.srv import GPS
 from .local_plan import LocalPlan
 from .pwm import PWM
 from .pending_data_log import PendingDataLog
@@ -63,24 +64,45 @@ class LocalPlanner(Node):
                 self.base_lat = self.load_param_double("base_lat")
                 self.base_lon = self.load_param_double("base_lon")
 
+                # CALLBACK GROUPS
+                # Mutually Exclusive Callback Group
+                #       * individual callbacks block themselves
+                #       * callbacks within group block each other
+                #       * groups execute in parallel with other groups
+                self.local_plan_callback_group = MutuallyExclusiveCallbackGroup()
+                self.process_callback_group = MutuallyExclusiveCallbackGroup()
+                # Reentrant Callback Group
+                #       * individual callbacks overlap themselves
+                #       * callbacks within group execute in parallel
+                #       * groups execute in parallel with other groups
+                self.service_callback_group = ReentrantCallbackGroup()
+                self.sub_callback_group = ReentrantCallbackGroup()
+
                 # ACTION SERVER
                 self.local_plan_action_server = ActionServer(
                         self,
                         NavigateThroughPoses,
-                        "/local_plan", 
-                        self.local_plan_callback
+                        "/local_plan",
+                        self.local_plan_callback,
+                        callback_group = self.local_plan_callback_group
                 )
                 self.local_plan = LocalPlan()
 
-                # CALLBACK GROUP 
-                # (for multi-threaded executor - to solve ActionServer callback blocking)
-                self.callback_group = MutuallyExclusiveCallbackGroup()
+                # SERVICES
+                self.initial_gps_service = self.create_service(
+                        GPS,
+                        "/initial_gps",
+                        self.initial_gps_service_callback,
+                        callback_group = self.service_callback_group
+                )
+                self.initial_gps: NavSatFix = None
+                self.utm_error: Point = None
 
                 # TIMERS
                 self.process_timer = self.create_timer(
                         1 / self.process_frequency, 
                         self.process,
-                        callback_group = self.callback_group
+                        callback_group = self.process_callback_group
                 )
                 self.pending_data_log = PendingDataLog()
 
@@ -131,35 +153,6 @@ class LocalPlanner(Node):
                         "/analysis/position",
                         10
                 )
-
-                # SUBSCRIBERS
-                self.odom_sub = self.create_subscription(
-                        Odometry, 
-                        "/odometry/global", 
-                        self.odom_callback, 
-                        10,
-                        callback_group = self.callback_group
-                )
-                self.base_odom: Odometry = None
-                self.current_odom: Odometry = None
-                # (only used for UTM error calculation)
-                self.gps_sub = self.create_subscription(
-                        NavSatFix, 
-                        "/fix/filtered", 
-                        self.gps_callback, 
-                        10,
-                        callback_group = self.callback_group
-                )
-                self.utm_error: Point = None
-                self.is_autonomous_mode_sub = self.create_subscription(
-                        Bool, 
-                        "/is_autonomous_mode", 
-                        self.is_autonomous_mode_callback, 
-                        1,
-                        callback_group = self.callback_group
-                )
-                self.is_autonomous_mode = False
-
 
                 # PWM CONTROLLERS
                 self.left_pwm = PWM(
@@ -247,8 +240,8 @@ class LocalPlanner(Node):
                 # get UTM error
                 utm_error = self.utm_error if self.compensate_utm_error else Point()
                 # calculate/update local position
-                self.local_position.x = (current_position_reading.x - initial_position_reading.x)  - utm_error.x
-                self.local_position.y = (current_position_reading.y - initial_position_reading.y)  - utm_error.y
+                self.local_position.x = (current_position_reading.x - initial_position_reading.x) - utm_error.x
+                self.local_position.y = (current_position_reading.y - initial_position_reading.y) - utm_error.y
                 # debugging info
                 # self.get_logger().info(f"x = {round(current_position_reading.x, 3)} - {round(initial_position_reading.x, 3)} - {round(utm_error.x, 3)}   = {round(self.local_position.x, 3)}")
                 # self.get_logger().info(f"y = {round(current_position_reading.y, 3)} - {round(initial_position_reading.y, 3)} - {round(utm_error.y, 3)}   = {round(self.local_position.y, 3)}")
@@ -257,17 +250,33 @@ class LocalPlanner(Node):
 
         def get_global_position(self) -> utm.UTMPoint:
                 """Return local position converted to a global UTM coordinate."""
-                base_utm = utm.fromLatLong(self.base_lat, self.base_lon)
-                base_point = base_utm.toPoint()
+                origin_utm = utm.fromLatLong(self.initial_gps.latitude, self.initial_gps.longitude)
+                global_origin = origin_utm.toPoint()
                 global_position = utm.UTMPoint(
-                        easting = base_point.x + self.local_position.x,
-                        northing = base_point.y + self.local_position.y,
-                        altitude = base_utm.altitude,
-                        zone = base_utm.zone,
-                        band = base_utm.band
+                        easting = global_origin.x + self.local_position.x,
+                        northing = global_origin.y + self.local_position.y,
+                        altitude = origin_utm.altitude,
+                        zone = origin_utm.zone,
+                        band = origin_utm.band
                 )
                 return global_position
         
+
+        # SERVICE CALLBACKS
+
+        def initial_gps_service_callback(self, request, response):
+                """Serve request for initial gps message when autonomous mode is started for first time."""
+                # log request
+                self.get_logger().info(f"Incoming request for initial gps: {request}")
+                # wait for gps subscriber callback to set initial gps
+                while not self.initial_gps:
+                        time.sleep(0.1)
+                # log response
+                response.data = self.initial_gps
+                self.get_logger().info(f"Serving request for initial gps: ({response.data.latitude}, {response.data.longitude})")
+                # return response
+                return response
+
 
         # TIMER CALLBACKS
         
@@ -479,9 +488,10 @@ class LocalPlanner(Node):
                 self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] odom: x = {msg.pose.pose.position.x} y = {msg.pose.pose.position.y}"))
 
         def gps_callback(self, msg: NavSatFix):
-                """Get lat & lon reading at base pin to calculate error in odometry UTM."""
+                """Get initial lat & lon when autonomous mode is started for the first time."""
                 # Wait for autonomous mode to start the first time -> get initial gps -> calculate UTM error
-                if self.is_autonomous_mode and not self.utm_error:
+                if self.is_autonomous_mode and not self.initial_gps:
+                        self.initial_gps = msg
                         # convert lat & lon reading at base pin to a UTM coodinate -> then to a point
                         reading_base_utm = utm.fromLatLong(msg.latitude, msg.longitude).toPoint()
                         # convert actual lat & lon at base pin to a UTM coordinate -> then to a point
