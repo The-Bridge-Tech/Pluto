@@ -27,6 +27,7 @@ import time
 # HELPER MODULES
 from .local_plan import LocalPlan
 from .pwm import PWM
+from .pending_data_log import PendingDataLog
 from .conversions import *
 
 
@@ -81,6 +82,33 @@ class LocalPlanner(Node):
                         self.process,
                         callback_group = self.callback_group
                 )
+                self.pending_data_log = PendingDataLog()
+
+                # SUBSCRIBERS
+                self.odom_sub = self.create_subscription(
+                        Odometry, 
+                        "/odometry/global", 
+                        self.odom_callback, 
+                        10,
+                        callback_group = self.sub_callback_group
+                )
+                self.base_odom: Odometry = None
+                self.current_odom: Odometry = None
+                self.gps_sub = self.create_subscription(
+                        NavSatFix,
+                        "/fix/filtered", 
+                        self.gps_callback, 
+                        10,
+                        callback_group = self.sub_callback_group
+                )
+                self.is_autonomous_mode_sub = self.create_subscription(
+                        Bool, 
+                        "/is_autonomous_mode", 
+                        self.is_autonomous_mode_callback, 
+                        1,
+                        callback_group = self.sub_callback_group
+                )
+                self.is_autonomous_mode = False
 
                 # PUBLISHERS
                 self.state_pub = self.create_publisher(
@@ -247,17 +275,23 @@ class LocalPlanner(Node):
                 # first time callback is called -> set state to "Stop" and servos to neutral
                 if not self.state:
                         self.stop()
+                # construct log message for pending prerequisite data
+                self.pending_data_log.clear()
                 # wait for odometry data
                 if not self.current_odom:
-                        self.get_logger().info("Waiting for odometry from /odometry/global")
-                        return
+                        self.pending_data_log.add("odom data")
+                # wait for base odometry reading
+                elif not self.base_odom:
+                        self.pending_data_log.add("base odom")
+                # wait for base/initial gps reading
+                if not self.initial_gps:
+                        self.pending_data_log.add("base gps")
                 # wait for first path
                 if not self.local_plan.has_path():
-                        self.get_logger().info("Waiting for first goal with path")
-                        return
-                # wait for base odometry & gps readings (set after autonomous mode is started)
-                if not self.base_odom or not self.utm_error:
-                        self.get_logger().info("Waiting for base odometry & gps reading. Start autonomous mode.")
+                        self.pending_data_log.add("first path")
+                # send log with pending prerequisite data and return
+                if self.pending_data_log.has_pending_data():
+                        self.get_logger().info(f"{self.pending_data_log}")
                         return
                 # update current conditions
                 self.update_conditions()
@@ -470,6 +504,9 @@ class LocalPlanner(Node):
                 self.is_autonomous_mode = msg.data
                 self.subscribed_pub.publish(String(data = f"[{self.get_seconds()}] is_autonomous_mode: {msg.data}"))
 
+        
+        # ACTION CALLBACKS
+        
         def local_plan_callback(self, goal_handle: ServerGoalHandle):
                 """Executes accepted goal sent by action client (path planner node)."""
                 # GOAL
@@ -535,14 +572,16 @@ class LocalPlanner(Node):
 # MAIN
 
 def main(args=None):
+        rclpy.init(args=args)
+        local_planner = LocalPlanner()
+        executor = MultiThreadedExecutor(num_threads = 8)
+        executor.add_node(local_planner)
         try:
-                rclpy.init(args=args)
-                local_planner = LocalPlanner()
-                executor = MultiThreadedExecutor(num_threads = 4)
-                executor.add_node(local_planner)
                 executor.spin()
         except (KeyboardInterrupt, ExternalShutdownException):
                 pass
+        local_planner.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":
