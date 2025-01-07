@@ -14,6 +14,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/LineMsg.msg"
   "msg/WaypointMsg.msg"
+  "msg/AnalysisMsg.msg"
   "srv/GPS.srv"
   DEPENDENCIES geometry_msgs sensor_msgs # Add packages that above messages depend on
 )

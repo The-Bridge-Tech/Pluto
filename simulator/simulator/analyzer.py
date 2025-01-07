@@ -8,25 +8,24 @@ Created: 10/9/24
 # ROS MODULES
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
-from nav_msgs.msg import Odometry
 
 # FILE WRITING
 import os
 import csv
 
 # HELPER MODULES
-from customize_local_planner.conversions import *
+from custom_msgs.msg import AnalysisMsg
 
 # CONSTANTS
+TEST_DATE = "11/16/24"
 CSV_FILE = os.path.join(
+        "src",
+        "Pluto",
         "simulator",
         "simulator",
-        "analysis2.csv"
+        f"analysis_{TEST_DATE.replace('/', '_')}.csv",
 )
-
-# PARAMETERS
-PROCESS_RATE = 10 # Hz (times / second)
+# csv header: "time (s)", "state", "heading (°)", "goal heading (°)", "x (m)", "y (m)", "goal x (m)", "goal y (m)", "left pwm (%)", "right pwm (%)"
 
 
 class Analyzer(Node):
@@ -34,74 +33,43 @@ class Analyzer(Node):
         def __init__(self):
                 super().__init__("analyzer")
 
-                # TIMERS
-                self.process_timer = self.create_timer(
-                        1 / PROCESS_RATE,
-                        self.process
-                )
-
-                # SUBSCRIBERS - INPUTS (CONTROL VARIABLES)
-                self.left_pwm_sub = self.create_subscription(
-                        Float32,
-                        "/steering_left/percentage",
-                        self.left_pwm_callback,
+                # SUBSCRIBERS
+                self.analysis_sub = self.create_subscription(
+                        AnalysisMsg,
+                        "/analysis/all",
+                        self.analysis_callback,
                         10
                 )
-                self.right_pwm_sub = self.create_subscription(
-                        Float32,
-                        "/steering_right/percentage",
-                        self.right_pwm_callback,
-                        10
-                )
-
-                # SUBSCRIBERS - OUTPUTS (SENSOR DATA)
-                self.odom_sub = self.create_subscription(
-                        Odometry, 
-                        "/odometry/global", 
-                        self.odom_callback, 
-                        10
-                )
-
-                # VARIABLES
-                self.x = None
-                self.y = None
-                self.heading = None
-                self.left_pwm = None
-                self.right_pwm = None
 
 
         # SUBSCRIBER CALLBACKS
-        
-        def odom_callback(self, msg: Odometry):
-                self.x = msg.pose.pose.position.x
-                self.y = msg.pose.pose.position.y
-                self.heading = angle_from_odom(msg)
 
-        def left_pwm_callback(self, msg: Float32):
-                self.left_pwm = msg.data
-
-        def right_pwm_callback(self, msg: Float32):
-                self.right_pwm = msg.data
-
-
-        # TIMER CALLBACKS
-
-        def process(self):
-                """Analyze inputs (control variables) and outputs (sensor data)"""
+        def analysis_callback(self, msg: AnalysisMsg):
+                # extract data from msg
                 data = [
-                        # inputs
-                        self.left_pwm,
-                        self.right_pwm,
-                        # outputs
-                        self.x,
-                        self.y,
-                        self.heading
+                        # float64 seconds
+                        msg.seconds,
+                        # std_msgs/String state
+                        msg.state.data,
+                        # float64 heading
+                        msg.heading,
+                        # float64 goal_heading
+                        msg.goal_heading,
+                        # geometry_msgs/Point local_position
+                        msg.local_position.x,
+                        msg.local_position.y,
+                        # geometry_msgs/Point goal_position
+                        msg.goal_position.x,
+                        msg.goal_position.y,
+                        # float64 left_pwm
+                        msg.left_pwm,
+                        # float64 right_pwm
+                        msg.right_pwm,
                 ]
-                # save current data as a row in csv file
-                # with open(CSV_FILE, mode='a', newline='') as f:
-                #         writer = csv.writer(f)
-                #         writer.writerow(data)
-                self.get_logger().info(f"p_L: {self.left_pwm}% p_R: {self.right_pwm}% x: {self.x} y: {self.y} heading: {self.heading}°")
+                # write data to new row in csv file
+                with open(CSV_FILE, mode='a', newline='') as f:
+                        writer = csv.writer(f)
+                        writer.writerow(data)
 
 
 # MAIN

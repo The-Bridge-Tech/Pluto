@@ -2,5 +2,7 @@
   ros__parameters:
 
     # BASE
-    base_lat: 34.841374
-    base_lon: -82.411773
+    base_lat: 34.8413622
+    base_lon: -82.4117471
+    # base_lat: 34.841374
+    # base_lon: -82.411773

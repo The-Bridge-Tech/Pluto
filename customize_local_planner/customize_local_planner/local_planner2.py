@@ -25,6 +25,7 @@ import math
 import time
 
 # HELPER MODULES
+from custom_msgs.msg import AnalysisMsg
 from custom_msgs.srv import GPS
 from .local_plan import LocalPlan
 from .pwm import PWM
@@ -133,6 +134,11 @@ class LocalPlanner(Node):
                 self.is_autonomous_mode = False
 
                 # PUBLISHERS
+                self.analysis_pub = self.create_publisher(
+                        AnalysisMsg,
+                        "/analysis/all",
+                        10
+                )
                 self.state_pub = self.create_publisher(
                         String,
                         "/analysis/state",
@@ -334,6 +340,21 @@ class LocalPlanner(Node):
                                 [goal_position.x, goal_position.y]
                         )
                 self.conditions_pub.publish(String(data = f"[{self.get_seconds()}] angle_diff = {round(self.angle_diff, 3)}° distance = {round(self.distance_diff, 3)}m"))
+                # publish all current analysis data
+                self.analysis_pub.publish(AnalysisMsg(
+                        # context
+                        seconds = self.get_seconds(),
+                        state = String(data = self.state),
+                        # feedback input - heading
+                        heading = self.heading,
+                        goal_heading = self.goal_heading,
+                        # feedback input - position
+                        local_position = self.local_position,
+                        goal_position = goal_position,
+                        # control output
+                        left_pwm = self.left_pwm.percentage,
+                        right_pwm = self.right_pwm.percentage
+                ))
 
         def update_state(self):
                 """Update state based on current conditions."""
