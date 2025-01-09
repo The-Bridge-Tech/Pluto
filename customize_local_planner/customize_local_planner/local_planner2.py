@@ -352,8 +352,8 @@ class LocalPlanner(Node):
                         local_position = self.local_position,
                         goal_position = goal_position,
                         # control output
-                        left_pwm = self.left_pwm.percentage,
-                        right_pwm = self.right_pwm.percentage
+                        left_pwm = self.left_pwm.percentage / 100,
+                        right_pwm = self.right_pwm.percentage / 100
                 ))
 
         def update_state(self):

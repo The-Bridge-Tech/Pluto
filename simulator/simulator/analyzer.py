@@ -17,7 +17,7 @@ import csv
 from custom_msgs.msg import AnalysisMsg
 
 # CONSTANTS
-TEST_DATE = "11/16/24"
+TEST_DATE = "1/8/25"
 CSV_FILE = os.path.join(
         "src",
         "Pluto",
