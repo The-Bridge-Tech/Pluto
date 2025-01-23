@@ -83,7 +83,9 @@ class PWMPlotter(Node):
                 # Create figure and axes
                 self.left_ax: plt.Axes = None
                 self.right_ax: plt.Axes = None
-                self.fig, (self.left_ax, self.right_ax) = plt.subplots(2, 1, figsize=(5, 9))
+                self.fig, (self.left_ax, self.right_ax) = plt.subplots(1, 2, figsize=(9, 6))
+                # Adjust the space between the plots
+                plt.subplots_adjust(wspace=0.3)
                 # Configure left_pwm plot
                 self.left_ax.set_title('Left PWM')
                 self.left_ax.set_xlabel('Time (s)')
@@ -91,6 +93,7 @@ class PWMPlotter(Node):
                 self.left_ax.set_xlim(0, PLOT_X_LIM)
                 self.left_ax.set_ylim(-100, 100)
                 self.left_ax.grid(True)
+                self.left_ax.set_yticks(range(-100, 101, 10))
                 self.left_ax.axhline(y=0, color='black', linestyle='-', linewidth=1.5)
                 # Configure right_pwm plot
                 self.right_ax.set_title('Right PWM')
@@ -99,6 +102,7 @@ class PWMPlotter(Node):
                 self.right_ax.set_xlim(0, PLOT_X_LIM)
                 self.right_ax.set_ylim(-100, 100)
                 self.right_ax.grid(True)
+                self.right_ax.set_yticks(range(-100, 101, 10))
                 self.right_ax.axhline(y=0, color='black', linestyle='-', linewidth=1.5)
                 # Create plot for left_pwm
                 self.left_pwm_plot = self.left_ax.plot(
@@ -122,6 +126,28 @@ class PWMPlotter(Node):
                         func = self.update_plot, 
                         interval = (1 / PROCESS_RATE) * 1000, # milliseconds - delay between frames
                         blit = True, # only redraw elements that have changed
+                )
+                # Add text to left plot to show current current number value
+                self.left_text = self.left_ax.text(
+                        0.95, 
+                        0.95, 
+                        f"0.0%", 
+                        transform = self.left_ax.transAxes,
+                        ha = "right",
+                        va = "top",
+                        fontsize = 18,
+                        color = "orange"
+                )
+                # Add text to right plot to show current current number value
+                self.right_text = self.right_ax.text(
+                        0.95, 
+                        0.95, 
+                        f"0.0%", 
+                        transform = self.right_ax.transAxes,
+                        ha = "right",
+                        va = "top",
+                        fontsize = 18,
+                        color = "purple"
                 )
 
                 # VARIABLES
@@ -152,6 +178,7 @@ class PWMPlotter(Node):
                                         self.left_pwm_data.times, 
                                         self.left_pwm_data.values
                                 )
+                                self.left_text.set_text(f"{self.left_pwm_data.values[-1]:.1f}%")
                                 # update left pwm data
                                 self.left_pwm_data.update()
                                 self.get_logger().info(f"time: {self.left_pwm_data.times[-1]}\t left pwm: {self.left_pwm_data.values[-1]}")
@@ -166,6 +193,7 @@ class PWMPlotter(Node):
                                         self.right_pwm_data.times, 
                                         self.right_pwm_data.values
                                 )
+                                self.right_text.set_text(f"{self.right_pwm_data.values[-1]:.1f}%")
                                 # update right pwm data
                                 self.right_pwm_data.update()
                                 self.get_logger().info(f"time: {self.right_pwm_data.times[-1]}\t right pwm: {self.right_pwm_data.values[-1]}")
