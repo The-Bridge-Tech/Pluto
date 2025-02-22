@@ -44,19 +44,19 @@ class LocalPlanner(Node):
                 self.min_pwm = self.load_param_int("min_pwm")
                 self.neutral_pwm = self.load_param_int("neutral_pwm")
                 self.max_pwm = self.load_param_int("max_pwm")
-                # YAML File: pluto_launch/config/local_planner.yaml
+                # YAML File: pluto_launch/config/local_planner2.yaml
+                # STATE: START
+                self.start_max_pwm = self.load_param_double("start_max_pwm")
+                self.start_angle_tolerance = self.load_param_double("start_angle_tolerance")
+                self.start_kp = self.load_param_double("start_kp")
+                self.start_ki = self.load_param_double("start_ki")
+                self.start_kd = self.load_param_double("start_kd")
                 # STATE: STRAIGHT
                 self.straight_initial_pwm = self.load_param_double("straight_initial_pwm")
                 self.straight_distance_tolerance = self.load_param_double("straight_distance_tolerance")
                 self.straight_kp = self.load_param_double("straight_kp")
                 self.straight_ki = self.load_param_double("straight_ki")
                 self.straight_kd = self.load_param_double("straight_kd")
-                # STATE: TURN
-                self.turn_max_pwm = self.load_param_double("turn_max_pwm")
-                self.turn_angle_tolerance = self.load_param_double("turn_angle_tolerance")
-                self.turn_kp = self.load_param_double("turn_kp")
-                self.turn_ki = self.load_param_double("turn_ki")
-                self.turn_kd = self.load_param_double("turn_kd")
                 # OTHER
                 self.process_frequency = self.load_param_int("process_frequency")
                 self.feedback_frequency = self.load_param_int("feedback_frequency")
@@ -367,13 +367,13 @@ class LocalPlanner(Node):
                         if self.local_plan.is_path_navigated():
                                 self.get_logger().info("Stopped. Waiting for new path")
                                 return
-                        # path has poses to navigate -> Turn
+                        # path has poses to navigate -> Start
                         else:
                                 self.get_logger().info("Navigating to current goal pose.")
-                                self.turn()
-                elif self.state == "Turn":
+                                self.start()
+                elif self.state == "Start":
                         # If angle difference is within tolerance -> Straight
-                        if abs(self.angle_diff) < self.turn_angle_tolerance:
+                        if abs(self.angle_diff) < self.start_angle_tolerance:
                                 self.straight()
                         else:
                                 pass # self.get_logger().info(f"angle_diff = {round(self.angle_diff, 3)}°")
@@ -394,8 +394,8 @@ class LocalPlanner(Node):
                 """Execute the function of the current state."""
                 if self.state == "Stop":
                         pass # no maintenance needed
-                elif self.state == "Turn":
-                        self.maintain_turn()
+                elif self.state == "Start":
+                        self.maintain_start()
                 elif self.state == "Straight":
                         self.maintain_straight()
                 else:
@@ -419,9 +419,9 @@ class LocalPlanner(Node):
                 self.left_pwm.set_neutral()
                 self.right_pwm.set_neutral()
 
-        def turn(self):
+        def start(self):
                 """Start turning in place towards the next waypoint."""
-                self.set_state("Turn")
+                self.set_state("Start")
                 # reset PID variables
                 self.reset_PID()
                 # set initial pwm's
@@ -440,7 +440,7 @@ class LocalPlanner(Node):
 
         # STATE MAINTENANCE
 
-        def maintain_turn(self):
+        def maintain_start(self):
                 """Adjust left and right servo pwm's from neutral using PID controller
                 to correct the mower's direction in place (no linear movement)."""
                 # update PID controller error terms
@@ -452,18 +452,18 @@ class LocalPlanner(Node):
                 # calculate PID error correction
                 correction = (
                         # P = Proportional error (current)
-                        self.turn_kp * error +
+                        self.start_kp * error +
                         # I = Integral error (past)
-                        self.turn_ki * self.integral_error +
+                        self.start_ki * self.integral_error +
                         # D = Derivative error (future)
-                        self.turn_kd * derivative_error
+                        self.start_kd * derivative_error
                 )
                 # limit correction to prevent instability
                 correction = max(
-                        min(correction, self.turn_max_pwm), 
-                        -self.turn_max_pwm
+                        min(correction, self.start_max_pwm), 
+                        -self.start_max_pwm
                 )
-                # self.get_logger().info(f"error: {error}\t P: {self.turn_kp * error} I: {self.turn_ki * self.integral_error} D: {self.turn_kd * derivative_error}")
+                # self.get_logger().info(f"error: {error}\t P: {self.start_kp * error} I: {self.start_ki * self.integral_error} D: {self.start_kd * derivative_error}")
                 # update PID previous values
                 self.prev_error = error
                 self.prev_time = t
