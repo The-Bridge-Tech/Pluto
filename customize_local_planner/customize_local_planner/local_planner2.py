@@ -339,22 +339,22 @@ class LocalPlanner(Node):
                                 [self.local_position.x, self.local_position.y], 
                                 [goal_position.x, goal_position.y]
                         )
-                self.conditions_pub.publish(String(data = f"[{self.get_seconds()}] angle_diff = {round(self.angle_diff, 3)}° distance = {round(self.distance_diff, 3)}m"))
-                # publish all current analysis data
-                self.analysis_pub.publish(AnalysisMsg(
-                        # context
-                        seconds = self.get_seconds(),
-                        state = String(data = self.state),
-                        # feedback input - heading
-                        heading = self.heading,
-                        goal_heading = self.goal_heading,
-                        # feedback input - position
-                        local_position = self.local_position,
-                        goal_position = goal_position,
-                        # control output
-                        left_pwm = self.left_pwm.percentage / 100,
-                        right_pwm = self.right_pwm.percentage / 100
-                ))
+                        self.conditions_pub.publish(String(data = f"[{self.get_seconds()}] angle_diff = {round(self.angle_diff, 3)}° distance = {round(self.distance_diff, 3)}m"))
+                        # publish all current analysis data
+                        self.analysis_pub.publish(AnalysisMsg(
+                                # context
+                                seconds = self.get_seconds(),
+                                state = String(data = self.state),
+                                # feedback input - heading
+                                heading = self.heading,
+                                goal_heading = self.goal_heading,
+                                # feedback input - position
+                                local_position = self.local_position,
+                                goal_position = goal_position,
+                                # control output
+                                left_pwm = self.left_pwm.percentage / 100,
+                                right_pwm = self.right_pwm.percentage / 100
+                        ))
 
         def update_state(self):
                 """Update state based on current conditions."""
