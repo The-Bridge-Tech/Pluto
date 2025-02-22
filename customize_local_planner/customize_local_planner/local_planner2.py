@@ -57,6 +57,12 @@ class LocalPlanner(Node):
                 self.straight_kp = self.load_param_double("straight_kp")
                 self.straight_ki = self.load_param_double("straight_ki")
                 self.straight_kd = self.load_param_double("straight_kd")
+                # STATE: TURN
+                self.turn_initial_pwm = self.load_param_double("turn_initial_pwm")
+                self.turn_distance_tolerance = self.load_param_double("turn_distance_tolerance")
+                self.turn_kp = self.load_param_double("turn_kp")
+                self.turn_ki = self.load_param_double("turn_ki")
+                self.turn_kd = self.load_param_double("turn_kd")
                 # OTHER
                 self.process_frequency = self.load_param_int("process_frequency")
                 self.feedback_frequency = self.load_param_int("feedback_frequency")
@@ -378,8 +384,14 @@ class LocalPlanner(Node):
                         else:
                                 pass # self.get_logger().info(f"angle_diff = {round(self.angle_diff, 3)}°")
                 elif self.state == "Straight":
-                        # If within distance tolerance of goal position -> Stop
+                        # If within distance tolerance of goal position -> Turn
                         if self.distance_diff < self.straight_distance_tolerance:
+                                self.turn()
+                        else:
+                                pass # self.get_logger().info(f"angle_diff = {round(self.angle_diff, 3)}° distance = {round(self.distance_diff, 3)}m")
+                elif self.state == "Turn":
+                        # If within distance tolerance of goal position -> Stop
+                        if self.distance_diff < self.turn_distance_tolerance:
                                 self.get_logger().info("Reached goal pose.")
                                 self.local_plan.complete_goal_pose()
                                 self.stop()
@@ -398,6 +410,8 @@ class LocalPlanner(Node):
                         self.maintain_start()
                 elif self.state == "Straight":
                         self.maintain_straight()
+                elif self.state == "Turn":
+                        self.maintain_turn()
                 else:
                         self.get_logger().error(f"Invalid state: '{self.state}'.")
                 
@@ -420,7 +434,7 @@ class LocalPlanner(Node):
                 self.right_pwm.set_neutral()
 
         def start(self):
-                """Start turning in place towards the next waypoint."""
+                """Turn in place towards the next waypoint."""
                 self.set_state("Start")
                 # reset PID variables
                 self.reset_PID()
@@ -429,13 +443,22 @@ class LocalPlanner(Node):
                 self.right_pwm.set_neutral()
 
         def straight(self):
-                """Start moving straight towards the next waypoint."""
+                """Move straight towards the next waypoint."""
                 self.set_state("Straight")
                 # reset PID variables
                 self.reset_PID()
                 # set initial pwm's
                 self.left_pwm.percentage = self.straight_initial_pwm
                 self.right_pwm.percentage = self.straight_initial_pwm
+
+        def turn(self):
+                """Slow down and rely on depth camera to navigate to landmark at waypoint."""
+                self.set_state("Turn")
+                # reset PID variables
+                self.reset_PID()
+                # set initial pwm's
+                self.left_pwm.percentage = self.turn_initial_pwm
+                self.right_pwm.percentage = self.turn_initial_pwm
 
 
         # STATE MAINTENANCE
@@ -472,7 +495,7 @@ class LocalPlanner(Node):
                 self.right_pwm.percentage = correction
 
         def maintain_straight(self):
-                """Adjust right servo pwm from initial straight pwm using PID controller 
+                """Adjust right servo pwm from initial pwm using PID controller
                 to correct the mower's direction (maintaining linear movement)."""
                 # update PID controller error terms
                 t = self.get_seconds()
@@ -495,6 +518,31 @@ class LocalPlanner(Node):
                 self.prev_time = t
                 # apply PID error correction
                 self.right_pwm.percentage = self.straight_initial_pwm + correction
+
+        def maintain_turn(self):
+                """Adjust right servo pwm from initial pwm using PID controller 
+                to correct the mower's direction (maintaining linear movement)."""
+                # update PID controller error terms
+                t = self.get_seconds()
+                dt = t - self.prev_t
+                error = self.angle_diff # TODO using depth camera (angle from landmark), not GPS
+                self.integral_error += error * dt
+                derivative_error = ((error - self.prev_error) / dt) if dt > 0 else 0
+                # calculate PID error correction
+                correction = (
+                        # P = Proportional error (current)
+                        self.turn_kp * error +
+                        # I = Integral error (past)
+                        self.turn_ki * self.integral_error +
+                        # D = Derivative error (future)
+                        self.turn_kd * derivative_error
+                )
+                # self.get_logger().info(f"error: {error}\t P: {self.turn_kp * error} I: {self.turn_ki * self.integral_error} D: {self.turn_kd * derivative_error}")
+                # update PID previous values
+                self.prev_error = error
+                self.prev_time = t
+                # apply PID error correction
+                self.right_pwm.percentage = self.turn_initial_pwm + correction
                         
 
         # SUBSCRIBER CALLBACKS
